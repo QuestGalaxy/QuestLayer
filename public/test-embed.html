@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuestLayer Embed Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f3f4f6;
+        color: #1f2937;
+      }
+      .container {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        margin-bottom: 1rem;
+      }
+      p {
+        color: #4b5563;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>QuestLayer Embed Test</h1>
+      <p>The widget should appear in the bottom-right corner.</p>
+    </div>
+
+    <!-- QuestLayer Widget Embed -->
+    <script
+      src="/widget-embed.js"
+      data-config='{"projectName":"Vortex Protocol","accentColor":"#6366f1","position":"bottom-right","activeTheme":"gaming","tasks":[{"id":1,"title":"Verify Protocol X","desc":"Secure your spot in the ecosystem by following our primary governance channel.","link":"https://twitter.com","xp":500},{"id":2,"title":"Community Discord","desc":"Join the verified builders and contributors to unlock restricted channels.","link":"https://discord.com","xp":800},{"id":3,"title":"Review Tokenomics","desc":"Deep dive into the latest v3 whitepaper regarding liquidity incentives.","link":"https://google.com","xp":300},{"id":4,"title":"Share Feedback","desc":"Help us improve the builder experience by submitting a quick bug report.","link":"https://google.com","xp":1200}]}'
+    ></script>
+  </body>
+</html>

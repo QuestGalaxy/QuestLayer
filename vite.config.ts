@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        cors: true
       },
       plugins: [react()],
       define: {
@@ -17,6 +18,19 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+        }
+      },
+      build: {
+        rollupOptions: {
+          input: {
+            main: path.resolve(__dirname, 'index.html'),
+            widget: path.resolve(__dirname, 'widget-runtime.js')
+          },
+          output: {
+            entryFileNames: (chunk) => (chunk.name === 'widget' ? 'widget-runtime.js' : 'assets/[name]-[hash].js'),
+            chunkFileNames: 'assets/[name]-[hash].js',
+            assetFileNames: 'assets/[name]-[hash][extname]'
+          }
         }
       }
     };

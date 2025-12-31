@@ -14,36 +14,16 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, state }) => {
 
   if (!isOpen) return null;
 
-  // Generate the actual script code with clean indentation
-  const scriptCode = `<!-- QuestLayer Widget Embed -->
-<script>
-(function() {
-  const config = ${JSON.stringify({
+  const configJson = JSON.stringify({
     projectName: state.projectName,
     accentColor: state.accentColor,
     position: state.position,
     activeTheme: state.activeTheme,
     tasks: state.tasks
-  }, null, 2)};
+  }).replace(/'/g, '&#39;');
 
-  // 1. Inject Tailwind and Fonts
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Mono&family=Inter:wght@400;700;900&display=swap';
-  document.head.appendChild(link);
-
-  const tw = document.createElement('script');
-  tw.src = 'https://cdn.tailwindcss.com';
-  document.head.appendChild(tw);
-
-  // 2. Load Widget Script
-  const s = document.createElement('script');
-  s.type = 'module';
-  s.src = '${window.location.origin}/widget-runtime.js';
-  s.onload = () => window.QuestLayer?.init(config);
-  document.body.appendChild(s);
-})();
-</script>`;
+  const scriptCode = `<!-- QuestLayer Widget Embed -->
+<script src="${window.location.origin}/widget-embed.js" data-config='${configJson}'></script>`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(scriptCode);

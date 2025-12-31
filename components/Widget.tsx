@@ -216,111 +216,101 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const getPositionClasses = () => {
     const classes = {
-      'bottom-right': 'bottom-6 right-6 md:bottom-8 md:right-8',
-      'bottom-left': 'bottom-6 left-6 md:bottom-8 md:left-8',
-      'top-right': 'top-6 right-6 md:top-8 md:right-8',
-      'top-left': 'top-6 left-6 md:top-8 md:left-8'
+      'bottom-right': 'bottom-2 right-2 md:bottom-8 md:right-8',
+      'bottom-left': 'bottom-2 left-2 md:bottom-8 md:left-8',
+      'top-right': 'top-2 right-2 md:top-8 md:right-8',
+      'top-left': 'top-2 left-2 md:top-8 md:left-8'
     };
     return classes[state.position];
   };
 
-  const getWidgetClasses = () => {
-    let cls = `${positionClasses} z-50 transition-all duration-300 `;
-    // Extreme containment for mobile/preview: only 8px from side edges
-    cls += 'left-2 right-2 md:left-auto md:right-auto mx-auto ';
-    if (state.position.includes('bottom')) {
-      cls += isPreview ? 'bottom-2 md:bottom-6 ' : 'bottom-2 md:bottom-24 ';
-    } else {
-      cls += isPreview ? 'top-2 md:top-6 ' : 'top-2 md:top-24 ';
-    }
-    // Constrain width on desktop, flexible on mobile
-    cls += 'md:w-[350px] max-w-full ';
-    
-    if (state.position === 'bottom-right') cls += 'md:right-8';
-    else if (state.position === 'bottom-left') cls += 'md:left-8';
-    else if (state.position === 'top-right') cls += 'md:right-8';
-    else if (state.position === 'top-left') cls += 'md:left-8';
-    
-    return cls;
-  };
+  const isBottom = state.position.includes('bottom');
+  const isRight = state.position.includes('right');
+  const wrapperClasses = [
+    positionClasses,
+    'z-50',
+    'flex',
+    isBottom ? 'flex-col-reverse' : 'flex-col',
+    isRight ? 'items-end' : 'items-start',
+    getPositionClasses(),
+    'gap-2',
+  ].join(' ');
 
   const formatXP = (val: number) => val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val;
 
   const currentLevelData = calculateLevel(visualXP);
 
-  if (!isOpen) {
-    return (
-      <button 
-        onClick={() => { setIsOpen(true); initAudio(); }}
-        style={(!isLightTheme && !isTransparentTheme) ? { 
-          backgroundColor: state.accentColor,
-          borderColor: state.activeTheme === 'cyber' ? state.accentColor : 'transparent'
-        } : (isTransparentTheme ? { 
-          backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-          backdropFilter: 'blur(20px)', 
-          borderColor: `${state.accentColor}60`, 
-          boxShadow: `0 0 20px ${state.accentColor}30` 
-        } : {})}
-        className={`${positionClasses} z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${getPositionClasses()} ${activeTheme.trigger}`}
-      >
-        {!isConnected ? (
-          <span className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-sm">
-            <Zap size={12} md:size={16} fill="currentColor" />
-            Connect
-          </span>
-        ) : (
-          <span className="flex items-center gap-2 md:gap-3">
-            <div className="bg-white/10 px-1 py-0.5 rounded text-[6px] md:text-[8px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">0x71...3921</div>
-            <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
-              <span className="text-[6px] md:text-[8px] font-black uppercase opacity-60">Lvl</span>
-              <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
-            </div>
-          </span>
-        )}
-      </button>
-    );
-  }
-
   return (
     <>
       <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
-      
-      <div 
-        className={`${getWidgetClasses()} flex flex-col shadow-2xl overflow-hidden h-[min(calc(100%-1rem),660px)] md:h-auto md:max-h-[min(620px,calc(100%-6rem))] border-2 theme-transition relative ${activeTheme.card} ${activeTheme.font}`}
-        style={{ 
-          borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)'))) 
-        }}
-      >
-        {/* Header */}
-        <div className={`px-3 py-2.5 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}>
-          <div className="flex items-center gap-2 md:gap-3 truncate">
-            <div 
-              style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }} 
-              className={`p-1.5 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
-            >
-              <Zap size={10} md:size={14} fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
-            </div>
-            <span className={`font-black text-[10px] md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
-              {state.projectName}
+
+      <div className={wrapperClasses}>
+        <button
+          onClick={() => { setIsOpen(true); initAudio(); }}
+          style={(!isLightTheme && !isTransparentTheme) ? {
+            backgroundColor: state.accentColor,
+            borderColor: state.activeTheme === 'cyber' ? state.accentColor : 'transparent'
+          } : (isTransparentTheme ? {
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(20px)',
+            borderColor: `${state.accentColor}60`,
+            boxShadow: `0 0 20px ${state.accentColor}30`
+          } : {})}
+          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger}`}
+        >
+          {!isConnected ? (
+            <span className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-sm">
+              <Zap size={12} md:size={16} fill="currentColor" />
+              Connect
             </span>
-          </div>
-          <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
-            {isConnected && (
-              <button onClick={disconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
-                <LogOut size={10} md:size={12} />
-              </button>
-            )}
-            <button 
-              onClick={() => setIsOpen(false)} 
-              className={`${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
-            >
-              <X size={14} md:size={16} />
-            </button>
-          </div>
-        </div>
+          ) : (
+            <span className="flex items-center gap-2 md:gap-3">
+              <div className="bg-white/10 px-1 py-0.5 rounded text-[6px] md:text-[8px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">0x71...3921</div>
+              <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
+                <span className="text-[6px] md:text-[8px] font-black uppercase opacity-60">Lvl</span>
+                <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
+              </div>
+            </span>
+          )}
+        </button>
+
+        {isOpen && (
+          <div
+            className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${activeTheme.card} ${activeTheme.font}`}
+            style={{
+              borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))
+            }}
+          >
+            {/* Header */}
+            <div className={`px-3 py-2.5 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}>
+              <div className="flex items-center gap-2 md:gap-3 truncate">
+                <div
+                  style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
+                  className={`p-1.5 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
+                >
+                  <Zap size={10} md:size={14} fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
+                </div>
+                <span className={`font-black text-[10px] md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
+                  {state.projectName}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
+                {isConnected && (
+                  <button onClick={disconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+                    <LogOut size={10} md:size={12} />
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className={`${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
+                >
+                  <X size={14} md:size={16} />
+                </button>
+              </div>
+            </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-3 md:p-5 space-y-3 md:space-y-5 custom-scroll">
+        <div className="flex-1 overflow-y-auto p-3 md:p-5 space-y-3 md:space-y-5 custom-scroll max-h-[min(620px,calc(100vh-6rem))]">
           {!isConnected ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-10">
               <div className="space-y-2">
@@ -549,6 +539,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
             QuestLayer Engine v2.5
           </p>
         </div>
+      </div>
+        )}
       </div>
     </>
   );
