@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Editor from './components/Editor.tsx';
 import Widget from './components/Widget.tsx';
 import LandingPage from './components/LandingPage.tsx';
@@ -13,6 +13,8 @@ const App: React.FC = () => {
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [previewTheme, setPreviewTheme] = useState<'dark' | 'light'>('dark');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const previewRef = useRef<HTMLDivElement | null>(null);
   
   const [state, setState] = useState<AppState>({
     projectName: 'Vortex Protocol',
@@ -30,6 +32,23 @@ const App: React.FC = () => {
   const handleSetColor = (color: string) => setState(prev => ({ ...prev, accentColor: color }));
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!previewRef.current) return;
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await previewRef.current.requestFullscreen();
+    }
+  };
 
   if (showLanding) {
     return <LandingPage onLaunch={() => setShowLanding(false)} />;
@@ -70,6 +89,7 @@ const App: React.FC = () => {
       <main className={`${view === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 relative overflow-hidden ${previewTheme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-500 p-4 md:p-8`}>
         {/* Mock Website Container */}
         <div
+          ref={previewRef}
           className={`w-full h-full border rounded-[2rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col group transition-all duration-500 ${
             previewTheme === 'dark'
               ? 'bg-slate-950 border-white/5'
@@ -167,6 +187,13 @@ const App: React.FC = () => {
               }`}
             >
               Light
+            </button>
+            <div className="w-px h-3 bg-white/20" />
+            <button
+              onClick={toggleFullscreen}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight text-white/70 transition-all hover:text-white"
+            >
+              <Layout size={12} /> {isFullscreen ? 'Exit' : 'Fullscreen'}
             </button>
           </div>
 
