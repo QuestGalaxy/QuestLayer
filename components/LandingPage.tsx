@@ -48,7 +48,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
       <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col items-center z-10">
         
         {/* --- HERO SECTION --- */}
-        <div className="mb-20 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
+        <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
            <div className="flex flex-col items-center">
              <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20 glow-orange">
@@ -62,13 +62,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
                Turn Any Website Into an Interactive <br/>
                <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
              </p>
-             <div className="mt-8 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full">
+             <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full">
                 <Sparkles size={14} className="text-orange-400 animate-spin-slow" />
                 <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.3em]">
                   One embed • No redirects • Instant Web3
                 </p>
              </div>
-             <div className="mt-6 flex items-center justify-center gap-4">
+             <div className="mt-4 flex items-center justify-center gap-4">
                <button
                  onClick={onLaunch}
                  className="px-6 py-3 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95"
@@ -83,7 +83,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
         </div>
 
         {/* --- THE OCTOPUS ENGINE (Interactive Feature Map) --- */}
-        <div className="relative w-full min-h-[600px] flex items-center justify-center py-20">
+        <div className="relative w-full min-h-[500px] flex items-center justify-center pb-20 pt-4">
           
           {/* SVG Tentacle Layer */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 overflow-visible" preserveAspectRatio="none">
