@@ -1,0 +1,276 @@
+
+import React, { useState } from 'react';
+import { Code, Wallet, Layout, Target, Trophy, Zap, ChevronRight, Globe, Sparkles } from 'lucide-react';
+
+interface LandingPageProps {
+  onLaunch: () => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  const getHubGlow = () => {
+    switch (hoveredCard) {
+      case 1: return 'shadow-[0_0_80px_rgba(249,115,22,0.6)] border-orange-500';
+      case 2: return 'shadow-[0_0_80px_rgba(99,102,241,0.6)] border-indigo-500';
+      case 3: return 'shadow-[0_0_80px_rgba(16,185,129,0.6)] border-emerald-500';
+      case 4: return 'shadow-[0_0_80px_rgba(168,85,247,0.6)] border-purple-500';
+      case 5: return 'shadow-[0_0_80px_rgba(234,179,8,0.6)] border-yellow-500';
+      default: return 'shadow-[0_0_60px_rgba(139,92,246,0.4)] border-indigo-500/50';
+    }
+  };
+
+  return (
+    <div className="relative min-h-screen w-full bg-[#05010d] overflow-x-hidden overflow-y-auto custom-scroll selection:bg-orange-500/30 font-['Inter']">
+      
+      {/* --- COSMIC BACKGROUND LAYER --- */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/10 blur-[150px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-900/10 blur-[150px] rounded-full" />
+        
+        {/* Animated Stars */}
+        {[...Array(30)].map((_, i) => (
+          <div 
+            key={i}
+            className="absolute rounded-full bg-white opacity-20 animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${Math.random() * 3}px`,
+              height: `${Math.random() * 3}px`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${2 + Math.random() * 3}s`
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col items-center z-10">
+        
+        {/* --- HERO SECTION --- */}
+        <div className="mb-20 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
+           <div className="flex flex-col items-center">
+             <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20 glow-orange">
+                  <Zap size={48} className="text-orange-500 fill-orange-500" />
+                </div>
+                <h1 className="pixel-text text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                  QUESTLAYER
+                </h1>
+             </div>
+             <p className="text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.1] tracking-tight">
+               Turn Any Website Into an Interactive <br/>
+               <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
+             </p>
+             <div className="mt-8 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full">
+                <Sparkles size={14} className="text-orange-400 animate-spin-slow" />
+                <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.3em]">
+                  One embed • No redirects • Instant Web3
+                </p>
+             </div>
+           </div>
+        </div>
+
+        {/* --- THE OCTOPUS ENGINE (Interactive Feature Map) --- */}
+        <div className="relative w-full min-h-[600px] flex items-center justify-center py-20">
+          
+          {/* SVG Tentacle Layer */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 overflow-visible" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="tentacleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6366f1" />
+                <stop offset="100%" stopColor="#f97316" />
+              </linearGradient>
+            </defs>
+            {/* These paths simulate the tentacles reaching from center to grid positions */}
+            <path d="M 50% 50% Q 25% 25% 15% 15%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" className="animate-pulse" />
+            <path d="M 50% 50% Q 75% 25% 85% 15%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
+            <path d="M 50% 50% Q 75% 75% 85% 85%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
+            <path d="M 50% 50% Q 25% 75% 15% 85%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
+            <path d="M 50% 50% L 50% 90%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
+          </svg>
+
+          {/* Central Animated Hub */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+            <div className={`w-32 h-32 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-400/20 p-1.5 animate-float transition-all duration-700 border-4 ${getHubGlow()}`}>
+               <div className="w-full h-full rounded-full bg-slate-950/90 flex flex-col items-center justify-center backdrop-blur-3xl overflow-hidden relative">
+                  <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
+                  <Zap size={64} className="text-orange-500 mb-2 relative z-10" />
+                  <span className="pixel-text text-[10px] text-white/40 tracking-[0.4em] relative z-10">CORE</span>
+               </div>
+            </div>
+            {/* Ambient Pulsing Rings */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-indigo-500/10 scale-125 animate-ping opacity-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-orange-500/5 scale-150 animate-pulse opacity-5" />
+          </div>
+
+          {/* Responsive Feature Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-x-48 md:gap-y-24 w-full relative z-40">
+            
+            {/* Card 1: Embed */}
+            <div 
+              onMouseEnter={() => setHoveredCard(1)} 
+              onMouseLeave={() => setHoveredCard(null)}
+              className="group cursor-pointer lg:translate-x-[-20px]"
+            >
+              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-orange-500/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(249,115,22,0.4)]">01</span>
+                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Embed Once</h4>
+                  </div>
+                  <div className="aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-orange-500/10 transition-all overflow-hidden">
+                     <Code size={48} className="text-orange-500/50 group-hover:text-orange-400 group-hover:scale-110 transition-transform" />
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Inject QuestLayer Snippet</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Spacer for 3-col desktop layout to center the hub */}
+            <div className="hidden lg:block pointer-events-none" />
+
+            {/* Card 2: Wallet */}
+            <div 
+              onMouseEnter={() => setHoveredCard(2)} 
+              onMouseLeave={() => setHoveredCard(null)}
+              className="group cursor-pointer lg:translate-x-[20px]"
+            >
+              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-indigo-500/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(99,102,241,0.4)]">02</span>
+                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Connect Wallet</h4>
+                  </div>
+                  <div className="aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 transition-all">
+                     <Wallet size={48} className="text-indigo-500/50 group-hover:text-indigo-400 transition-all" />
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Floating Wallet Button</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Tasks */}
+            <div 
+              onMouseEnter={() => setHoveredCard(4)} 
+              onMouseLeave={() => setHoveredCard(null)}
+              className="group cursor-pointer"
+            >
+              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-purple-500/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]">04</span>
+                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Complete Tasks</h4>
+                  </div>
+                  <div className="aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-purple-500/10 transition-all">
+                     <Target size={48} className="text-purple-500/50 group-hover:text-purple-400 transition-all" />
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Gamified Mission Completion</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Rewards */}
+            <div 
+              onMouseEnter={() => setHoveredCard(5)} 
+              onMouseLeave={() => setHoveredCard(null)}
+              className="group cursor-pointer lg:mt-24"
+            >
+              <div className="relative p-0.5 rounded-[40px] overflow-hidden transition-all duration-500 group-hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-8 rounded-[40px] group-hover:border-yellow-500/50">
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <span className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-[12px] font-black text-black shadow-[0_0_20px_rgba(234,179,8,0.5)]">05</span>
+                    <h4 className="text-white font-black uppercase text-sm tracking-widest">Earn Rewards</h4>
+                  </div>
+                  <div className="aspect-[3/1] bg-black/40 rounded-3xl mb-6 border border-white/5 flex items-center justify-around group-hover:bg-yellow-500/10 transition-all">
+                     <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-400 transition-all" />
+                     <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs">XP</div>
+                     <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px]">NFT</div>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tight text-center">Gain XP, Tokens, & Digital Assets</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Open Widget */}
+            <div 
+              onMouseEnter={() => setHoveredCard(3)} 
+              onMouseLeave={() => setHoveredCard(null)}
+              className="group cursor-pointer"
+            >
+              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:scale-105">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-emerald-500/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(16,185,129,0.4)]">03</span>
+                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Open Widget</h4>
+                  </div>
+                  <div className="aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-emerald-500/10 transition-all">
+                     <Layout size={48} className="text-emerald-500/50 group-hover:text-emerald-400 transition-all" />
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Native In-App Quest Panel</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* --- BOTTOM CTA --- */}
+        <div className="mt-20 md:mt-40 w-full max-w-3xl text-center space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+           <div className="space-y-4">
+             <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight drop-shadow-2xl">
+                QuestLayer turns traffic <br/>
+                <span className="text-indigo-500">into engagement</span> <br/>
+                <span className="opacity-20">& engagement into ownership.</span>
+             </h2>
+           </div>
+
+           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+              <button 
+                onClick={onLaunch}
+                className="group relative w-full md:w-auto px-12 py-6 bg-orange-500 text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all active:scale-95 overflow-hidden"
+              >
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                <span className="relative flex items-center justify-center gap-3">
+                  Start Building Now <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
+              
+              <button className="w-full md:w-auto px-12 py-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-sm tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3">
+                <Globe size={18} /> Documentation
+              </button>
+           </div>
+
+           {/* Chain Marquee */}
+           <div className="pt-16 border-t border-white/5 overflow-hidden">
+             <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em] mb-8">Ecosystem Support</p>
+             <div className="flex flex-wrap justify-center gap-x-10 gap-y-6 opacity-30">
+                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">ETHEREUM</span>
+                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">SOLANA</span>
+                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">POLYGON</span>
+                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">BASE</span>
+                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">ARBITRUM</span>
+                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">OPTIMISM</span>
+             </div>
+           </div>
+        </div>
+      </div>
+
+      {/* Footer Branding */}
+      <div className="py-20 flex flex-col items-center gap-4 opacity-10">
+        <Zap size={24} className="text-white fill-white" />
+        <h3 className="pixel-text text-2xl text-white tracking-[0.5em] uppercase">
+          QuestLayer
+        </h3>
+      </div>
+    </div>
+  );
+};
+
+export default LandingPage;
