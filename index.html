@@ -49,6 +49,15 @@
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
+        @keyframes float-slow {
+          0% { transform: translate(0, 0); }
+          33% { transform: translate(10px, -15px); }
+          66% { transform: translate(-5px, 10px); }
+          100% { transform: translate(0, 0); }
+        }
+        .animate-float-slow {
+          animation: float-slow 15s ease-in-out infinite;
+        }
         .glow-orange {
           box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
         }

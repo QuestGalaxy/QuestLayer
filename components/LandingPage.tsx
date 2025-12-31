@@ -23,23 +23,71 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
   return (
     <div className="relative min-h-screen w-full bg-[#05010d] overflow-x-hidden overflow-y-auto custom-scroll selection:bg-orange-500/30 font-['Inter']">
       
+      {/* --- VIDEO BACKGROUND LAYER --- */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover opacity-20"
+        >
+          <source src="/questlayer.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#05010d]/50 via-transparent to-[#05010d]" />
+      </div>
+      
       {/* --- COSMIC BACKGROUND LAYER --- */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/10 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-900/10 blur-[150px] rounded-full" />
+      <div className="fixed inset-0 pointer-events-none z-[1]">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/15 blur-[150px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-900/15 blur-[150px] rounded-full" />
         
         {/* Animated Stars */}
-        {[...Array(30)].map((_, i) => (
+        {[...Array(40)].map((_, i) => (
           <div 
             key={i}
-            className="absolute rounded-full bg-white opacity-20 animate-pulse"
+            className="absolute rounded-full bg-white opacity-40 animate-pulse"
             style={{
               top: `${Math.random() * 100}%`,
               left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3}px`,
-              height: `${Math.random() * 3}px`,
+              width: `${1 + Math.random() * 2}px`,
+              height: `${1 + Math.random() * 2}px`,
               animationDelay: `${Math.random() * 5}s`,
               animationDuration: `${2 + Math.random() * 3}s`
+            }}
+          />
+        ))}
+
+        {/* Floating Particles */}
+        {[...Array(25)].map((_, i) => (
+          <div 
+            key={`p-${i}`}
+            className="absolute bg-indigo-500/30 rounded-full animate-float-slow"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${4 + Math.random() * 8}px`,
+              height: `${4 + Math.random() * 8}px`,
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${10 + Math.random() * 15}s`,
+              opacity: 0.2 + Math.random() * 0.3
+            }}
+          />
+        ))}
+
+        {/* Pixel Blocks */}
+        {[...Array(20)].map((_, i) => (
+          <div 
+            key={`px-${i}`}
+            className="absolute bg-orange-500/20 border border-orange-500/30 animate-pulse"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: '10px',
+              height: '10px',
+              transform: `rotate(${Math.random() * 360}deg)`,
+              animationDelay: `${Math.random() * 4}s`,
+              opacity: 0.15 + Math.random() * 0.2
             }}
           />
         ))}
@@ -261,20 +309,43 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
            {/* Chain Marquee */}
            <div className="pt-16 border-t border-white/5 overflow-hidden">
              <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em] mb-8">Ecosystem Support</p>
-             <div className="flex flex-wrap justify-center gap-x-10 gap-y-6 opacity-30">
-                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">ETHEREUM</span>
-                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">SOLANA</span>
-                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">POLYGON</span>
-                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">BASE</span>
-                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">ARBITRUM</span>
-                <span className="pixel-text text-xs hover:opacity-100 transition-opacity cursor-default">OPTIMISM</span>
+             <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-10 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <svg width="32" height="32" viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" className="group-hover:scale-110 transition-transform"><path d="M127.961 0l-2.795 9.5v275.668l2.795 2.79 127.962-75.638z" fill="#343434"/><path d="M127.962 0L0 212.32l127.962 75.639V154.158z" fill="#8C8C8C"/><path d="M127.961 312.187l-1.575 1.92V414.41l1.575 4.59 128.038-180.32z" fill="#3C3C3B"/><path d="M127.962 419V312.187L0 238.68z" fill="#8C8C8C"/><path d="M127.961 287.958l127.96-75.637-127.96-58.162z" fill="#141414"/><path d="M0 212.32l127.962 75.638V154.158z" fill="#393939"/></svg>
+                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">ETHEREUM</span>
+                </div>
+                
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <svg width="32" height="32" viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform"><path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H4.6c-5.8 0-8.7-7-4.6-11.1l64.6-62.7z" fill="#9945FF"/><path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H4.6c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" fill="#14F195"/><path d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" fill="#9945FF"/></svg>
+                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">SOLANA</span>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform"><path d="M12 0.75L14.6515 8.91031H23.2307L16.2896 13.9544L18.9411 22.1147L12 17.0706L5.05887 22.1147L7.71039 13.9544L0.769264 8.91031H9.34848L12 0.75Z" fill="#8247E5"/></svg>
+                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">POLYGON</span>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform"><circle cx="12" cy="12" r="12" fill="#0052FF"/><path d="M12 18.5V5.5C15.5899 5.5 18.5 8.41015 18.5 12C18.5 15.5899 15.5899 18.5 12 18.5Z" fill="white"/></svg>
+                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">BASE</span>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform"><circle cx="12" cy="12" r="12" fill="#28A0F0"/><path d="M12 16.5L16.5 12L12 7.5L7.5 12L12 16.5Z" fill="white"/></svg>
+                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">ARBITRUM</span>
+                </div>
+
+                <div className="flex flex-col items-center gap-3 group cursor-default">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform"><circle cx="12" cy="12" r="12" fill="#FF0420"/><path d="M8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12Z" fill="white"/></svg>
+                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">OPTIMISM</span>
+                </div>
              </div>
            </div>
         </div>
       </div>
 
       {/* Footer Branding */}
-      <div className="py-20 flex flex-col items-center gap-4 opacity-10">
+      <div className="py-10 flex flex-col items-center gap-4 opacity-10">
         <Zap size={24} className="text-white fill-white" />
         <h3 className="pixel-text text-2xl text-white tracking-[0.5em] uppercase">
           QuestLayer
