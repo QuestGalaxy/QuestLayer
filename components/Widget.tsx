@@ -21,9 +21,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const [isConnecting, setIsConnecting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | number | null>(null);
   const [sharedPlatforms, setSharedPlatforms] = useState<string[]>([]);
+  const [verifyingPlatforms, setVerifyingPlatforms] = useState<string[]>([]);
   const [timerValue, setTimerValue] = useState(10);
   const [visualXP, setVisualXP] = useState(state.userXP);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const audioCtxRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
@@ -168,6 +170,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const handleShare = (platform: string) => {
     initAudio();
+    if (sharedPlatforms.includes(platform) || verifyingPlatforms.includes(platform)) return;
     const shareUrl = window.location.origin;
     const shareText = `Engage with ${state.projectName} on QuestLayer and earn rewards!`;
     let url = '';
@@ -182,11 +185,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
     if (url) {
       window.open(url, '_blank');
-      if (!sharedPlatforms.includes(platform)) {
-        setSharedPlatforms(prev => [...prev, platform]);
-        playSound('reward');
-        setState(prev => ({ ...prev, userXP: prev.userXP + 100 }));
+      setVerifyingPlatforms(prev => [...prev, platform]);
+      if (shareVerifyTimeoutsRef.current[platform]) {
+        clearTimeout(shareVerifyTimeoutsRef.current[platform]!);
       }
+      shareVerifyTimeoutsRef.current[platform] = setTimeout(() => {
+        setVerifyingPlatforms(prev => prev.filter(p => p !== platform));
+        if (!sharedPlatforms.includes(platform)) {
+          setSharedPlatforms(prev => [...prev, platform]);
+          playSound('reward');
+          setState(prev => ({ ...prev, userXP: prev.userXP + 100 }));
+        }
+      }, 10000);
     }
   };
 
@@ -460,14 +470,41 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                       { id: 'li', icon: <Linkedin size={12} />, color: '#0A66C2' }
                     ].map(platform => {
                       const isShared = sharedPlatforms.includes(platform.id);
+                      const isVerifying = verifyingPlatforms.includes(platform.id);
                       return (
                         <button 
                           key={platform.id}
                           onClick={() => handleShare(platform.id)}
-                          className={`relative w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white transition-all shadow-md active:scale-90 hover:scale-105 ${isShared ? 'grayscale opacity-10 pointer-events-none' : ''}`}
+                          className={`relative w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white transition-all shadow-md active:scale-90 hover:scale-105 ${isShared ? 'grayscale opacity-10 pointer-events-none' : ''} ${isVerifying ? 'pointer-events-none' : ''}`}
                           style={{ backgroundColor: platform.color }}
                         >
                           {platform.icon}
+                          {isVerifying && (
+                            <svg
+                              className="absolute inset-[-4px] h-[calc(100%+8px)] w-[calc(100%+8px)] -rotate-90"
+                              viewBox="0 0 40 40"
+                            >
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="18"
+                                fill="none"
+                                stroke="rgba(255,255,255,0.25)"
+                                strokeWidth="3"
+                              />
+                              <circle
+                                cx="20"
+                                cy="20"
+                                r="18"
+                                fill="none"
+                                stroke="rgba(255,255,255,0.9)"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                className="ql-share-progress"
+                                style={{ animationDuration: '10s' }}
+                              />
+                            </svg>
+                          )}
                           {isShared && (
                             <div className="absolute -top-0.5 -right-0.5 bg-white rounded-full p-0.5 border border-slate-100 shadow-sm">
                                <CheckCircle2 size={6} className="text-emerald-500" />
@@ -542,6 +579,20 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
       </div>
         )}
       </div>
+      <style>{`
+        .ql-share-progress {
+          stroke-dasharray: 113;
+          stroke-dashoffset: 113;
+          animation-name: ql-share-progress;
+          animation-timing-function: linear;
+          animation-fill-mode: forwards;
+        }
+        @keyframes ql-share-progress {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+      `}</style>
     </>
   );
 };
