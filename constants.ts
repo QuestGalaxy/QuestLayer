@@ -59,7 +59,6 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
 };
 
 export const INITIAL_TASKS: Task[] = [
-  { id: 'viral-share', title: 'Viral Expansion', desc: 'Spread the word across your social networks and earn 100 XP per platform shared.', link: 'share', xp: 100 },
   { id: 1, title: 'Verify Protocol X', desc: 'Secure your spot in the ecosystem by following our primary governance channel.', link: 'https://twitter.com', xp: 500 },
   { id: 2, title: 'Community Discord', desc: 'Join the verified builders and contributors to unlock restricted channels.', link: 'https://discord.com', xp: 800 },
   { id: 3, title: 'Review Tokenomics', desc: 'Deep dive into the latest v3 whitepaper regarding liquidity incentives.', link: 'https://google.com', xp: 300 },
