@@ -254,7 +254,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     <>
       <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
 
-      <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-1rem)]' : 'max-h-[calc(100vh-1rem)]') : ''}`}>
+      <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}>
         <button
           onClick={() => {
             if (!isOpen) initAudio();
