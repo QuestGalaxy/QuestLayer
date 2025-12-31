@@ -68,6 +68,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
                   One embed • No redirects • Instant Web3
                 </p>
              </div>
+             <div className="mt-6 flex items-center justify-center gap-4">
+               <button
+                 onClick={onLaunch}
+                 className="px-6 py-3 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95"
+               >
+                 Start Building
+               </button>
+               <button className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all">
+                 View Demo
+               </button>
+             </div>
            </div>
         </div>
 
