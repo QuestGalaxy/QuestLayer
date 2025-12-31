@@ -254,9 +254,12 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     <>
       <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
 
-      <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'h-full max-h-[calc(100%-1rem)]' : 'max-h-[calc(100vh-1rem)]') : ''}`}>
+      <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-1rem)]' : 'max-h-[calc(100vh-1rem)]') : ''}`}>
         <button
-          onClick={() => { setIsOpen(true); initAudio(); }}
+          onClick={() => {
+            if (!isOpen) initAudio();
+            setIsOpen(prev => !prev);
+          }}
           style={(!isLightTheme && !isTransparentTheme) ? {
             backgroundColor: state.accentColor,
             borderColor: state.activeTheme === 'cyber' ? state.accentColor : 'transparent'
@@ -286,7 +289,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
         {isOpen && (
           <div
-            className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `flex-1 min-h-0 ${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font}`}
+            className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font}`}
             style={{
               borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))
             }}
@@ -322,7 +325,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         {/* Body */}
         <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-5 space-y-3 md:space-y-5 custom-scroll">
           {!isConnected ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-10">
+            <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
               <div className="space-y-2">
                 <div 
                   className="mx-auto w-10 h-10 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
