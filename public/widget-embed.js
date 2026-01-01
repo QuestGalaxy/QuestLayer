@@ -25,19 +25,27 @@
     return path;
   }
 
+  function runInit(mod) {
+    var init = mod.init || mod.initQuestLayer || (window.QuestLayer && window.QuestLayer.init);
+    if (init) {
+      init(config);
+    } else {
+      console.error("[QuestLayer] Widget runtime loaded, but init() is missing.");
+    }
+  }
+
   function initWidget() {
     var runtimeUrl = resolveFromScript("widget-runtime.js");
     import(runtimeUrl)
-      .then(function (mod) {
-        var init = mod.init || mod.initQuestLayer || (window.QuestLayer && window.QuestLayer.init);
-        if (init) {
-          init(config);
-        } else {
-          console.error("[QuestLayer] Widget runtime loaded, but init() is missing.");
-        }
-      })
+      .then(runInit)
       .catch(function (err) {
-        console.error("[QuestLayer] Failed to load widget runtime", err);
+        var fallbackUrl = resolveFromScript("widget-runtime.tsx");
+        import(fallbackUrl)
+          .then(runInit)
+          .catch(function (fallbackErr) {
+            console.error("[QuestLayer] Failed to load widget runtime", err);
+            console.error("[QuestLayer] Failed to load widget runtime fallback", fallbackErr);
+          });
       });
   }
 

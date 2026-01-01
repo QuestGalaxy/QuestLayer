@@ -36,6 +36,7 @@ const HOST_ID = 'questlayer-widget-host';
 const ROOT_ID = 'questlayer-widget-root';
 const STYLE_ATTR = 'data-questlayer-styles';
 const FONT_ATTR = 'data-questlayer-fonts';
+const GLOBAL_FONT_ATTR = 'data-questlayer-fonts-global';
 const FONT_URL =
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Mono&family=Inter:wght@400;700;900&display=swap';
 let widgetRoot: Root | null = null;
@@ -75,7 +76,7 @@ const ensureMount = (): HTMLDivElement => {
       :host {
         all: initial;
         display: block;
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
@@ -93,6 +94,14 @@ const ensureMount = (): HTMLDivElement => {
     link.href = FONT_URL;
     link.setAttribute(FONT_ATTR, 'true');
     shadow.appendChild(link);
+  }
+
+  if (document.head && !document.head.querySelector(`link[${GLOBAL_FONT_ATTR}]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = FONT_URL;
+    link.setAttribute(GLOBAL_FONT_ATTR, 'true');
+    document.head.appendChild(link);
   }
 
   let container = shadow.querySelector(`#${ROOT_ID}`) as HTMLDivElement | null;
