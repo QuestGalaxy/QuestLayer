@@ -55,6 +55,24 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     itemCard: 'bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-sm',
     iconBox: 'rounded-2xl bg-white/10 border border-white/20 shadow-inner',
     font: 'font-["Plus_Jakarta_Sans"]'
+  },
+  terminal: {
+    card: 'bg-[#0b0f0c] rounded-none border border-[#1f3d2a] shadow-[0_0_0_1px_rgba(24,255,131,0.12)]',
+    trigger: 'rounded-none border border-[#1f3d2a] bg-[#0b0f0c] text-[#86efac] tracking-[0.2em]',
+    header: 'bg-[#0f1612] border-b border-[#1f3d2a]',
+    button: 'rounded-none border border-[#1f3d2a] bg-[#0f1612] text-[#86efac] hover:bg-[#142018] transition-colors',
+    itemCard: 'bg-[#0f1612] border border-[#1f3d2a] rounded-none',
+    iconBox: 'rounded-none border border-[#1f3d2a] bg-[#0b0f0c]',
+    font: 'font-["Space_Mono"]'
+  },
+  aura: {
+    card: 'bg-[#fff7f3] rounded-[36px] border border-rose-200 shadow-[0_20px_50px_rgba(244,63,94,0.18)]',
+    trigger: 'rounded-full border border-rose-200 bg-rose-100 text-rose-900',
+    header: 'bg-rose-100 border-b border-rose-200',
+    button: 'rounded-full bg-rose-200 text-rose-900 border border-rose-300 hover:bg-rose-300 transition-colors',
+    itemCard: 'bg-white border-rose-200 rounded-[28px]',
+    iconBox: 'rounded-full bg-rose-100 border border-rose-200',
+    font: 'font-["Inter"]'
   }
 };
 

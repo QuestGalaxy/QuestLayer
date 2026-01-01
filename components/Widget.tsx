@@ -30,7 +30,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const animationFrameRef = useRef<number | null>(null);
 
   const activeTheme = THEMES[state.activeTheme];
-  const isLightTheme = ['minimal', 'brutal'].includes(state.activeTheme);
+  const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
   const isTransparentTheme = state.activeTheme === 'glass';
 
   const positionClasses = isPreview ? 'absolute' : 'fixed';

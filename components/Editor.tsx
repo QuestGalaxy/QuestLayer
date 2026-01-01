@@ -98,7 +98,7 @@ const Editor: React.FC<EditorProps> = ({
             <h3>Style & Layout</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass'] as ThemeType[]).map((t) => (
+            {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setActiveTheme(t)}
