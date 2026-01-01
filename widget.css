@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@layer base {
+  :host {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .theme-transition {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .custom-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    overscroll-behavior: contain;
+  }
+
+  .custom-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+}

@@ -30,14 +30,14 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   gaming: {
-    card: 'bg-indigo-950 rounded-t-3xl md:rounded-3xl border-[#fbbf24]',
-    trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic shadow-[4px_4px_0px_#fbbf24]',
-    header: 'bg-black/40 border-b-2 border-[#fbbf24]',
-    button: 'rounded-lg border-b-4 border-amber-800 bg-amber-500 text-black active:border-b-0 active:translate-y-1',
-    itemCard: 'bg-indigo-900 rounded-xl border-indigo-400/20',
-    iconBox: 'rounded-lg',
-    font: 'font-["Plus_Jakarta_Sans"]'
-  },
+      card: 'bg-indigo-950 rounded-t-3xl md:rounded-3xl border-2 border-[#fbbf24]',
+      trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic',
+      header: 'bg-black/40 border-b-2 border-[#fbbf24]',
+      button: 'rounded-lg border-b-4 border-amber-800 bg-amber-500 text-black active:border-b-0 active:translate-y-1',
+      itemCard: 'bg-indigo-900 rounded-xl border-indigo-400/20',
+      iconBox: 'rounded-lg',
+      font: 'font-["Plus_Jakarta_Sans"]'
+    },
   brutal: {
     card: 'bg-white rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]',
     trigger: 'rounded-none border-4 border-black bg-white text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
@@ -48,8 +48,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   glass: {
-    card: 'bg-white/5 backdrop-blur-3xl rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
-    trigger: 'rounded-full bg-white/10 backdrop-blur-xl border border-white/30 text-white shadow-xl',
+    card: 'bg-slate-950/40 backdrop-blur-3xl rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
+    trigger: 'rounded-full bg-slate-950/40 backdrop-blur-xl border border-white/30 text-white shadow-xl',
     header: 'bg-white/5 border-b border-white/10 backdrop-blur-md',
     button: 'rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-md transition-all active:scale-95 shadow-lg',
     itemCard: 'bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-sm',

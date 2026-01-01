@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import Widget from './components/Widget.tsx';
 import { INITIAL_TASKS } from './constants.ts';
 import type { AppState } from './types.ts';
+import widgetStyles from './widget.css?inline';
 
 export type WidgetConfig = Partial<Pick<AppState, 'projectName' | 'accentColor' | 'position' | 'activeTheme' | 'tasks'>>;
 
@@ -31,9 +32,79 @@ const normalizeConfig = (config?: WidgetConfig): AppState => ({
   tasks: config?.tasks?.length ? config.tasks : DEFAULT_STATE.tasks
 });
 
+const HOST_ID = 'questlayer-widget-host';
 const ROOT_ID = 'questlayer-widget-root';
+const STYLE_ATTR = 'data-questlayer-styles';
+const FONT_ATTR = 'data-questlayer-fonts';
+const FONT_URL =
+  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Mono&family=Inter:wght@400;700;900&display=swap';
 let widgetRoot: Root | null = null;
 let renderVersion = 0;
+
+const ensureMount = (): HTMLDivElement => {
+  const legacyRoot = document.getElementById(ROOT_ID);
+  if (legacyRoot && legacyRoot.parentElement && legacyRoot.parentElement.id !== HOST_ID) {
+    legacyRoot.remove();
+  }
+
+  let host = document.getElementById(HOST_ID) as HTMLDivElement | null;
+  if (!host) {
+    host = document.createElement('div');
+    host.id = HOST_ID;
+    host.style.cssText = [
+      'position: fixed',
+      'top: 0',
+      'left: 0',
+      'width: 100%',
+      'height: 100%',
+      'z-index: 2147483647',
+      'pointer-events: none',
+      'font-size: 16px',
+      'line-height: normal'
+    ].join('; ');
+    document.body.appendChild(host);
+  }
+
+  const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
+
+  if (!shadow.querySelector(`style[${STYLE_ATTR}]`)) {
+    const style = document.createElement('style');
+    style.setAttribute(STYLE_ATTR, 'true');
+    // Ensure preflight/reset is applied inside shadow dom
+    style.textContent = `
+      :host {
+        all: initial;
+        display: block;
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      ${widgetStyles}
+    `;
+    shadow.appendChild(style);
+  }
+
+  if (!shadow.querySelector(`link[${FONT_ATTR}]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = FONT_URL;
+    link.setAttribute(FONT_ATTR, 'true');
+    shadow.appendChild(link);
+  }
+
+  let container = shadow.querySelector(`#${ROOT_ID}`) as HTMLDivElement | null;
+  if (!container) {
+    container = document.createElement('div');
+    container.id = ROOT_ID;
+    container.style.pointerEvents = 'auto';
+    shadow.appendChild(container);
+  }
+
+  return container;
+};
 
 const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ initialState, version }) => {
   const [state, setState] = useState<AppState>(initialState);
@@ -58,12 +129,7 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
 export const initQuestLayer = (config?: WidgetConfig) => {
   const boot = () => {
     const state = normalizeConfig(config);
-    let container = document.getElementById(ROOT_ID);
-    if (!container) {
-      container = document.createElement('div');
-      container.id = ROOT_ID;
-      document.body.appendChild(container);
-    }
+    const container = ensureMount();
     if (!widgetRoot) {
       widgetRoot = createRoot(container);
     }

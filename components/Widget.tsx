@@ -238,12 +238,14 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const isRight = state.position.includes('right');
   const wrapperClasses = [
     positionClasses,
-    'z-50',
+    'z-[2147483647]',
     'flex',
+    activeTheme.font,
     isBottom ? 'flex-col-reverse' : 'flex-col',
     isRight ? 'items-end' : 'items-start',
     getPositionClasses(),
     'gap-2',
+    'antialiased'
   ].join(' ');
 
   const formatXP = (val: number) => val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val;
@@ -252,7 +254,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   return (
     <>
-      <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
+      {isOpen && (
+        <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
+      )}
 
       <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}>
         <button
@@ -262,14 +266,15 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           }}
           style={(!isLightTheme && !isTransparentTheme) ? {
             backgroundColor: state.accentColor,
-            borderColor: state.activeTheme === 'cyber' ? state.accentColor : 'transparent'
+            borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : 'transparent'),
+            boxShadow: state.activeTheme === 'gaming' ? `4px 4px 0px 0px #fbbf24` : undefined
           } : (isTransparentTheme ? {
             backgroundColor: 'rgba(255, 255, 255, 0.05)',
             backdropFilter: 'blur(20px)',
             borderColor: `${state.accentColor}60`,
             boxShadow: `0 0 20px ${state.accentColor}30`
           } : {})}
-          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger}`}
+          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'}`}
         >
           {!isConnected ? (
             <span className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-sm">
@@ -289,13 +294,16 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
         {isOpen && (
           <div
-            className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font}`}
+            className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
             style={{
               borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))
             }}
           >
             {/* Header */}
-            <div className={`px-3 py-2.5 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}>
+            <div 
+              className={`px-3 py-2.5 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}
+              style={{ borderColor: state.activeTheme === 'gaming' ? '#fbbf24' : undefined }}
+            >
               <div className="flex items-center gap-2 md:gap-3 truncate">
                 <div
                   style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
@@ -303,7 +311,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 >
                   <Zap size={10} md:size={14} fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
                 </div>
-                <span className={`font-black text-[10px] md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
+                <span 
+                  className={`font-black text-[10px] md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
+                  style={isTransparentTheme ? { color: state.accentColor } : {}}
+                >
                   {state.projectName}
                 </span>
               </div>
@@ -419,7 +430,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                           borderColor: isActive ? state.accentColor : undefined,
                           backgroundColor: isActive ? `${state.accentColor}${isLightTheme ? '10' : '20'}` : undefined,
                           ringColor: isCurrent ? state.accentColor : 'transparent',
-                          ringOffsetColor: isLightTheme ? '#ffffff' : '#0f172a'
+                          ringOffsetColor: isLightTheme ? '#ffffff' : '#0f172a',
+                          boxShadow: (isActive && state.activeTheme === 'gaming') ? `2px 2px 0px 0px #fbbf24` : undefined
                         }}
                       >
                         <span className={`text-[5px] md:text-[7px] font-black uppercase ${isActive ? (isLightTheme ? 'text-slate-900' : 'text-white') : (isLightTheme ? 'text-black' : 'text-white')}`}>D{day}</span>
@@ -441,7 +453,16 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 {!state.dailyClaimed ? (
                   <button 
                     onClick={claimDaily} 
-                    style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}20` } : (isLightTheme ? { backgroundColor: state.accentColor, color: 'white' } : {}))} 
+                    style={(!isLightTheme && !isTransparentTheme) ? { 
+                      backgroundColor: state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor,
+                      borderColor: state.activeTheme === 'gaming' ? '#b45309' : state.accentColor 
+                    } : (isTransparentTheme ? { 
+                      border: `2px solid ${state.accentColor}`, 
+                      backgroundColor: `${state.accentColor}20` 
+                    } : (isLightTheme ? { 
+                      backgroundColor: state.accentColor, 
+                      color: 'white' 
+                    } : {}))} 
                     className={`w-full py-1.5 md:py-3 font-black text-[8px] md:text-[9px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
                   >
                     Claim Daily Bonus
@@ -463,7 +484,13 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                     +100 XP EACH
                   </p>
                 </div>
-                <div className={`p-2 md:p-4 border border-opacity-10 shadow-sm flex flex-col items-center gap-2 ${activeTheme.itemCard}`}>
+                <div 
+                  className={`p-2 md:p-4 border border-opacity-10 shadow-sm flex flex-col items-center gap-2 ${activeTheme.itemCard}`}
+                  style={{ 
+                    borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
+                    boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
+                  }}
+                >
                   <div className="flex gap-2.5 md:gap-5 items-center justify-center w-full">
                     {[
                       { id: 'x', icon: <Twitter size={12} />, color: '#000000' },
@@ -527,7 +554,14 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 </p>
                 <div className="space-y-2 md:space-y-3 pb-2">
                   {state.tasks.map(task => (
-                    <div key={task.id} className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard}`}>
+                    <div 
+                        key={task.id} 
+                        className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard}`}
+                        style={{ 
+                          borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
+                          boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
+                        }}
+                      >
                       <div className="flex justify-between items-start mb-0.5 gap-2">
                         <h5 className={`text-[8px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
                           {task.title}
@@ -546,10 +580,22 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                         onClick={() => startQuest(task)} 
                         disabled={loadingId !== null && loadingId !== task.id}
                         style={(!isLightTheme && !isTransparentTheme) ? { 
+                          backgroundColor: state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor,
+                          borderColor: state.activeTheme === 'gaming' ? '#b45309' : state.accentColor,
+                          color: state.activeTheme === 'gaming' ? 'black' : 'white'
+                        } : (isTransparentTheme ? { 
                           borderColor: state.accentColor, 
-                          color: loadingId === task.id ? 'gray' : 'white',
-                          backgroundColor: 'transparent'
-                        } : (isTransparentTheme ? { borderColor: state.accentColor, backgroundColor: loadingId === task.id ? `${state.accentColor}10` : 'transparent' } : (loadingId === task.id ? { backgroundColor: '#f8fafc', color: '#1e293b', borderColor: '#cbd5e1' } : { backgroundColor: state.accentColor, color: 'white', borderColor: state.accentColor }))} 
+                          backgroundColor: loadingId === task.id ? `${state.accentColor}10` : 'transparent',
+                          color: 'white'
+                        } : (loadingId === task.id ? { 
+                          backgroundColor: '#f8fafc', 
+                          color: '#1e293b', 
+                          borderColor: '#cbd5e1' 
+                        } : { 
+                          backgroundColor: state.accentColor, 
+                          color: 'white', 
+                          borderColor: state.accentColor 
+                        }))} 
                         className={`w-full h-7 md:h-9 border-2 font-black text-[7px] md:text-[8px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
                       >
                         {loadingId !== task.id ? (
@@ -573,7 +619,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         </div>
 
         {/* Footer */}
-        <div className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.header}`}>
+        <div 
+          className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.header}`}
+          style={{ borderColor: state.activeTheme === 'gaming' ? state.accentColor : undefined }}
+        >
           <Zap size={8} md:size={10} className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current`} style={!isLightTheme ? { color: state.accentColor } : {}} />
           <p className={`text-[5px] md:text-[7px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'}`}>
             QuestLayer Engine v2.5
