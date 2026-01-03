@@ -4,6 +4,8 @@ import Editor from './components/Editor.tsx';
 import Widget from './components/Widget.tsx';
 import LandingPage from './components/LandingPage.tsx';
 import HomePage from './components/HomePage.tsx';
+import SettingsPage from './components/SettingsPage.tsx';
+import ProfilePage from './components/ProfilePage.tsx';
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
 import { Layout, Monitor, Smartphone, Globe, Shield, Zap, Search, Menu, Home, Sparkles, UserCircle2, Settings } from 'lucide-react';
@@ -178,47 +180,17 @@ const App: React.FC = () => {
         )}
 
         {activeSection === 'profile' && (
-          <section className="flex-1 overflow-y-auto px-6 py-10">
-            <div className="mx-auto max-w-3xl space-y-6">
-              <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl">
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-indigo-300">Profile</p>
-                <h2 className="mt-3 text-2xl font-semibold text-white">Your QuestLayer identity</h2>
-                <p className="mt-2 text-sm text-slate-400">
-                  Manage your avatar, connected wallets, and public profile visibility from this space.
-                </p>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                {['Connected wallets', 'Notification channels'].map(item => (
-                  <div key={item} className="rounded-3xl border border-white/10 bg-slate-900/40 p-6">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">{item}</p>
-                    <p className="mt-3 text-sm text-slate-500">Coming soon with deeper integrations.</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          <ProfilePage />
         )}
 
         {activeSection === 'settings' && (
-          <section className="flex-1 overflow-y-auto px-6 py-10">
-            <div className="mx-auto max-w-3xl space-y-6">
-              <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6 shadow-2xl">
-                <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-indigo-300">Settings</p>
-                <h2 className="mt-3 text-2xl font-semibold text-white">Control how your hub behaves</h2>
-                <p className="mt-2 text-sm text-slate-400">
-                  Fine tune permissions, environment toggles, and publishing preferences.
-                </p>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                {['Workspace preferences', 'Security & access'].map(item => (
-                  <div key={item} className="rounded-3xl border border-white/10 bg-slate-900/40 p-6">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-300">{item}</p>
-                    <p className="mt-3 text-sm text-slate-500">Configure defaults for your team.</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          <SettingsPage
+            state={state}
+            setProjectName={handleSetName}
+            setAccentColor={handleSetColor}
+            setPosition={handleSetPos}
+            setActiveTheme={handleSetTheme}
+          />
         )}
 
         {activeSection === 'builder' && (
