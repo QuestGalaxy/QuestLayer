@@ -83,7 +83,7 @@ const App: React.FC = () => {
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
                   <Zap size={18} className="text-indigo-300" />
                 </div>
-                <div className="hidden md:block md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                <div className="hidden md:block md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">QuestLayer</p>
                   <p className="text-[10px] uppercase tracking-[0.35em] text-slate-400">Builder Suite</p>
                 </div>
@@ -97,7 +97,7 @@ const App: React.FC = () => {
             </div>
             <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 md:justify-center md:group-hover:justify-start md:transition-all">
               <Search size={12} />
-              <span className="hidden md:inline md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+              <span className="hidden md:inline md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                 Search commands
               </span>
             </div>
@@ -105,7 +105,7 @@ const App: React.FC = () => {
 
           <nav className="flex-1 overflow-y-auto custom-scroll px-4 py-6 space-y-6">
             <div className="space-y-2">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                 Workspace
               </p>
               <button
@@ -117,7 +117,7 @@ const App: React.FC = () => {
                 }`}
               >
                 <Home size={16} />
-                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                <span className="md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                   Home
                 </span>
               </button>
@@ -130,14 +130,14 @@ const App: React.FC = () => {
                 }`}
               >
                 <Sparkles size={16} />
-                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                <span className="md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                   Builder + Widget
                 </span>
               </button>
             </div>
 
             <div className="space-y-2">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                 Account
               </p>
               <button
@@ -149,7 +149,7 @@ const App: React.FC = () => {
                 }`}
               >
                 <UserCircle2 size={16} />
-                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                <span className="md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                   Profile
                 </span>
               </button>
@@ -162,7 +162,7 @@ const App: React.FC = () => {
                 }`}
               >
                 <Settings size={16} />
-                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                <span className="md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                   Settings
                 </span>
               </button>
