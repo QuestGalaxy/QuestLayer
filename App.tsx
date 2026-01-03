@@ -96,7 +96,7 @@ const App: React.FC = () => {
                 <Layout size={16} />
               </button>
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 shadow-[0_10px_25px_rgba(15,23,42,0.35)] md:justify-center md:group-hover:justify-start md:transition-all">
+            <div className="mt-4 flex w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 shadow-[0_10px_25px_rgba(15,23,42,0.35)] md:justify-center md:group-hover:justify-start md:transition-all">
               <Search size={12} />
               <span className="hidden md:inline md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                 Search commands
@@ -171,7 +171,7 @@ const App: React.FC = () => {
           </nav>
 
           <div className="relative z-10 px-5 pb-6">
-            <div className="rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/15 via-slate-900/60 to-slate-950/80 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.6)]">
+            <div className="rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/15 via-slate-900/60 to-slate-950/80 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.6)] md:hidden md:group-hover:block">
               <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-indigo-300">Productivity Boost</p>
               <p className="mt-2 text-sm text-slate-200">
                 Jump back into your latest build with one click.
