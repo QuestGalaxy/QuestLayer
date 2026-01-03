@@ -72,18 +72,18 @@ const App: React.FC = () => {
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`group fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-[transform,width] duration-300 md:static md:translate-x-0 md:w-20 md:hover:w-72 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/90 px-5 py-4 backdrop-blur-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between md:justify-center md:group-hover:justify-between transition-all">
+              <div className="flex items-center gap-3 md:group-hover:gap-3 md:justify-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
                   <Zap size={18} className="text-indigo-300" />
                 </div>
-                <div>
+                <div className="hidden md:block md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">QuestLayer</p>
                   <p className="text-[10px] uppercase tracking-[0.35em] text-slate-400">Builder Suite</p>
                 </div>
@@ -95,62 +95,76 @@ const App: React.FC = () => {
                 <Layout size={16} />
               </button>
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400">
+            <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 md:justify-center md:group-hover:justify-start md:transition-all">
               <Search size={12} />
-              Search commands
+              <span className="hidden md:inline md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                Search commands
+              </span>
             </div>
           </div>
 
           <nav className="flex-1 overflow-y-auto custom-scroll px-4 py-6 space-y-6">
             <div className="space-y-2">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Workspace</p>
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                Workspace
+              </p>
               <button
                 onClick={() => handleSectionChange('home')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'home'
                     ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <Home size={16} />
-                Home
+                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                  Home
+                </span>
               </button>
               <button
                 onClick={() => handleSectionChange('builder')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'builder'
                     ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <Sparkles size={16} />
-                Builder + Widget
+                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                  Builder + Widget
+                </span>
               </button>
             </div>
 
             <div className="space-y-2">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Account</p>
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                Account
+              </p>
               <button
                 onClick={() => handleSectionChange('profile')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'profile'
                     ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <UserCircle2 size={16} />
-                Profile
+                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                  Profile
+                </span>
               </button>
               <button
                 onClick={() => handleSectionChange('settings')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'settings'
                     ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <Settings size={16} />
-                Settings
+                <span className="md:opacity-0 md:translate-x-2 md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
+                  Settings
+                </span>
               </button>
             </div>
           </nav>
