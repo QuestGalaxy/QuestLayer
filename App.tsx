@@ -72,15 +72,16 @@ const App: React.FC = () => {
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
       <aside
-        className={`group fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-[transform,width] duration-300 md:static md:translate-x-0 md:w-20 md:hover:w-72 ${
+        className={`group fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-[0_0_40px_rgba(15,23,42,0.8)] transition-[transform,width] duration-300 md:static md:translate-x-0 md:w-20 md:hover:w-72 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-full flex-col overflow-hidden">
+        <div className="relative flex h-full flex-col overflow-hidden">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.18),_transparent_50%)] opacity-80" />
           <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/90 px-5 py-4 backdrop-blur-xl">
             <div className="flex items-center justify-between md:justify-center md:group-hover:justify-between transition-all">
               <div className="flex items-center gap-3 md:group-hover:gap-3 md:justify-center">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-400/20 bg-indigo-500/15 shadow-[0_10px_30px_rgba(99,102,241,0.25)]">
                   <Zap size={18} className="text-indigo-300" />
                 </div>
                 <div className="hidden md:block md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
@@ -90,12 +91,12 @@ const App: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="md:hidden rounded-lg border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:text-white"
+                className="md:hidden rounded-lg border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:border-indigo-400/40 hover:text-white"
               >
                 <Layout size={16} />
               </button>
             </div>
-            <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 md:justify-center md:group-hover:justify-start md:transition-all">
+            <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400 shadow-[0_10px_25px_rgba(15,23,42,0.35)] md:justify-center md:group-hover:justify-start md:transition-all">
               <Search size={12} />
               <span className="hidden md:inline md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                 Search commands
@@ -103,17 +104,17 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto custom-scroll px-4 py-6 space-y-6">
+          <nav className="relative z-10 flex-1 overflow-y-auto custom-scroll px-4 py-6 space-y-6">
             <div className="space-y-2">
               <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 md:w-0 md:overflow-hidden md:opacity-0 md:translate-x-2 md:group-hover:w-auto md:group-hover:opacity-100 md:group-hover:translate-x-0 md:transition-all">
                 Workspace
               </p>
               <button
                 onClick={() => handleSectionChange('home')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
+                className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'home'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)] before:absolute before:left-1.5 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-indigo-400 before:shadow-[0_0_12px_rgba(99,102,241,0.7)]'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_20px_rgba(148,163,184,0.1)]'
                 }`}
               >
                 <Home size={16} />
@@ -123,10 +124,10 @@ const App: React.FC = () => {
               </button>
               <button
                 onClick={() => handleSectionChange('builder')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
+                className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'builder'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)] before:absolute before:left-1.5 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-indigo-400 before:shadow-[0_0_12px_rgba(99,102,241,0.7)]'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_20px_rgba(148,163,184,0.1)]'
                 }`}
               >
                 <Sparkles size={16} />
@@ -142,10 +143,10 @@ const App: React.FC = () => {
               </p>
               <button
                 onClick={() => handleSectionChange('profile')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
+                className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'profile'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)] before:absolute before:left-1.5 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-indigo-400 before:shadow-[0_0_12px_rgba(99,102,241,0.7)]'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_20px_rgba(148,163,184,0.1)]'
                 }`}
               >
                 <UserCircle2 size={16} />
@@ -155,10 +156,10 @@ const App: React.FC = () => {
               </button>
               <button
                 onClick={() => handleSectionChange('settings')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
+                className={`relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition md:justify-center md:px-3 md:group-hover:justify-start md:group-hover:px-4 md:group-hover:gap-3 ${
                   activeSection === 'settings'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)] before:absolute before:left-1.5 before:top-1/2 before:h-6 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-indigo-400 before:shadow-[0_0_12px_rgba(99,102,241,0.7)]'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_20px_rgba(148,163,184,0.1)]'
                 }`}
               >
                 <Settings size={16} />
@@ -168,6 +169,21 @@ const App: React.FC = () => {
               </button>
             </div>
           </nav>
+
+          <div className="relative z-10 px-5 pb-6">
+            <div className="rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-500/15 via-slate-900/60 to-slate-950/80 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.6)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-indigo-300">Productivity Boost</p>
+              <p className="mt-2 text-sm text-slate-200">
+                Jump back into your latest build with one click.
+              </p>
+              <button
+                onClick={() => handleSectionChange('builder')}
+                className="mt-4 w-full rounded-xl border border-indigo-400/30 bg-indigo-500/20 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-indigo-100 transition hover:bg-indigo-500/30"
+              >
+                Resume Builder
+              </button>
+            </div>
+          </div>
         </div>
       </aside>
 
