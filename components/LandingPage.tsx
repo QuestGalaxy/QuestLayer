@@ -98,16 +98,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
         {/* --- HERO SECTION --- */}
         <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
            <div className="flex flex-col items-center">
-             <div className="flex items-center gap-4 mb-6">
+             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-6">
                 <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20 glow-orange">
                   <Zap size={48} className="text-orange-500 fill-orange-500" />
                 </div>
-                <h1 className="pixel-text text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                <h1 className="pixel-text text-4xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
                   QUESTLAYER
                 </h1>
              </div>
-             <p className="text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.1] tracking-tight">
-               Turn Any Website Into an Interactive <br/>
+             <p className="text-xl sm:text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.1] tracking-tight">
+               Turn Any Website Into an Interactive <br className="hidden sm:block" />
                <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
              </p>
              <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full">
