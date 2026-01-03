@@ -5,7 +5,7 @@ import Widget from './components/Widget.tsx';
 import LandingPage from './components/LandingPage.tsx';
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
-import { Layout, Monitor, Smartphone, Globe, Shield, Zap, Search, Menu } from 'lucide-react';
+import { Layout, Monitor, Smartphone, Zap, Search, SlidersHorizontal, ChevronRight } from 'lucide-react';
 
 const App: React.FC = () => {
   const [showLanding, setShowLanding] = useState(true);
@@ -97,60 +97,72 @@ const App: React.FC = () => {
           } ${previewMode === 'mobile' ? 'max-w-[420px] mx-auto' : ''}`}
         >
           
-          {/* Mock Browser Header */}
-          <header className={`h-14 border-b flex items-center justify-between px-6 shrink-0 ${previewTheme === 'dark' ? 'border-white/5 bg-black/20' : 'border-slate-200 bg-white'}`}>
-             <div className="flex items-center gap-4">
-               <div className="flex gap-1.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${previewTheme === 'dark' ? 'bg-red-500/30' : 'bg-red-500/50'}`} />
-                  <div className={`w-2.5 h-2.5 rounded-full ${previewTheme === 'dark' ? 'bg-amber-500/30' : 'bg-amber-500/50'}`} />
-                  <div className={`w-2.5 h-2.5 rounded-full ${previewTheme === 'dark' ? 'bg-emerald-500/30' : 'bg-emerald-500/50'}`} />
-               </div>
-               <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${previewTheme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-100 border-slate-200'}`}>
-                 <Globe size={12} className={`${previewTheme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`} />
-                 <span className={`text-[10px] font-mono tracking-tighter ${previewTheme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>your-protocol.io</span>
-               </div>
-             </div>
-             <div className="flex items-center gap-6">
-                <div className={`hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-widest ${previewTheme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>
-                  <span className={`cursor-pointer transition-colors ${previewTheme === 'dark' ? 'hover:text-white' : 'hover:text-slate-900'}`}>Stake</span>
-                  <span className={`cursor-pointer transition-colors ${previewTheme === 'dark' ? 'hover:text-white' : 'hover:text-slate-900'}`}>Swap</span>
-                  <span className={`cursor-pointer transition-colors ${previewTheme === 'dark' ? 'hover:text-white' : 'hover:text-slate-900'}`}>Docs</span>
-                </div>
-                <Menu size={18} className={`${previewTheme === 'dark' ? 'text-slate-400' : 'text-slate-600'} lg:hidden`} />
-             </div>
-          </header>
-
-          {/* Mock Content */}
-          <div className={`flex-1 overflow-y-auto custom-scroll p-10 space-y-20 ${previewTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-             {/* Hero section mock */}
-             <div className="space-y-6 max-w-2xl">
-                <div className={`flex items-center gap-2 ${previewTheme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                  <Shield size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Protocol V3.2</span>
-                </div>
-                <h1 className={`text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.9] ${previewTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                  Liquid <span style={{ color: state.accentColor }}>Efficiency</span> <br/>
-                  Defined.
-                </h1>
-                <p className={`text-sm leading-relaxed max-w-md ${previewTheme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Experience the next generation of decentralized liquidity provisioning with cross-chain atomic settlements.
-                </p>
-                <div className="flex gap-3">
-                  <div style={{ backgroundColor: state.accentColor }} className="px-6 py-2.5 rounded-xl text-black font-black text-[10px] uppercase tracking-widest cursor-pointer hover:brightness-110">Launch App</div>
-                  <div className={`px-6 py-2.5 rounded-xl border font-black text-[10px] uppercase tracking-widest cursor-pointer ${previewTheme === 'dark' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 hover:bg-slate-100'}`}>Read Whitepaper</div>
-                </div>
-             </div>
-
-             {/* Grid mockup */}
-             <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${previewTheme === 'dark' ? 'opacity-30' : 'opacity-40'}`}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} className={`h-32 border rounded-3xl ${previewTheme === 'dark' ? 'border-white/5 bg-white/5' : 'border-slate-200 bg-slate-100'}`} />
+          <div className="flex flex-1 overflow-hidden bg-[#121212] text-slate-100">
+            <aside className="w-20 shrink-0 border-r border-white/10 bg-black/40 py-6 flex flex-col items-center gap-6">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <Zap size={22} className="text-emerald-400" />
+              </div>
+              <div className="flex flex-col items-center gap-5 text-white/40">
+                {['nodes', 'users', 'grid', 'chart', 'wallet', 'settings'].map((item, index) => (
+                  <div
+                    key={item}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center border transition ${
+                      index === 0 ? 'bg-white/10 border-white/20 text-white' : 'border-transparent hover:border-white/10'
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-sm bg-white/40" />
+                  </div>
                 ))}
-             </div>
+              </div>
+            </aside>
 
-             <div className={`h-64 border rounded-[3rem] w-full flex items-center justify-center ${previewTheme === 'dark' ? 'border-white/5 bg-white/5 opacity-20' : 'border-slate-200 bg-slate-100 opacity-40'}`}>
-                <p className={`text-[9px] font-black uppercase tracking-[1em] ${previewTheme === 'dark' ? 'text-white' : 'text-slate-700'}`}>Main Content Block</p>
-             </div>
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <header className="h-16 border-b border-white/10 bg-black/30 flex items-center justify-between px-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                      <Zap size={18} className="text-emerald-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold tracking-tight">Midday</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-white/10 text-white/70">PRO</span>
+                    </div>
+                  </div>
+                  <div className="w-px h-5 bg-white/10" />
+                  <button className="w-10 h-10 rounded-2xl border border-white/10 bg-white/5 text-white/50 flex items-center justify-center">
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+                <div className="text-[11px] text-white/40 font-medium tracking-[0.2em] uppercase">Dashboard</div>
+              </header>
+
+              <div className="relative flex-1 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#1f1f1f_0%,#121212_55%)]" />
+                <div className="relative z-10 h-full p-8">
+                  <div className="flex justify-end gap-3 mb-8">
+                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/50">
+                      <Search size={14} />
+                      <span className="hidden sm:inline">Search</span>
+                    </div>
+                    <button className="w-10 h-10 rounded-xl border border-dashed border-white/20 text-white/50 flex items-center justify-center">
+                      <SlidersHorizontal size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-center h-[calc(100%-4rem)]">
+                    <div className="w-full max-w-3xl rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur shadow-[0_0_40px_rgba(0,0,0,0.45)] p-10 flex flex-col justify-between min-h-[280px]">
+                      <div className="flex justify-between items-start">
+                        <span className="text-[11px] font-semibold tracking-[0.3em] uppercase text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded-full">
+                          Medium
+                        </span>
+                        <ChevronRight className="text-white/50" size={20} />
+                      </div>
+                      <div className="text-white/40 text-xs">AI-generated content</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* View Switcher Overlay (Desktop Only) */}
