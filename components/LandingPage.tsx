@@ -255,24 +255,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
               onMouseLeave={() => setHoveredCard(null)}
               className="group cursor-pointer"
             >
-              <div className="relative rounded-[40px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '1.2s' }}>
-                <div className="absolute -inset-6 rounded-[48px] bg-yellow-500/25 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[40px] card-aurora card-aurora-yellow opacity-70 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[40px] border border-white/10 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-yellow-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute right-7 top-7 h-16 w-16 rounded-full border border-yellow-500/40 opacity-50 card-ring pointer-events-none" />
-                <div className="relative rounded-[39px] bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_40px_90px_-60px_rgba(234,179,8,0.8)]">
-                  <div className="absolute inset-0 rounded-[39px] bg-[radial-gradient(circle_at_top,_rgba(253,230,138,0.25),transparent_60%)] opacity-80 pointer-events-none" />
-                  <div className="relative z-10 flex items-center justify-center gap-3 mb-6">
+              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '1.2s' }}>
+                <div className="absolute -inset-6 rounded-[40px] bg-yellow-500/25 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-yellow opacity-70 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-yellow-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-yellow-500/40 opacity-50 card-ring pointer-events-none" />
+                <div className="relative rounded-[31px] bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(234,179,8,0.8)]">
+                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(253,230,138,0.25),transparent_60%)] opacity-80 pointer-events-none" />
+                  <div className="relative z-10 flex items-center justify-center gap-3 mb-4">
                     <span className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-[12px] font-black text-black shadow-[0_0_20px_rgba(234,179,8,0.5)]">04</span>
                     <h4 className="text-white font-black uppercase text-sm tracking-widest">Earn Rewards</h4>
                   </div>
-                  <div className="relative z-10 aspect-[3/1] bg-black/40 rounded-3xl mb-6 border border-white/5 flex items-center justify-around group-hover:bg-yellow-500/10 transition-all overflow-hidden">
+                  <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-around group-hover:bg-yellow-500/10 transition-all overflow-hidden">
                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(253,230,138,0.3),transparent_65%)] pointer-events-none" />
-                     <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-200 group-hover:scale-110 transition-transform duration-500" />
-                     <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs group-hover:scale-110 transition-transform duration-500">XP</div>
-                     <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px] group-hover:scale-110 transition-transform duration-500">NFT</div>
+                     <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-200 reward-hop" style={{ animationDelay: '0.2s' }} />
+                     <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs reward-smash" style={{ animationDelay: '0.6s' }}>XP</div>
+                     <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px] reward-splash" style={{ animationDelay: '1s' }}>NFT</div>
                   </div>
                   <p className="relative z-10 text-[11px] text-slate-400 font-bold uppercase tracking-tight text-center">Gain XP, Tokens, & Digital Assets</p>
                 </div>
