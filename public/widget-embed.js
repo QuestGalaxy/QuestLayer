@@ -35,11 +35,12 @@
   }
 
   function initWidget() {
-    var runtimeUrl = resolveFromScript("widget-runtime.js");
+    var cacheBuster = "v=" + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    var runtimeUrl = resolveFromScript("widget-runtime.js") + "?" + cacheBuster;
     import(runtimeUrl)
       .then(runInit)
       .catch(function (err) {
-        var fallbackUrl = resolveFromScript("widget-runtime.tsx");
+        var fallbackUrl = resolveFromScript("widget-runtime.tsx") + "?" + cacheBuster;
         import(fallbackUrl)
           .then(runInit)
           .catch(function (fallbackErr) {
