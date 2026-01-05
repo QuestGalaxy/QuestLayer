@@ -3,9 +3,10 @@ import { ArrowRight, Rocket, Sparkles, ShieldCheck, Palette } from 'lucide-react
 
 interface HomePageProps {
   onStartBuilding: () => void;
+  onOpenPaywall: () => void;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ onStartBuilding }) => {
+const HomePage: React.FC<HomePageProps> = ({ onStartBuilding, onOpenPaywall }) => {
   return (
     <section className="flex-1 overflow-y-auto px-6 py-10">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-10">
@@ -20,13 +21,22 @@ const HomePage: React.FC<HomePageProps> = ({ onStartBuilding }) => {
                 Launch the builder, update your widget, and keep your community engaged—all from one modern dashboard.
               </p>
             </div>
-            <button
-              onClick={onStartBuilding}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-5 py-3 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-[0_0_30px_rgba(99,102,241,0.35)] transition hover:brightness-110"
-            >
-              Start Building
-              <ArrowRight size={14} />
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={onStartBuilding}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-500 px-5 py-3 text-[11px] font-black uppercase tracking-[0.3em] text-white shadow-[0_0_30px_rgba(99,102,241,0.35)] transition hover:brightness-110"
+              >
+                Start Building
+                <ArrowRight size={14} />
+              </button>
+              <button
+                onClick={onOpenPaywall}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-[11px] font-black uppercase tracking-[0.3em] text-slate-200 transition hover:text-white"
+              >
+                Go Pro
+                <Sparkles size={14} />
+              </button>
+            </div>
           </div>
         </div>
 
