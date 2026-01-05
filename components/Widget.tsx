@@ -598,9 +598,24 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                         }}
                       >
                       <div className="flex justify-between items-start mb-0.5 gap-2">
-                        <h5 className={`text-[8px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
-                          {task.title}
-                        </h5>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {task.icon ? (
+                            <div 
+                              className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+                              style={{ background: `${state.accentColor}10` }}
+                            >
+                              <img
+                                src={task.icon}
+                                alt=""
+                                className="h-4 w-4 md:h-5 md:w-5 object-contain"
+                                loading="lazy"
+                              />
+                            </div>
+                          ) : null}
+                          <h5 className={`text-[8px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
+                            {task.title}
+                          </h5>
+                        </div>
                         <span 
                           className={`text-[6px] md:text-[8px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
                           style={{ background: `${state.accentColor}10`, color: state.accentColor }}

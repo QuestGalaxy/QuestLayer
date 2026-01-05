@@ -8,6 +8,7 @@ export interface Task {
   title: string;
   desc: string;
   link: string;
+  icon?: string;
   xp: number;
 }
 

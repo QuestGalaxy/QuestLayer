@@ -46,6 +46,7 @@ const Editor: React.FC<EditorProps> = ({
       title: 'New Quest',
       desc: 'Enter mission details...',
       link: 'https://',
+      icon: '',
       xp: 100
     };
     setTasks([newTask, ...state.tasks]);
@@ -193,9 +194,19 @@ const Editor: React.FC<EditorProps> = ({
               <div key={task.id} className="bg-white/5 rounded-2xl border border-white/5 overflow-hidden transition-all group">
                 {editingId !== task.id ? (
                   <div className="p-4 flex items-center justify-between">
-                    <div className="truncate mr-4">
-                      <p className="text-xs font-black text-white truncate uppercase">{task.title}</p>
-                      <p className="text-[10px] text-indigo-400 font-bold">{task.xp} XP Reward</p>
+                    <div className="truncate mr-4 flex items-center gap-2">
+                      {task.icon ? (
+                        <img
+                          src={task.icon}
+                          alt=""
+                          className="h-6 w-6 rounded-full border border-white/10 bg-white/10 object-contain"
+                          loading="lazy"
+                        />
+                      ) : null}
+                      <div className="truncate">
+                        <p className="text-xs font-black text-white truncate uppercase">{task.title}</p>
+                        <p className="text-[10px] text-indigo-400 font-bold">{task.xp} XP Reward</p>
+                      </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
                       <button 
@@ -252,6 +263,15 @@ const Editor: React.FC<EditorProps> = ({
                           className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-center text-white focus:border-indigo-500"
                         />
                       </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-500 uppercase">Icon URL</label>
+                      <input 
+                        value={editForm?.icon || ''}
+                        onChange={(e) => setEditForm(prev => prev ? { ...prev, icon: e.target.value } : null)}
+                        placeholder="https://..."
+                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                      />
                     </div>
                     <div className="flex gap-2 pt-2">
                       <button 
