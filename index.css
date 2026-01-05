@@ -1,1 +1,128 @@
 @import "tailwindcss";
+
+@keyframes prism-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes aurora-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateX(-140%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(140%);
+    opacity: 0;
+  }
+}
+
+@keyframes ring-orbit {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes icon-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+@keyframes icon-smash {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(8px) scale(0.92);
+  }
+}
+
+@keyframes icon-splash {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(-4px, -8px) scale(1.08);
+  }
+  70% {
+    transform: translate(4px, 2px) scale(0.96);
+  }
+}
+
+.card-drift {
+  animation: prism-drift 8s ease-in-out infinite;
+}
+
+.card-aurora {
+  background-size: 220% 220%;
+  animation: aurora-shift 10s ease infinite;
+}
+
+.card-scanline {
+  animation: scanline 5s ease-in-out infinite;
+}
+
+.card-ring {
+  animation: ring-orbit 16s linear infinite;
+}
+
+.reward-hop {
+  animation: icon-hop 2.6s ease-in-out infinite;
+}
+
+.reward-smash {
+  animation: icon-smash 2.4s ease-in-out infinite;
+}
+
+.reward-splash {
+  animation: icon-splash 2.8s ease-in-out infinite;
+}
+
+.card-aurora-orange {
+  background-image: linear-gradient(120deg, rgba(249, 115, 22, 0.65), rgba(253, 186, 116, 0.15), rgba(248, 113, 113, 0.5));
+}
+
+.card-aurora-indigo {
+  background-image: linear-gradient(120deg, rgba(99, 102, 241, 0.65), rgba(129, 140, 248, 0.15), rgba(14, 165, 233, 0.5));
+}
+
+.card-aurora-purple {
+  background-image: linear-gradient(120deg, rgba(168, 85, 247, 0.65), rgba(216, 180, 254, 0.15), rgba(244, 114, 182, 0.5));
+}
+
+.card-aurora-yellow {
+  background-image: linear-gradient(120deg, rgba(234, 179, 8, 0.65), rgba(253, 230, 138, 0.15), rgba(251, 146, 60, 0.5));
+}
+
+.animate-spin-slow {
+  animation: ring-orbit 12s linear infinite;
+}
