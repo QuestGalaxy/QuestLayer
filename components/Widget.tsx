@@ -251,6 +251,50 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const formatXP = (val: number) => val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val;
 
   const currentLevelData = calculateLevel(visualXP);
+  const triggerStyle = (() => {
+    if (isTransparentTheme) {
+      return {
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(20px)',
+        borderColor: `${state.accentColor}60`,
+        boxShadow: `0 0 20px ${state.accentColor}30`
+      };
+    }
+
+    switch (state.activeTheme) {
+      case 'cyber':
+        return {
+          backgroundColor: state.accentColor,
+          borderColor: state.accentColor
+        };
+      case 'gaming':
+        return {
+          backgroundColor: state.accentColor,
+          borderColor: '#fbbf24',
+          boxShadow: '4px 4px 0px 0px #fbbf24'
+        };
+      case 'terminal':
+        return {
+          borderColor: '#1f3d2a',
+          boxShadow: '0 0 0 1px rgba(24, 255, 131, 0.15)'
+        };
+      case 'aura':
+        return {
+          borderColor: '#fecdd3',
+          boxShadow: '0 0 0 2px rgba(244, 63, 94, 0.08)'
+        };
+      case 'minimal':
+      case 'brutal':
+        return {
+          borderColor: '#000'
+        };
+      default:
+        return {
+          backgroundColor: state.accentColor,
+          borderColor: 'transparent'
+        };
+    }
+  })();
 
   return (
     <>
@@ -264,16 +308,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
             if (!isOpen) initAudio();
             setIsOpen(prev => !prev);
           }}
-          style={(!isLightTheme && !isTransparentTheme) ? {
-            backgroundColor: state.accentColor,
-            borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : 'transparent'),
-            boxShadow: state.activeTheme === 'gaming' ? `4px 4px 0px 0px #fbbf24` : undefined
-          } : (isTransparentTheme ? {
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            backdropFilter: 'blur(20px)',
-            borderColor: `${state.accentColor}60`,
-            boxShadow: `0 0 20px ${state.accentColor}30`
-          } : {})}
+          style={triggerStyle}
           className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'}`}
         >
           {!isConnected ? (
