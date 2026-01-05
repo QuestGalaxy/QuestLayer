@@ -294,7 +294,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const isRight = state.position.includes('right');
   const wrapperClasses = [
     positionClasses,
-    'z-[2147483647]',
+    'z-[2147483000]',
     'flex',
     activeTheme.font,
     isBottom ? 'flex-col-reverse' : 'flex-col',

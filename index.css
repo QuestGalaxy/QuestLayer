@@ -119,6 +119,10 @@
   background-image: linear-gradient(120deg, rgba(168, 85, 247, 0.65), rgba(216, 180, 254, 0.15), rgba(244, 114, 182, 0.5));
 }
 
+w3m-modal {
+  z-index: 2147483647 !important;
+}
+
 .card-aurora-yellow {
   background-image: linear-gradient(120deg, rgba(234, 179, 8, 0.65), rgba(253, 230, 138, 0.15), rgba(251, 146, 60, 0.5));
 }

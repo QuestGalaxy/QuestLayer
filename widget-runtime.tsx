@@ -38,6 +38,7 @@ const ROOT_ID = 'questlayer-widget-root';
 const STYLE_ATTR = 'data-questlayer-styles';
 const FONT_ATTR = 'data-questlayer-fonts';
 const GLOBAL_FONT_ATTR = 'data-questlayer-fonts-global';
+const APPKIT_Z_ATTR = 'data-questlayer-appkit-z';
 const FONT_URL =
   'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Space+Mono&family=Inter:wght@400;700;900&display=swap';
 let widgetRoot: Root | null = null;
@@ -103,6 +104,13 @@ const ensureMount = (): HTMLDivElement => {
     link.href = FONT_URL;
     link.setAttribute(GLOBAL_FONT_ATTR, 'true');
     document.head.appendChild(link);
+  }
+
+  if (document.head && !document.head.querySelector(`style[${APPKIT_Z_ATTR}]`)) {
+    const style = document.createElement('style');
+    style.setAttribute(APPKIT_Z_ATTR, 'true');
+    style.textContent = 'w3m-modal { z-index: 2147483647 !important; }';
+    document.head.appendChild(style);
   }
 
   let container = shadow.querySelector(`#${ROOT_ID}`) as HTMLDivElement | null;
