@@ -8,7 +8,7 @@ import SettingsPage from './components/SettingsPage.tsx';
 import ProfilePage from './components/ProfilePage.tsx';
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
-import { Layout, Monitor, Smartphone, Globe, Shield, Zap, Search, Menu, Home, Sparkles, UserCircle2, Settings } from 'lucide-react';
+import { Layout, Monitor, Smartphone, Globe, Shield, Search, Menu, Home, Sparkles, UserCircle2, Settings } from 'lucide-react';
 
 const App: React.FC = () => {
   const [showLanding, setShowLanding] = useState(true);
@@ -83,7 +83,11 @@ const App: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
-                  <Zap size={18} className="text-indigo-300" />
+                  <img
+                    src="/logoLayer.webp"
+                    alt="QuestLayer logo"
+                    className="h-7 w-7 object-contain"
+                  />
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">QuestLayer</p>

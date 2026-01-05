@@ -1,0 +1,17 @@
+{
+  "name": "QuestLayer Builder Pro",
+  "short_name": "QuestLayer",
+  "description": "A high-end quest and reward widget builder with theme customization, task management, and a real-time interactive preview.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/logoLayer.webp",
+      "sizes": "500x500",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}

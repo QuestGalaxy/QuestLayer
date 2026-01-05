@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Code, Wallet, Target, Trophy, Zap, ChevronRight, Globe, Sparkles } from 'lucide-react';
+import { Code, Wallet, Target, Trophy, ChevronRight, Globe, Sparkles } from 'lucide-react';
 
 interface LandingPageProps {
   onLaunch: () => void;
@@ -99,7 +99,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
            <div className="flex flex-col items-center">
              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-6">
                 <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20 glow-orange">
-                  <Zap size={48} className="text-orange-500 fill-orange-500" />
+                  <img
+                    src="/logoLayer.webp"
+                    alt="QuestLayer logo"
+                    className="h-12 w-12 object-contain"
+                  />
                 </div>
                 <h1 className="pixel-text text-4xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
                   QUESTLAYER
@@ -153,7 +157,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
             <div className={`w-32 h-32 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-400/20 p-1.5 animate-float transition-all duration-700 border-4 ${getHubGlow()}`}>
                <div className="w-full h-full rounded-full bg-slate-950/90 flex flex-col items-center justify-center backdrop-blur-3xl overflow-hidden relative">
                   <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
-                  <Zap size={64} className="text-orange-500 mb-2 relative z-10" />
+                  <img
+                    src="/logoLayer.webp"
+                    alt="QuestLayer logo"
+                    className="h-14 w-14 md:h-16 md:w-16 object-contain mb-2 relative z-10"
+                  />
                   <span className="pixel-text text-[10px] text-white/40 tracking-[0.4em] relative z-10">CORE</span>
                </div>
             </div>
@@ -349,7 +357,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
 
       {/* Footer Branding */}
       <div className="py-10 flex flex-col items-center gap-4 opacity-10">
-        <Zap size={24} className="text-white fill-white" />
+        <img
+          src="/logoLayer.webp"
+          alt="QuestLayer logo"
+          className="h-6 w-6 object-contain"
+        />
         <h3 className="pixel-text text-2xl text-white tracking-[0.5em] uppercase">
           QuestLayer
         </h3>
