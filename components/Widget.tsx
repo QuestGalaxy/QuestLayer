@@ -32,6 +32,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const audioCtxRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const wasConnectedRef = useRef(false);
+  const isDisconnectingRef = useRef(false);
+  const initialStateRef = useRef(state);
+  const cacheScope = globalThis.location?.origin ?? 'unknown-origin';
+  const walletKey = address ? `questlayer:wallet:${address.toLowerCase()}:${cacheScope}` : '';
 
   const activeTheme = THEMES[state.activeTheme];
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
@@ -71,7 +75,59 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
       playSound('connect');
     }
     wasConnectedRef.current = isConnected;
+    if (!isConnected) {
+      isDisconnectingRef.current = false;
+    }
   }, [isConnected]);
+
+  useEffect(() => {
+    if (!isConnected || !walletKey) return;
+    try {
+      const cached = localStorage.getItem(walletKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Pick<AppState, 'tasks' | 'userXP' | 'currentStreak' | 'dailyClaimed'> & {
+          sharedPlatforms?: string[];
+        };
+        setState(prev => ({
+          ...prev,
+          tasks: parsed.tasks ?? prev.tasks,
+          userXP: parsed.userXP ?? prev.userXP,
+          currentStreak: parsed.currentStreak ?? prev.currentStreak,
+          dailyClaimed: parsed.dailyClaimed ?? prev.dailyClaimed
+        }));
+        setSharedPlatforms(parsed.sharedPlatforms ?? []);
+      } else {
+        const fresh = initialStateRef.current;
+        setState(prev => ({
+          ...prev,
+          tasks: fresh.tasks,
+          userXP: fresh.userXP,
+          currentStreak: fresh.currentStreak,
+          dailyClaimed: fresh.dailyClaimed
+        }));
+        setSharedPlatforms([]);
+      }
+    } catch {
+      // Ignore cache errors and keep current state.
+    }
+  }, [isConnected, walletKey, setState]);
+
+  useEffect(() => {
+    if (!isConnected || !walletKey) return;
+    if (isDisconnectingRef.current) return;
+    try {
+      const payload = {
+        tasks: state.tasks,
+        userXP: state.userXP,
+        currentStreak: state.currentStreak,
+        dailyClaimed: state.dailyClaimed,
+        sharedPlatforms
+      };
+      localStorage.setItem(walletKey, JSON.stringify(payload));
+    } catch {
+      // Ignore storage errors in case localStorage is unavailable.
+    }
+  }, [isConnected, walletKey, state.tasks, state.userXP, state.currentStreak, state.dailyClaimed, sharedPlatforms]);
 
   // --- AUDIO ENGINE ---
   const initAudio = () => {
@@ -219,16 +275,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const handleDisconnect = () => {
     if (!isConnected) return;
+    isDisconnectingRef.current = true;
     void disconnect();
     setIsOpen(false);
-    setVisualXP(0);
-    setSharedPlatforms([]);
-    setState(prev => ({
-      ...prev,
-      userXP: 0,
-      currentStreak: 1,
-      dailyClaimed: false
-    }));
   };
 
   const getPositionClasses = () => {
