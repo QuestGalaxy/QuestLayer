@@ -3,12 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import Editor from './components/Editor.tsx';
 import Widget from './components/Widget.tsx';
 import LandingPage from './components/LandingPage.tsx';
-import HomePage from './components/HomePage.tsx';
-import SettingsPage from './components/SettingsPage.tsx';
-import ProfilePage from './components/ProfilePage.tsx';
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
-import { Layout, Monitor, Smartphone, Globe, Shield, Search, Menu, Home, Sparkles, UserCircle2, Settings } from 'lucide-react';
+import { Layout, Monitor, Smartphone, Globe, Shield, Menu } from 'lucide-react';
 
 const App: React.FC = () => {
   const [showLanding, setShowLanding] = useState(true);
@@ -17,8 +14,6 @@ const App: React.FC = () => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [previewTheme, setPreviewTheme] = useState<'dark' | 'light'>('dark');
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [activeSection, setActiveSection] = useState<'home' | 'builder' | 'profile' | 'settings'>('home');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const previewRef = useRef<HTMLDivElement | null>(null);
   
   const [state, setState] = useState<AppState>({
@@ -46,11 +41,6 @@ const App: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const handleSectionChange = (section: 'home' | 'builder' | 'profile' | 'settings') => {
-    setActiveSection(section);
-    setIsSidebarOpen(false);
-  };
-
   const toggleFullscreen = async () => {
     if (!previewRef.current) return;
     if (document.fullscreenElement) {
@@ -65,180 +55,53 @@ const App: React.FC = () => {
       <LandingPage
         onLaunch={() => {
           setShowLanding(false);
-          setActiveSection('home');
         }}
       />
     );
   }
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-transform duration-300 md:static md:translate-x-0 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex h-full flex-col overflow-hidden">
-          <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/90 px-5 py-4 backdrop-blur-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
-                  <img
-                    src="/logoLayer.webp"
-                    alt="QuestLayer logo"
-                    className="h-7 w-7 object-contain"
-                  />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">QuestLayer</p>
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-slate-400">Builder Suite</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className="md:hidden rounded-lg border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:text-white"
-              >
-                <Layout size={16} />
-              </button>
-            </div>
-            <div className="mt-4 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-slate-400">
-              <Search size={12} />
-              Search commands
-            </div>
-          </div>
+    <div className="flex flex-col md:flex-row h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
+      {/* Mobile Tab Navigation */}
+      <div className="md:hidden flex bg-slate-900 border-b border-white/10 shrink-0 z-10">
+        <button 
+          onClick={() => setView('editor')} 
+          className={`flex-1 py-4 font-bold text-xs uppercase tracking-widest transition-colors ${view === 'editor' ? 'text-indigo-400 border-b-2 border-indigo-400 bg-white/5' : 'text-slate-500'}`}
+        >
+          Editor
+        </button>
+        <button 
+          onClick={() => setView('preview')} 
+          className={`flex-1 py-4 font-bold text-xs uppercase tracking-widest transition-colors ${view === 'preview' ? 'text-indigo-400 border-b-2 border-indigo-400 bg-white/5' : 'text-slate-500'}`}
+        >
+          Preview
+        </button>
+      </div>
 
-          <nav className="flex-1 overflow-y-auto custom-scroll px-4 py-6 space-y-6">
-            <div className="space-y-2">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Workspace</p>
-              <button
-                onClick={() => handleSectionChange('home')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                  activeSection === 'home'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Home size={16} />
-                Home
-              </button>
-              <button
-                onClick={() => handleSectionChange('builder')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                  activeSection === 'builder'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Sparkles size={16} />
-                Builder + Widget
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Account</p>
-              <button
-                onClick={() => handleSectionChange('profile')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                  activeSection === 'profile'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <UserCircle2 size={16} />
-                Profile
-              </button>
-              <button
-                onClick={() => handleSectionChange('settings')}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                  activeSection === 'settings'
-                    ? 'bg-indigo-500/20 text-indigo-200 shadow-[0_0_20px_rgba(99,102,241,0.2)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Settings size={16} />
-                Settings
-              </button>
-            </div>
-          </nav>
-        </div>
-      </aside>
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-white/10 bg-slate-950/95 px-6 py-4 md:hidden">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="rounded-xl border border-white/10 bg-white/5 p-2 text-slate-200"
-          >
-            <Menu size={18} />
-          </button>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-            {activeSection === 'home' && 'Home'}
-            {activeSection === 'builder' && 'Builder + Widget'}
-            {activeSection === 'profile' && 'Profile'}
-            {activeSection === 'settings' && 'Settings'}
-          </p>
-        </div>
-
-        {activeSection === 'home' && (
-          <HomePage onStartBuilding={() => handleSectionChange('builder')} />
-        )}
-
-        {activeSection === 'profile' && (
-          <ProfilePage />
-        )}
-
-        {activeSection === 'settings' && (
-          <SettingsPage
+      <div className="flex flex-1 overflow-hidden">
+        {/* Editor Panel */}
+        <aside className={`${view === 'editor' ? 'flex' : 'hidden'} md:flex flex-col flex-1 md:flex-none md:w-[450px] shrink-0 z-20 overflow-hidden min-h-0`}>
+          <Editor 
             state={state}
             setProjectName={handleSetName}
             setAccentColor={handleSetColor}
             setPosition={handleSetPos}
             setActiveTheme={handleSetTheme}
+            setTasks={handleSetTasks}
           />
-        )}
+        </aside>
 
-        {activeSection === 'builder' && (
-          <>
-            {/* Mobile Tab Navigation */}
-            <div className="md:hidden flex bg-slate-900 border-b border-white/10 shrink-0 z-10">
-              <button 
-                onClick={() => setView('editor')} 
-                className={`flex-1 py-4 font-bold text-xs uppercase tracking-widest transition-colors ${view === 'editor' ? 'text-indigo-400 border-b-2 border-indigo-400 bg-white/5' : 'text-slate-500'}`}
-              >
-                Editor
-              </button>
-              <button 
-                onClick={() => setView('preview')} 
-                className={`flex-1 py-4 font-bold text-xs uppercase tracking-widest transition-colors ${view === 'preview' ? 'text-indigo-400 border-b-2 border-indigo-400 bg-white/5' : 'text-slate-500'}`}
-              >
-                Preview
-              </button>
-            </div>
-
-            <div className="flex flex-1 overflow-hidden">
-              {/* Editor Panel */}
-              <aside className={`${view === 'editor' ? 'flex' : 'hidden'} md:flex flex-col flex-1 md:flex-none md:w-[450px] shrink-0 z-20 overflow-hidden min-h-0`}>
-                <Editor 
-                  state={state}
-                  setProjectName={handleSetName}
-                  setAccentColor={handleSetColor}
-                  setPosition={handleSetPos}
-                  setActiveTheme={handleSetTheme}
-                  setTasks={handleSetTasks}
-                />
-              </aside>
-
-              {/* Preview Area */}
-              <main className={`${view === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 relative overflow-hidden ${previewTheme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-500 p-4 md:p-8`}>
-                {/* Mock Website Container */}
-                <div
-                  ref={previewRef}
-                  className={`w-full h-full border rounded-[2rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col group transition-all duration-500 ${
-                    previewTheme === 'dark'
-                      ? 'bg-slate-950 border-white/5'
-                      : 'bg-white border-slate-200'
-                  } ${previewMode === 'mobile' ? 'max-w-[420px] mx-auto' : ''}`}
-                >
+        {/* Preview Area */}
+        <main className={`${view === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 relative overflow-hidden ${previewTheme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-500 p-4 md:p-8`}>
+          {/* Mock Website Container */}
+          <div
+            ref={previewRef}
+            className={`w-full h-full border rounded-[2rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col group transition-all duration-500 ${
+              previewTheme === 'dark'
+                ? 'bg-slate-950 border-white/5'
+                : 'bg-white border-slate-200'
+            } ${previewMode === 'mobile' ? 'max-w-[420px] mx-auto' : ''}`}
+          >
                   
                   {/* Mock Browser Header */}
                   <header className={`h-14 border-b flex items-center justify-between px-6 shrink-0 ${previewTheme === 'dark' ? 'border-white/5 bg-black/20' : 'border-slate-200 bg-white'}`}>
@@ -340,19 +203,16 @@ const App: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Widget Component inside the mock browser container */}
-                  <Widget 
-                    isOpen={isWidgetOpen} 
-                    setIsOpen={setIsWidgetOpen} 
-                    state={state} 
-                    setState={setState} 
-                    isPreview={true}
-                  />
-                </div>
-              </main>
-            </div>
-          </>
-        )}
+            {/* Widget Component inside the mock browser container */}
+            <Widget 
+              isOpen={isWidgetOpen} 
+              setIsOpen={setIsWidgetOpen} 
+              state={state} 
+              setState={setState} 
+              isPreview={true}
+            />
+          </div>
+        </main>
       </div>
     </div>
   );
