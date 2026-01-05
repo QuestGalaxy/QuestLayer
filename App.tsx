@@ -6,6 +6,8 @@ import LandingPage from './components/LandingPage.tsx';
 import HomePage from './components/HomePage.tsx';
 import SettingsPage from './components/SettingsPage.tsx';
 import ProfilePage from './components/ProfilePage.tsx';
+import Paywall from './components/Paywall.tsx';
+import { getOfferings, purchasePackage, PaywallOffering } from './lib/revenuecat';
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
 import { Layout, Monitor, Smartphone, Globe, Shield, Zap, Search, Menu, Home, Sparkles, UserCircle2, Settings } from 'lucide-react';
@@ -19,6 +21,11 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeSection, setActiveSection] = useState<'home' | 'builder' | 'profile' | 'settings'>('home');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isPaywallOpen, setIsPaywallOpen] = useState(false);
+  const [paywallOffering, setPaywallOffering] = useState<PaywallOffering | null>(null);
+  const [paywallLoading, setPaywallLoading] = useState(false);
+  const [paywallError, setPaywallError] = useState<string | null>(null);
+  const [paywallNotice, setPaywallNotice] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   
   const [state, setState] = useState<AppState>({
@@ -46,6 +53,53 @@ const App: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  useEffect(() => {
+    if (!isPaywallOpen) return;
+    let isMounted = true;
+    setPaywallLoading(true);
+    setPaywallError(null);
+    setPaywallNotice(null);
+    getOfferings()
+      .then(offering => {
+        if (isMounted) {
+          setPaywallOffering(offering);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setPaywallError('Unable to load the current offering. Please try again.');
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setPaywallLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isPaywallOpen]);
+
+  const handlePaywallPurchase = async (packageId: string) => {
+    setPaywallLoading(true);
+    setPaywallError(null);
+    setPaywallNotice(null);
+    const result = await purchasePackage(packageId);
+    if (result.status === 'missing_key') {
+      setPaywallError(result.message);
+    } else if (result.status === 'redirect' && result.redirectUrl) {
+      window.open(result.redirectUrl, '_blank', 'noopener');
+      setPaywallNotice('Checkout opened in a new tab.');
+    } else {
+      setPaywallError(result.message);
+    }
+    setPaywallLoading(false);
+  };
+
+  const handlePaywallRestore = () => {
+    setPaywallNotice('Restore flow will be available once RevenueCat is configured.');
+  };
+
   const handleSectionChange = (section: 'home' | 'builder' | 'profile' | 'settings') => {
     setActiveSection(section);
     setIsSidebarOpen(false);
@@ -72,7 +126,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
+    <>
+      <div className="flex h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-transform duration-300 md:static md:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -176,7 +231,10 @@ const App: React.FC = () => {
         </div>
 
         {activeSection === 'home' && (
-          <HomePage onStartBuilding={() => handleSectionChange('builder')} />
+          <HomePage
+            onStartBuilding={() => handleSectionChange('builder')}
+            onOpenPaywall={() => setIsPaywallOpen(true)}
+          />
         )}
 
         {activeSection === 'profile' && (
@@ -350,7 +408,20 @@ const App: React.FC = () => {
           </>
         )}
       </div>
-    </div>
+      </div>
+      {paywallOffering && (
+        <Paywall
+          isOpen={isPaywallOpen}
+          offering={paywallOffering}
+          isLoading={paywallLoading}
+          errorMessage={paywallError}
+          noticeMessage={paywallNotice}
+          onClose={() => setIsPaywallOpen(false)}
+          onPurchase={handlePaywallPurchase}
+          onRestore={handlePaywallRestore}
+        />
+      )}
+    </>
   );
 };
 
