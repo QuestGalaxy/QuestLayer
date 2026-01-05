@@ -163,57 +163,58 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
           </div>
 
           {/* Responsive Feature Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-x-48 md:gap-y-24 w-full relative z-40">
+          <div className="grid w-full max-w-5xl grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 relative z-40">
             
             {/* Card 1: Embed */}
             <div 
               onMouseEnter={() => setHoveredCard(1)} 
               onMouseLeave={() => setHoveredCard(null)}
-              className="group cursor-pointer lg:translate-x-[-20px]"
+              className="group cursor-pointer"
             >
-              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-700 card-float group-hover:-translate-y-2 group-hover:scale-[1.04]">
-                <div className="absolute -inset-6 bg-orange-500/20 blur-3xl opacity-40 group-hover:opacity-70 transition-opacity card-halo pointer-events-none" />
-                <div className="absolute inset-0 card-outline card-outline-orange opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 card-sheen pointer-events-none" />
-                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-orange-500/60 shadow-[0_30px_80px_-50px_rgba(249,115,22,0.9)]">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),transparent_55%)] opacity-70 pointer-events-none" />
+              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]">
+                <div className="absolute -inset-6 rounded-[40px] bg-orange-500/20 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-orange opacity-70 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-orange-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-orange-500/40 opacity-50 card-ring pointer-events-none" />
+                <div className="relative rounded-[31px] bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(249,115,22,0.7)]">
+                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(251,146,60,0.25),transparent_60%)] opacity-80 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-3 mb-4">
                     <span className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(249,115,22,0.4)]">01</span>
                     <h4 className="text-white font-black uppercase text-xs tracking-widest">Embed Once</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-orange-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(249,115,22,0.2),transparent_60%)] pointer-events-none" />
-                     <Code size={48} className="text-orange-500/50 group-hover:text-orange-300 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
+                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(251,146,60,0.25),transparent_65%)] pointer-events-none" />
+                     <Code size={48} className="text-orange-500/50 group-hover:text-orange-200 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Inject QuestLayer Snippet</p>
                 </div>
               </div>
             </div>
 
-            {/* Spacer for 3-col desktop layout to center the hub */}
-            <div className="hidden lg:block pointer-events-none" />
-
             {/* Card 2: Wallet */}
             <div 
               onMouseEnter={() => setHoveredCard(2)} 
               onMouseLeave={() => setHoveredCard(null)}
-              className="group cursor-pointer lg:translate-x-[20px]"
+              className="group cursor-pointer"
             >
-              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-700 card-float group-hover:-translate-y-2 group-hover:scale-[1.04]" style={{ animationDelay: '0.6s' }}>
-                <div className="absolute -inset-6 bg-indigo-500/20 blur-3xl opacity-40 group-hover:opacity-70 transition-opacity card-halo pointer-events-none" />
-                <div className="absolute inset-0 card-outline card-outline-indigo opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 card-sheen pointer-events-none" />
-                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-indigo-500/60 shadow-[0_30px_80px_-50px_rgba(99,102,241,0.9)]">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.2),transparent_55%)] opacity-70 pointer-events-none" />
+              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '0.4s' }}>
+                <div className="absolute -inset-6 rounded-[40px] bg-indigo-500/20 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-indigo opacity-70 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-indigo-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-indigo-500/40 opacity-50 card-ring pointer-events-none" />
+                <div className="relative rounded-[31px] bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(99,102,241,0.7)]">
+                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.25),transparent_60%)] opacity-80 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-3 mb-4">
                     <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(99,102,241,0.4)]">02</span>
                     <h4 className="text-white font-black uppercase text-xs tracking-widest">Connect Wallet</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(129,140,248,0.25),transparent_60%)] pointer-events-none" />
-                     <Wallet size={48} className="text-indigo-500/50 group-hover:text-indigo-300 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500" />
+                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(129,140,248,0.25),transparent_65%)] pointer-events-none" />
+                     <Wallet size={48} className="text-indigo-500/50 group-hover:text-indigo-200 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500" />
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Floating Wallet Button</p>
                 </div>
@@ -226,20 +227,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
               onMouseLeave={() => setHoveredCard(null)}
               className="group cursor-pointer"
             >
-              <div className="relative p-0.5 rounded-[32px] overflow-hidden transition-all duration-700 card-float group-hover:-translate-y-2 group-hover:scale-[1.04]" style={{ animationDelay: '1.2s' }}>
-                <div className="absolute -inset-6 bg-purple-500/20 blur-3xl opacity-40 group-hover:opacity-70 transition-opacity card-halo pointer-events-none" />
-                <div className="absolute inset-0 card-outline card-outline-purple opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 card-sheen pointer-events-none" />
-                <div className="relative bg-slate-900/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[32px] group-hover:border-purple-500/60 shadow-[0_30px_80px_-50px_rgba(168,85,247,0.9)]">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(168,85,247,0.2),transparent_55%)] opacity-70 pointer-events-none" />
+              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '0.8s' }}>
+                <div className="absolute -inset-6 rounded-[40px] bg-purple-500/20 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-purple opacity-70 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-purple-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-purple-500/40 opacity-50 card-ring pointer-events-none" />
+                <div className="relative rounded-[31px] bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(168,85,247,0.7)]">
+                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(216,180,254,0.25),transparent_60%)] opacity-80 pointer-events-none" />
                   <div className="relative z-10 flex items-center gap-3 mb-4">
                     <span className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]">03</span>
                     <h4 className="text-white font-black uppercase text-xs tracking-widest">Complete Tasks</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-purple-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(216,180,254,0.25),transparent_60%)] pointer-events-none" />
-                     <Target size={48} className="text-purple-500/50 group-hover:text-purple-300 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
+                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(216,180,254,0.25),transparent_65%)] pointer-events-none" />
+                     <Target size={48} className="text-purple-500/50 group-hover:text-purple-200 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Gamified Mission Completion</p>
                 </div>
@@ -250,22 +253,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
             <div 
               onMouseEnter={() => setHoveredCard(4)} 
               onMouseLeave={() => setHoveredCard(null)}
-              className="group cursor-pointer lg:mt-24"
+              className="group cursor-pointer"
             >
-              <div className="relative p-0.5 rounded-[40px] overflow-hidden transition-all duration-700 card-float group-hover:-translate-y-2 group-hover:scale-[1.04]" style={{ animationDelay: '1.8s' }}>
-                <div className="absolute -inset-6 bg-yellow-500/25 blur-3xl opacity-40 group-hover:opacity-70 transition-opacity card-halo pointer-events-none" />
-                <div className="absolute inset-0 card-outline card-outline-yellow opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 card-sheen pointer-events-none" />
-                <div className="relative bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-8 rounded-[40px] group-hover:border-yellow-500/60 shadow-[0_40px_90px_-60px_rgba(234,179,8,1)]">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(250,204,21,0.22),transparent_60%)] opacity-80 pointer-events-none" />
+              <div className="relative rounded-[40px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '1.2s' }}>
+                <div className="absolute -inset-6 rounded-[48px] bg-yellow-500/25 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[40px] card-aurora card-aurora-yellow opacity-70 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[40px] border border-white/10 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-yellow-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute inset-0 rounded-[40px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
+                <div className="absolute right-7 top-7 h-16 w-16 rounded-full border border-yellow-500/40 opacity-50 card-ring pointer-events-none" />
+                <div className="relative rounded-[39px] bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_40px_90px_-60px_rgba(234,179,8,0.8)]">
+                  <div className="absolute inset-0 rounded-[39px] bg-[radial-gradient(circle_at_top,_rgba(253,230,138,0.25),transparent_60%)] opacity-80 pointer-events-none" />
                   <div className="relative z-10 flex items-center justify-center gap-3 mb-6">
                     <span className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-[12px] font-black text-black shadow-[0_0_20px_rgba(234,179,8,0.5)]">04</span>
                     <h4 className="text-white font-black uppercase text-sm tracking-widest">Earn Rewards</h4>
                   </div>
                   <div className="relative z-10 aspect-[3/1] bg-black/40 rounded-3xl mb-6 border border-white/5 flex items-center justify-around group-hover:bg-yellow-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(234,179,8,0.25),transparent_60%)] pointer-events-none" />
-                     <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-300 group-hover:scale-110 transition-transform duration-500" />
+                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(253,230,138,0.3),transparent_65%)] pointer-events-none" />
+                     <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-200 group-hover:scale-110 transition-transform duration-500" />
                      <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs group-hover:scale-110 transition-transform duration-500">XP</div>
                      <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px] group-hover:scale-110 transition-transform duration-500">NFT</div>
                   </div>

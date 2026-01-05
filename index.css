@@ -1,28 +1,16 @@
 @import "tailwindcss";
 
-@keyframes card-float {
+@keyframes prism-drift {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
-@keyframes halo-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(0.98);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.04);
-  }
-}
-
-@keyframes border-shift {
+@keyframes aurora-shift {
   0% {
     background-position: 0% 50%;
   }
@@ -34,62 +22,62 @@
   }
 }
 
-@keyframes sheen {
+@keyframes scanline {
   0% {
-    transform: translateX(-120%);
+    transform: translateX(-140%);
     opacity: 0;
   }
-  30% {
-    opacity: 0.35;
+  35% {
+    opacity: 0.5;
   }
   100% {
-    transform: translateX(120%);
+    transform: translateX(140%);
     opacity: 0;
   }
 }
 
-@keyframes spin-slow {
-  from {
+@keyframes ring-orbit {
+  0% {
     transform: rotate(0deg);
   }
-  to {
+  100% {
     transform: rotate(360deg);
   }
 }
 
-.card-float {
-  animation: card-float 10s ease-in-out infinite;
+.card-drift {
+  animation: prism-drift 8s ease-in-out infinite;
 }
 
-.card-halo {
-  animation: halo-pulse 6s ease-in-out infinite;
+.card-aurora {
+  background-size: 220% 220%;
+  animation: aurora-shift 10s ease infinite;
 }
 
-.card-outline {
-  background-size: 200% 200%;
-  animation: border-shift 8s ease infinite;
+.card-scanline {
+  animation: scanline 5s ease-in-out infinite;
 }
 
-.card-outline-orange {
-  background-image: linear-gradient(120deg, rgba(249, 115, 22, 0.8), rgba(249, 115, 22, 0.15), rgba(248, 113, 113, 0.8));
+.card-ring {
+  animation: ring-orbit 16s linear infinite;
 }
 
-.card-outline-indigo {
-  background-image: linear-gradient(120deg, rgba(99, 102, 241, 0.8), rgba(99, 102, 241, 0.2), rgba(56, 189, 248, 0.7));
+.card-aurora-orange {
+  background-image: linear-gradient(120deg, rgba(249, 115, 22, 0.65), rgba(253, 186, 116, 0.15), rgba(248, 113, 113, 0.5));
 }
 
-.card-outline-purple {
-  background-image: linear-gradient(120deg, rgba(168, 85, 247, 0.8), rgba(168, 85, 247, 0.2), rgba(244, 114, 182, 0.7));
+.card-aurora-indigo {
+  background-image: linear-gradient(120deg, rgba(99, 102, 241, 0.65), rgba(129, 140, 248, 0.15), rgba(14, 165, 233, 0.5));
 }
 
-.card-outline-yellow {
-  background-image: linear-gradient(120deg, rgba(234, 179, 8, 0.8), rgba(234, 179, 8, 0.2), rgba(251, 146, 60, 0.75));
+.card-aurora-purple {
+  background-image: linear-gradient(120deg, rgba(168, 85, 247, 0.65), rgba(216, 180, 254, 0.15), rgba(244, 114, 182, 0.5));
 }
 
-.card-sheen {
-  animation: sheen 4.5s ease-in-out infinite;
+.card-aurora-yellow {
+  background-image: linear-gradient(120deg, rgba(234, 179, 8, 0.65), rgba(253, 230, 138, 0.15), rgba(251, 146, 60, 0.5));
 }
 
 .animate-spin-slow {
-  animation: spin-slow 12s linear infinite;
+  animation: ring-orbit 12s linear infinite;
 }
