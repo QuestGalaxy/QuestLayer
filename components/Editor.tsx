@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2 } from 'lucide-react';
 import EmbedModal from './EmbedModal.tsx';
@@ -36,6 +36,16 @@ const Editor: React.FC<EditorProps> = ({
   setActiveTheme,
   setTasks,
 }) => {
+  const getFaviconUrl = (link: string) => {
+    try {
+      const url = new URL(link);
+      if (!url.hostname) return '';
+      return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+    } catch {
+      return '';
+    }
+  };
+
   const [editingId, setEditingId] = useState<string | number | null>(null);
   const [editForm, setEditForm] = useState<Task | null>(null);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
@@ -69,11 +79,23 @@ const Editor: React.FC<EditorProps> = ({
 
   const saveEdit = () => {
     if (editForm) {
-      setTasks(state.tasks.map(t => t.id === editingId ? editForm : t));
+      const nextTask = {
+        ...editForm,
+        icon: editForm.icon || getFaviconUrl(editForm.link)
+      };
+      setTasks(state.tasks.map(t => t.id === editingId ? nextTask : t));
       setEditingId(null);
       setEditForm(null);
     }
   };
+
+  useEffect(() => {
+    if (!editForm) return;
+    if (editForm.icon) return;
+    const faviconUrl = getFaviconUrl(editForm.link);
+    if (!faviconUrl) return;
+    setEditForm(prev => (prev ? { ...prev, icon: faviconUrl } : null));
+  }, [editForm?.link, editForm?.icon]);
 
   return (
     <div className="flex flex-col h-full bg-slate-900 border-r border-white/5 overflow-hidden">

@@ -7,6 +7,7 @@ import {
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, 
   MessageSquare, Facebook, Linkedin, Twitter
 } from 'lucide-react';
+import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 
 interface WidgetProps {
   isOpen: boolean;
@@ -17,8 +18,10 @@ interface WidgetProps {
 }
 
 const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isPreview = false }) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { open } = useAppKit();
+  const { address, isConnected, status } = useAppKitAccount();
+  const { disconnect } = useDisconnect();
+  const isConnecting = status === 'connecting' || status === 'reconnecting';
   const [loadingId, setLoadingId] = useState<string | number | null>(null);
   const [sharedPlatforms, setSharedPlatforms] = useState<string[]>([]);
   const [verifyingPlatforms, setVerifyingPlatforms] = useState<string[]>([]);
@@ -28,6 +31,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const audioCtxRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const wasConnectedRef = useRef(false);
 
   const activeTheme = THEMES[state.activeTheme];
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
@@ -61,6 +65,13 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   }, [state.userXP]);
+
+  useEffect(() => {
+    if (!wasConnectedRef.current && isConnected) {
+      playSound('connect');
+    }
+    wasConnectedRef.current = isConnected;
+  }, [isConnected]);
 
   // --- AUDIO ENGINE ---
   const initAudio = () => {
@@ -202,17 +213,13 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const handleConnect = () => {
     if (isConnecting) return;
-    setIsConnecting(true);
     initAudio();
-    setTimeout(() => {
-      playSound('connect');
-      setIsConnected(true);
-      setIsConnecting(false);
-    }, 1500);
+    open();
   };
 
-  const disconnect = () => {
-    setIsConnected(false);
+  const handleDisconnect = () => {
+    if (!isConnected) return;
+    void disconnect();
     setIsOpen(false);
     setVisualXP(0);
     setSharedPlatforms([]);
@@ -251,6 +258,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const formatXP = (val: number) => val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val;
 
   const currentLevelData = calculateLevel(visualXP);
+  const shortAddress = address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '';
   const triggerStyle = (() => {
     if (isTransparentTheme) {
       return {
@@ -318,7 +326,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
             </span>
           ) : (
             <span className="flex items-center gap-2 md:gap-3">
-              <div className="bg-white/10 px-1 py-0.5 rounded text-[6px] md:text-[8px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">0x71...3921</div>
+              <div className="bg-white/10 px-1 py-0.5 rounded text-[6px] md:text-[8px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
+                {shortAddress}
+              </div>
               <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
                 <span className="text-[6px] md:text-[8px] font-black uppercase opacity-60">Lvl</span>
                 <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
@@ -355,7 +365,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
               </div>
               <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
                 {isConnected && (
-                  <button onClick={disconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+                  <button onClick={handleDisconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
                     <LogOut size={10} md:size={12} />
                   </button>
                 )}

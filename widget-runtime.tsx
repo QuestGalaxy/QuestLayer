@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import Widget from './components/Widget.tsx';
 import { INITIAL_TASKS } from './constants.ts';
+import { AppKitProvider } from './appkit.tsx';
 import type { AppState } from './types.ts';
 import widgetStyles from './widget.css?inline';
 
@@ -125,13 +126,15 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
   }, [initialState, version]);
 
   return (
-    <Widget
-      isOpen={isOpen}
-      setIsOpen={setIsOpen}
-      state={state}
-      setState={setState}
-      isPreview={false}
-    />
+    <AppKitProvider>
+      <Widget
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        state={state}
+        setState={setState}
+        isPreview={false}
+      />
+    </AppKitProvider>
   );
 };
 
