@@ -23,12 +23,14 @@ export interface ThemeConfig {
 }
 
 export interface AppState {
+  projectId?: string;
   projectName: string;
   accentColor: string;
   position: Position;
   activeTheme: ThemeType;
   tasks: Task[];
   userXP: number;
+  globalXP?: number;
   currentStreak: number;
   dailyClaimed: boolean;
 }

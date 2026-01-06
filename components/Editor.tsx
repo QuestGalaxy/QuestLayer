@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
-import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2 } from 'lucide-react';
+import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft } from 'lucide-react';
 import EmbedModal from './EmbedModal.tsx';
 
 interface EditorProps {
@@ -11,6 +11,8 @@ interface EditorProps {
   setPosition: (pos: Position) => void;
   setActiveTheme: (theme: ThemeType) => void;
   setTasks: (tasks: Task[]) => void;
+  onPublish: () => Promise<void>;
+  onBack: () => void;
 }
 
 const PASTEL_PALETTE = [
@@ -35,6 +37,8 @@ const Editor: React.FC<EditorProps> = ({
   setPosition,
   setActiveTheme,
   setTasks,
+  onPublish,
+  onBack
 }) => {
   const getFaviconUrl = (link: string) => {
     try {
@@ -49,6 +53,15 @@ const Editor: React.FC<EditorProps> = ({
   const [editingId, setEditingId] = useState<string | number | null>(null);
   const [editForm, setEditForm] = useState<Task | null>(null);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const handlePublishClick = async () => {
+    setIsPublishing(true);
+    await onPublish();
+    setIsPublishing(false);
+    setIsEmbedModalOpen(true);
+  };
+
 
   const addTask = () => {
     const newTask: Task = {
@@ -100,15 +113,26 @@ const Editor: React.FC<EditorProps> = ({
   return (
     <div className="flex flex-col h-full bg-slate-900 border-r border-white/5 overflow-hidden">
       {/* Fixed Header */}
-      <div className="p-6 border-b border-white/5 bg-slate-900 shrink-0 z-30 shadow-xl flex items-center justify-between">
-        <h1 className="text-xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2">
-          QuestLayer <span className="text-indigo-500 not-italic font-mono text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded tracking-normal">BUILDER</span>
-        </h1>
+      <div className="p-6 border-b border-white/5 bg-slate-900 shrink-0 z-30 shadow-xl flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={onBack}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <h1 className="text-xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2">
+            QuestLayer <span className="text-indigo-500 not-italic font-mono text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded tracking-normal">BUILDER</span>
+          </h1>
+        </div>
         <button 
-          onClick={() => setIsEmbedModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+          onClick={handlePublishClick}
+          disabled={isPublishing}
+          className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Share2 size={14} /> Publish
+          {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />} 
+          {isPublishing ? 'Saving...' : 'Publish'}
         </button>
       </div>
 

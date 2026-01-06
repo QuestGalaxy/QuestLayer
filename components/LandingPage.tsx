@@ -137,7 +137,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
         <div className="relative w-full min-h-[500px] flex items-center justify-center pb-20 pt-4">
           
           {/* SVG Tentacle Layer */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 overflow-visible" preserveAspectRatio="none">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
               <linearGradient id="tentacleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#6366f1" />
@@ -145,11 +145,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
               </linearGradient>
             </defs>
             {/* These paths simulate the tentacles reaching from center to grid positions */}
-            <path d="M 50% 50% Q 25% 25% 15% 15%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" className="animate-pulse" />
-            <path d="M 50% 50% Q 75% 25% 85% 15%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
-            <path d="M 50% 50% Q 75% 75% 85% 85%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
-            <path d="M 50% 50% Q 25% 75% 15% 85%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
-            <path d="M 50% 50% L 50% 90%" stroke="url(#tentacleGrad)" strokeWidth="2" fill="none" strokeDasharray="8 8" />
+            <path d="M 50 50 Q 25 25 15 15" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" className="animate-pulse" />
+            <path d="M 50 50 Q 75 25 85 15" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
+            <path d="M 50 50 Q 75 75 85 85" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
+            <path d="M 50 50 Q 25 75 15 85" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
+            <path d="M 50 50 L 50 90" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
           </svg>
 
           {/* Central Animated Hub */}

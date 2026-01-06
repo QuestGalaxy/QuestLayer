@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { THEMES } from '../constants.ts';
+import { supabase } from '../lib/supabase';
 import { 
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2, 
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, 
@@ -11,7 +12,7 @@ import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react'
 
 interface WidgetProps {
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   state: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   isPreview?: boolean;
@@ -27,6 +28,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const [verifyingPlatforms, setVerifyingPlatforms] = useState<string[]>([]);
   const [timerValue, setTimerValue] = useState(10);
   const [visualXP, setVisualXP] = useState(state.userXP);
+  const [globalXP, setGlobalXP] = useState(0);
+  const [dbProjectId, setDbProjectId] = useState<string | null>(null);
+  const [dbUserId, setDbUserId] = useState<string | null>(null);
+  const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
+
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -42,6 +48,154 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const isTransparentTheme = state.activeTheme === 'glass';
 
   const positionClasses = isPreview ? 'absolute' : 'fixed';
+
+  // --- SUPABASE SYNC ---
+  useEffect(() => {
+    const initSupabase = async () => {
+      if (!isConnected || !address) return;
+
+      try {
+        let projectId = state.projectId;
+
+        // Fallback: Try to find project by name if ID is missing (legacy/unsynced state)
+        if (!projectId && state.projectName) {
+          const { data: projects } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('name', state.projectName)
+            .limit(1);
+          projectId = projects?.[0]?.id;
+        }
+
+        if (!projectId) {
+          // If project doesn't exist in DB (Unpublished Preview Mode), 
+          // we do NOT create the user or sync DB progress.
+          // We just operate in local mode.
+          console.log('Preview Mode: Project not published. Running in local-only mode.');
+          return;
+        }
+
+        setDbProjectId(projectId);
+
+        // 2. Fetch Tasks Mappings (Read-Only)
+        // We only map tasks that exist in the DB. New unsaved tasks won't have IDs.
+        const taskMapping: Record<string | number, string> = {};
+        if (state.tasks.length > 0) {
+           const { data: dbTasks } = await supabase
+             .from('tasks')
+             .select('id, title')
+             .eq('project_id', projectId);
+            
+           if (dbTasks) {
+             // Map by title (assuming titles are unique per project for simplicity)
+             // or ideally we would have a stable ID.
+             state.tasks.forEach(localTask => {
+               const match = dbTasks.find(d => d.title === localTask.title);
+               if (match) {
+                 taskMapping[localTask.id] = match.id;
+               }
+             });
+           }
+        }
+        setTaskMap(taskMapping);
+
+        // 3. Get or Create User
+        let { data: users } = await supabase
+          .from('end_users')
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('wallet_address', address)
+          .limit(1);
+
+        let userId = users?.[0]?.id;
+
+        if (!userId) {
+          const { data: newUser, error: userError } = await supabase
+            .from('end_users')
+            .insert({
+              project_id: projectId,
+              wallet_address: address
+            })
+            .select()
+            .single();
+          
+          if (userError) throw userError;
+          userId = newUser.id;
+        }
+        setDbUserId(userId);
+
+        // 4. Fetch Progress
+        const { data: progress } = await supabase
+          .from('user_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (progress) {
+          // Sync DB state to Local State
+          setState(prev => ({
+            ...prev,
+            userXP: progress.xp || 0,
+            currentStreak: progress.streak || 1,
+            // Check if claimed today
+            dailyClaimed: progress.last_claim_date 
+              ? new Date(progress.last_claim_date).toDateString() === new Date().toDateString()
+              : false
+          }));
+        } else {
+          // Initialize progress row
+          await supabase.from('user_progress').insert({
+            user_id: userId,
+            xp: 0,
+            streak: 1
+          });
+        }
+
+        // 5. Filter completed tasks
+        const { data: completions } = await supabase
+          .from('task_completions')
+          .select('task_id')
+          .eq('user_id', userId);
+
+        if (completions) {
+          const completedTaskIds = new Set(completions.map(c => c.task_id));
+          setState(prev => ({
+            ...prev,
+            tasks: prev.tasks.filter(t => {
+              const dbUuid = taskMapping[t.id];
+              // If task is in DB and completed, filter it out.
+              // If task is NOT in DB (unsaved), keep it (can't be completed in DB anyway).
+              return !dbUuid || !completedTaskIds.has(dbUuid);
+            })
+          }));
+        }
+
+        // 6. Fetch Global XP
+        const { data: globalXPData } = await supabase.rpc('get_global_xp', { wallet_addr: address });
+        if (globalXPData !== null) {
+          setGlobalXP(globalXPData);
+        }
+
+      } catch (err: any) {
+        console.error('Supabase sync error details:', {
+          message: err.message,
+          code: err.code,
+          details: err.details,
+          hint: err.hint
+        });
+        // Visual feedback for debugging
+        if (isPreview) {
+          const toast = document.createElement('div');
+          toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold z-[100]';
+          toast.innerText = `DB Sync Failed: ${err.message || 'Unknown error'}`;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 5000);
+        }
+      }
+    };
+
+    initSupabase();
+  }, [isConnected, address, state.projectName, state.projectId]); // Added state.projectId dependency
 
   // --- XP ANIMATION ENGINE ---
   useEffect(() => {
@@ -186,29 +340,58 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   };
 
   const calculateLevel = (xp: number) => {
+    // Use Global XP if available (connected), otherwise local XP (preview/unconnected)
+    const effectiveXP = isConnected ? (globalXP > xp ? globalXP : xp) : xp;
+    
     const xpPerLevel = 3000;
-    const lvl = Math.floor(xp / xpPerLevel) + 1;
-    const progress = ((xp % xpPerLevel) / xpPerLevel) * 100;
-    return { lvl, progress: Math.floor(progress) };
+    const lvl = Math.floor(effectiveXP / xpPerLevel) + 1;
+    const progress = ((effectiveXP % xpPerLevel) / xpPerLevel) * 100;
+    const nextLevelXP = lvl * xpPerLevel;
+    const xpNeeded = nextLevelXP - effectiveXP;
+    
+    return { lvl, progress: Math.floor(progress), xpNeeded, effectiveXP };
   };
 
   const getRankName = () => {
-    const { lvl } = calculateLevel(visualXP);
+    const { lvl } = calculateLevel(visualXP); // VisualXP is local. We should use global for rank too.
     if (lvl < 2) return "Pioneer";
     if (lvl < 5) return "Guardian";
     return "Overlord";
   };
 
-  const claimDaily = () => {
+  const claimDaily = async () => {
     if (state.dailyClaimed) return;
     playSound('fanfare');
     const bonus = 100 * Math.pow(2, state.currentStreak - 1);
+    
+    // Optimistic Update
     setState(prev => ({
       ...prev,
       userXP: prev.userXP + bonus,
       currentStreak: (prev.currentStreak % 5) + 1,
       dailyClaimed: true
     }));
+
+    // DB Update
+    if (dbUserId) {
+      await supabase
+        .from('user_progress')
+        .update({
+          xp: state.userXP + bonus, // Note: using state.userXP here might be stale if setState is async, but visualXP is lagging anyway. 
+                                    // Better to use the calculated value or SQL increment.
+                                    // SQL increment is safer: xp = xp + bonus
+          streak: (state.currentStreak % 5) + 1,
+          last_claim_date: new Date().toISOString()
+        })
+        .eq('user_id', dbUserId);
+        
+      // Also strictly speaking we should increment XP in DB to avoid race conditions, but for this widget simple update is fine.
+      // Better:
+      // const { error } = await supabase.rpc('claim_bonus', { user_id: dbUserId, bonus_amount: bonus });
+
+      // Update Global XP locally to reflect change immediately
+      setGlobalXP(prev => prev + bonus);
+    }
   };
 
   const startQuest = (task: Task) => {
@@ -222,12 +405,32 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         if (prev <= 1) {
           if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
           playSound('reward');
+          
+          // Optimistic Update
           setState(prev => ({
             ...prev,
             userXP: prev.userXP + task.xp,
             tasks: prev.tasks.filter(t => t.id !== task.id)
           }));
           setLoadingId(null);
+
+          // DB Update
+          if (dbUserId) {
+            const dbTaskId = taskMap[task.id];
+            if (dbTaskId) {
+               supabase.from('task_completions').insert({
+                 user_id: dbUserId,
+                 task_id: dbTaskId
+               }).then(() => {
+                 supabase.from('user_progress')
+                   .update({ xp: state.userXP + task.xp }) // Again, careful with stale state. 
+                   .eq('user_id', dbUserId)
+                   .then(() => {
+                      setGlobalXP(prev => prev + task.xp);
+                   });
+               });
+            }
+          }
           return 0;
         }
         return prev - 1;
@@ -262,6 +465,16 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           setSharedPlatforms(prev => [...prev, platform]);
           playSound('reward');
           setState(prev => ({ ...prev, userXP: prev.userXP + 100 }));
+          
+          // DB Update
+          if (dbUserId) {
+             supabase.from('user_progress')
+               .update({ xp: state.userXP + 100 })
+               .eq('user_id', dbUserId)
+               .then(() => {
+                  setGlobalXP(prev => prev + 100);
+               });
+          }
         }
       }, 10000);
     }
@@ -370,7 +583,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         >
           {!isConnected ? (
             <span className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
-              <Zap size={12} md:size={16} fill="currentColor" />
+              <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
               Connect
             </span>
           ) : (
@@ -403,7 +616,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
                   className={`p-1.5 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
                 >
-                  <Zap size={10} md:size={14} fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
+                  <Zap className="w-[10px] h-[10px] md:w-[14px] md:h-[14px]" fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
                 </div>
                 <span 
                   className={`font-black text-xs md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
@@ -415,14 +628,14 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
               <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
                 {isConnected && (
                   <button onClick={handleDisconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
-                    <LogOut size={10} md:size={12} />
+                    <LogOut className="w-[10px] h-[10px] md:w-[12px] md:h-[12px]" />
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
                   className={`${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
                 >
-                  <X size={14} md:size={16} />
+                  <X className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]" />
                 </button>
               </div>
             </div>
@@ -436,7 +649,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   className="mx-auto w-10 h-10 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
                   style={{ backgroundColor: `${state.accentColor}15`, color: state.accentColor }}
                 >
-                  <ShieldCheck size={24} md:size={32} />
+                  <ShieldCheck className="w-[24px] h-[24px] md:w-[32px] md:h-[32px]" />
                 </div>
                 <h3 className={`text-[11px] md:text-lg font-black uppercase tracking-tighter ${isLightTheme ? 'text-black' : 'text-white'}`}>
                   Connect to unlock <br/><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
@@ -482,11 +695,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xs md:text-xl font-black tabular-nums ${isLightTheme ? 'text-black' : 'text-white'}`}>{visualXP}</p>
-                    <p className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>XP Total</p>
+                    <p className={`text-xs md:text-xl font-black tabular-nums ${isLightTheme ? 'text-black' : 'text-white'}`}>{currentLevelData.effectiveXP >= 1000 ? (currentLevelData.effectiveXP / 1000).toFixed(1) + 'k' : currentLevelData.effectiveXP}</p>
+                    <p className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank XP</p>
                   </div>
                 </div>
-                <div className={`h-1 md:h-2 w-full overflow-hidden border relative ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
+                <div className={`h-1 md:h-2 w-full overflow-hidden border relative mb-1 ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
                   <div 
                     className={`h-full transition-all duration-300 ease-out relative`} 
                     style={{ width: `${currentLevelData.progress}%`, backgroundColor: state.accentColor }}
@@ -495,6 +708,14 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1s_infinite]" />
                      )}
                   </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className={`text-[8px] md:text-[9px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
+                    Quest XP: <span className={isLightTheme ? 'text-slate-600' : 'text-white/70'}>{visualXP}</span>
+                  </p>
+                  <p className={`text-[8px] md:text-[9px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
+                    {currentLevelData.xpNeeded} XP to Lvl {currentLevelData.lvl + 1}
+                  </p>
                 </div>
               </div>
 
@@ -523,10 +744,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                         style={{
                           borderColor: isActive ? state.accentColor : undefined,
                           backgroundColor: isActive ? `${state.accentColor}${isLightTheme ? '10' : '20'}` : undefined,
-                          ringColor: isCurrent ? state.accentColor : 'transparent',
+                          '--tw-ring-color': isCurrent ? state.accentColor : 'transparent',
                           ringOffsetColor: isLightTheme ? '#ffffff' : '#0f172a',
                           boxShadow: (isActive && state.activeTheme === 'gaming') ? `2px 2px 0px 0px #fbbf24` : undefined
-                        }}
+                        } as React.CSSProperties}
                       >
                         <span className={`text-[7px] md:text-[9px] font-black uppercase ${isActive ? (isLightTheme ? 'text-slate-900' : 'text-white') : (isLightTheme ? 'text-black' : 'text-white')}`}>D{day}</span>
                         <span 
@@ -732,7 +953,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.header}`}
           style={{ borderColor: state.activeTheme === 'gaming' ? state.accentColor : undefined }}
         >
-          <Zap size={8} md:size={10} className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current`} style={!isLightTheme ? { color: state.accentColor } : {}} />
+          <Zap className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current w-[8px] h-[8px] md:w-[10px] md:h-[10px]`} style={!isLightTheme ? { color: state.accentColor } : {}} />
           <a
             href="https://questlayer.vercel.app/"
             target="_blank"

@@ -6,9 +6,13 @@ import LandingPage from './components/LandingPage.tsx';
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
 import { Layout, Monitor, Smartphone, Globe, Shield, Menu } from 'lucide-react';
+import { syncProjectToSupabase } from './lib/supabase';
+
+import Dashboard from './components/Dashboard.tsx';
+import { fetchProjectDetails } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [showLanding, setShowLanding] = useState(true);
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder'>('landing');
   const [view, setView] = useState<'editor' | 'preview'>('editor');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -33,6 +37,13 @@ const App: React.FC = () => {
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
 
+  const handlePublish = async () => {
+    const { projectId } = await syncProjectToSupabase(state);
+    if (projectId) {
+      setState(prev => ({ ...prev, projectId }));
+    }
+  };
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(Boolean(document.fullscreenElement));
@@ -50,11 +61,61 @@ const App: React.FC = () => {
     }
   };
 
-  if (showLanding) {
+  if (currentPage === 'landing') {
     return (
       <LandingPage
         onLaunch={() => {
-          setShowLanding(false);
+          setCurrentPage('dashboard');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'dashboard') {
+    return (
+      <Dashboard
+        onSelectProject={async (id) => {
+          // Fetch and Load
+          try {
+            const { project, tasks } = await fetchProjectDetails(id);
+            if (project) {
+              setState({
+                projectId: project.id,
+                projectName: project.name,
+                accentColor: project.accent_color,
+                position: project.position as Position,
+                activeTheme: project.theme as ThemeType,
+                tasks: tasks.map((t: any) => ({
+                  id: t.id,
+                  title: t.title,
+                  desc: t.description,
+                  link: t.link,
+                  icon: t.icon_url,
+                  xp: t.xp_reward
+                })),
+                userXP: 0,
+                currentStreak: 1,
+                dailyClaimed: false
+              });
+              setCurrentPage('builder');
+            }
+          } catch (err) {
+            console.error("Failed to load project", err);
+          }
+        }}
+        onCreateProject={() => {
+          // Reset State
+          setState({
+            projectName: 'New Project',
+            accentColor: '#6366f1',
+            position: 'bottom-right',
+            activeTheme: 'sleek',
+            tasks: INITIAL_TASKS,
+            userXP: 0,
+            currentStreak: 1,
+            dailyClaimed: false
+          });
+          setCurrentPage('builder');
         }}
       />
     );
@@ -88,6 +149,8 @@ const App: React.FC = () => {
             setPosition={handleSetPos}
             setActiveTheme={handleSetTheme}
             setTasks={handleSetTasks}
+            onPublish={handlePublish}
+            onBack={() => setCurrentPage('dashboard')}
           />
         </aside>
 

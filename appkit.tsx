@@ -17,7 +17,7 @@ const metadata = {
   icons: [`${appOrigin}/logoLayer.webp`]
 };
 
-const networks = [mainnet, arbitrum];
+const networks = [mainnet, arbitrum] as [any, ...any[]];
 
 const wagmiAdapter = new WagmiAdapter({
   networks,
