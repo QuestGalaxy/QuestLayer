@@ -7,6 +7,7 @@ import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
 import { Layout, Monitor, Smartphone, Globe, Shield, Menu } from 'lucide-react';
 import { syncProjectToSupabase } from './lib/supabase';
+import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 import Dashboard from './components/Dashboard.tsx';
 import { fetchProjectDetails } from './lib/supabase';
@@ -37,8 +38,11 @@ const App: React.FC = () => {
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
 
+  const { address } = useAppKitAccount();
+
   const handlePublish = async () => {
-    const { projectId } = await syncProjectToSupabase(state);
+    if (!address) return;
+    const { projectId } = await syncProjectToSupabase(state, address);
     if (projectId) {
       setState(prev => ({ ...prev, projectId }));
     }
@@ -60,6 +64,8 @@ const App: React.FC = () => {
       await previewRef.current.requestFullscreen();
     }
   };
+
+  const { disconnect } = useDisconnect();
 
   if (currentPage === 'landing') {
     return (
@@ -116,6 +122,9 @@ const App: React.FC = () => {
             dailyClaimed: false
           });
           setCurrentPage('builder');
+        }}
+        onDisconnect={() => {
+          setCurrentPage('landing');
         }}
       />
     );

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { Code, Wallet, Target, Trophy, ChevronRight, Globe, Sparkles } from 'lucide-react';
+import { Code, Wallet, Target, Trophy, ChevronRight, Globe, Sparkles, LogIn } from 'lucide-react';
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
 interface LandingPageProps {
   onLaunch: () => void;
@@ -8,6 +9,23 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const { open } = useAppKit();
+  const { isConnected, status } = useAppKitAccount();
+  const isConnecting = status === 'connecting' || status === 'reconnecting';
+
+  React.useEffect(() => {
+    if (isConnected) {
+      onLaunch();
+    }
+  }, [isConnected]);
+
+  const handleStartBuilding = () => {
+    if (isConnected) {
+      onLaunch();
+    } else {
+      open();
+    }
+  };
 
   const getHubGlow = () => {
     switch (hoveredCard) {
@@ -121,10 +139,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
              </div>
              <div className="mt-4 flex items-center justify-center gap-4">
                <button
-                 onClick={onLaunch}
-                 className="px-6 py-3 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95"
+                 onClick={handleStartBuilding}
+                 disabled={isConnecting}
+                 className="px-6 py-3 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                >
-                 Start Building
+                 {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building' : 'Connect to Build')}
+                 {!isConnected && !isConnecting && <Wallet size={14} />}
                </button>
                <button className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all">
                  View Demo
@@ -302,13 +322,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
 
            <div className="flex flex-col md:flex-row items-center justify-center gap-6">
               <button 
-                onClick={onLaunch}
-                className="group relative w-full md:w-auto px-12 py-6 bg-orange-500 text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all active:scale-95 overflow-hidden"
+                onClick={handleStartBuilding}
+                disabled={isConnecting}
+                className="group relative w-full md:w-auto px-12 py-6 bg-orange-500 text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all active:scale-95 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {/* Shimmer Effect */}
                 <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
                 <span className="relative flex items-center justify-center gap-3">
-                  Start Building Now <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building Now' : 'Connect Wallet to Build')} <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </span>
               </button>
               

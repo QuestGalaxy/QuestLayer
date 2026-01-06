@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { fetchProjects } from '../lib/supabase';
-import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen } from 'lucide-react';
+import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut } from 'lucide-react';
+import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 interface DashboardProps {
   onSelectProject: (projectId: string) => void;
   onCreateProject: () => void;
+  onDisconnect: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { disconnect } = useDisconnect();
+  const { address } = useAppKitAccount();
+
+  const handleDisconnect = async () => {
+    await disconnect();
+    onDisconnect();
+  };
 
   useEffect(() => {
     const load = async () => {
+      if (!address) return;
       try {
-        const data = await fetchProjects();
+        const data = await fetchProjects(address);
         setProjects(data || []);
       } catch (err) {
         console.error(err);
@@ -23,7 +33,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject 
       }
     };
     load();
-  }, []);
+  }, [address]);
 
   return (
     <div className="flex-1 overflow-y-auto px-6 py-10 bg-slate-950">
@@ -33,12 +43,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject 
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">My Widgets</h2>
             <p className="mt-2 text-slate-400 text-sm">Manage your quest campaigns and settings.</p>
           </div>
-          <button
-            onClick={onCreateProject}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-          >
-            <Plus size={16} /> New Widget
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleDisconnect}
+              className="flex items-center gap-2 bg-slate-900 border border-white/10 hover:bg-slate-800 text-slate-400 hover:text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all"
+              title="Disconnect Wallet"
+            >
+              <LogOut size={14} /> <span className="hidden sm:inline">Disconnect</span>
+            </button>
+            <button
+              onClick={onCreateProject}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+            >
+              <Plus size={16} /> New Widget
+            </button>
+          </div>
         </div>
 
         {loading ? (

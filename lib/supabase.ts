@@ -16,10 +16,11 @@ if (supabaseUrl.includes('your_supabase_url') || supabaseAnonKey.includes('your_
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export const fetchProjects = async () => {
+export const fetchProjects = async (ownerAddress: string) => {
   const { data, error } = await supabase
     .from('projects')
     .select('*')
+    .eq('owner_wallet', ownerAddress)
     .order('created_at', { ascending: false });
   
   if (error) throw error;
@@ -46,13 +47,14 @@ export const fetchProjectDetails = async (projectId: string) => {
   return { project, tasks };
 };
 
-export const syncProjectToSupabase = async (state: AppState): Promise<{ projectId: string, error?: any }> => {
+export const syncProjectToSupabase = async (state: AppState, ownerAddress?: string): Promise<{ projectId: string, error?: any }> => {
   try {
     // 1. Get or Create Project
     let { data: projects } = await supabase
       .from('projects')
       .select('id')
       .eq('name', state.projectName)
+      .eq('owner_wallet', ownerAddress) // Scope check to owner
       .limit(1);
 
     let projectId = projects?.[0]?.id;
@@ -77,7 +79,8 @@ export const syncProjectToSupabase = async (state: AppState): Promise<{ projectI
           name: state.projectName,
           accent_color: state.accentColor,
           position: state.position,
-          theme: state.activeTheme
+          theme: state.activeTheme,
+          owner_wallet: ownerAddress // Save owner
         })
         .select()
         .single();
