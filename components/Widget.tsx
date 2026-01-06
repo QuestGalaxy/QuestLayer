@@ -100,28 +100,21 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         setTaskMap(taskMapping);
 
         // 3. Get or Create User
-        let { data: users } = await supabase
+        // Use upsert to handle race conditions safely
+        const { data: user, error: userError } = await supabase
           .from('end_users')
+          .upsert(
+            { 
+              project_id: projectId, 
+              wallet_address: address 
+            }, 
+            { onConflict: 'project_id,wallet_address' }
+          )
           .select('id')
-          .eq('project_id', projectId)
-          .eq('wallet_address', address)
-          .limit(1);
+          .single();
 
-        let userId = users?.[0]?.id;
-
-        if (!userId) {
-          const { data: newUser, error: userError } = await supabase
-            .from('end_users')
-            .insert({
-              project_id: projectId,
-              wallet_address: address
-            })
-            .select()
-            .single();
-          
-          if (userError) throw userError;
-          userId = newUser.id;
-        }
+        if (userError) throw userError;
+        let userId = user.id;
         setDbUserId(userId);
 
         // 4. Fetch Progress
