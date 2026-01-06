@@ -124,6 +124,9 @@ const ensureMount = (): HTMLDivElement => {
   return container;
 };
 
+import { fetchProjectDetails, supabase } from './lib/supabase.ts';
+import type { Task, Position, ThemeType } from './types.ts';
+
 const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ initialState, version }) => {
   const [state, setState] = useState<AppState>(initialState);
   const [isOpen, setIsOpen] = useState(false);
@@ -132,6 +135,51 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
     setState(initialState);
     setIsOpen(false);
   }, [initialState, version]);
+
+  // Live Sync Logic
+  useEffect(() => {
+    const syncLiveConfig = async () => {
+       try {
+         let targetProjectId = state.projectId;
+
+         // If no ID provided but Name is, try to resolve ID from DB (Legacy Support)
+         if (!targetProjectId && state.projectName) {
+            const { data: projects } = await supabase
+              .from('projects')
+              .select('id')
+              .eq('name', state.projectName)
+              .limit(1);
+            targetProjectId = projects?.[0]?.id;
+         }
+
+         if (targetProjectId) {
+            const { project, tasks } = await fetchProjectDetails(targetProjectId);
+            if (project) {
+              setState(prev => ({
+                ...prev,
+                projectId: project.id, // Ensure ID is set
+                projectName: project.name,
+                accentColor: project.accent_color,
+                position: project.position as Position,
+                activeTheme: project.theme as ThemeType,
+                tasks: tasks.map((t: any) => ({
+                  id: t.id, 
+                  title: t.title,
+                  desc: t.description,
+                  link: t.link,
+                  icon: t.icon_url,
+                  xp: t.xp_reward
+                }))
+              }));
+            }
+         }
+       } catch (err) {
+         console.error('[QuestLayer] Failed to sync live config', err);
+       }
+    };
+    
+    syncLiveConfig();
+  }, []); // Run once on mount
 
   return (
     <AppKitProvider>

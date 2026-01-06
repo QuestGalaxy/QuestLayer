@@ -16,10 +16,7 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, state }) => {
 
   const configJson = JSON.stringify({
     projectName: state.projectName,
-    accentColor: state.accentColor,
-    position: state.position,
-    activeTheme: state.activeTheme,
-    tasks: state.tasks
+    projectId: state.projectId // Include ID for fetching live config
   }).replace(/'/g, '&#39;');
 
   const scriptCode = `<!-- QuestLayer Widget Embed -->

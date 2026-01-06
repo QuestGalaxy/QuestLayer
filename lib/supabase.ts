@@ -50,20 +50,25 @@ export const fetchProjectDetails = async (projectId: string) => {
 export const syncProjectToSupabase = async (state: AppState, ownerAddress?: string): Promise<{ projectId: string, error?: any }> => {
   try {
     // 1. Get or Create Project
-    let { data: projects } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('name', state.projectName)
-      .eq('owner_wallet', ownerAddress) // Scope check to owner
-      .limit(1);
+    let projectId = state.projectId;
 
-    let projectId = projects?.[0]?.id;
+    if (!projectId) {
+      // Fallback: Try to find by name + owner if no ID is present in state
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('name', state.projectName)
+        .eq('owner_wallet', ownerAddress)
+        .limit(1);
+      projectId = projects?.[0]?.id;
+    }
 
     if (projectId) {
       // Update existing project
       const { error: updateError } = await supabase
         .from('projects')
         .update({
+          name: state.projectName, // Allow renaming
           accent_color: state.accentColor,
           position: state.position,
           theme: state.activeTheme
