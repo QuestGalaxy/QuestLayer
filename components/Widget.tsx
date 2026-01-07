@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { THEMES } from '../constants.ts';
-import { supabase, logProjectView } from '../lib/supabase';
 import { 
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2, 
-  ShieldCheck, ExternalLink, Sparkles, Loader2, Send, 
+  ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown, 
   MessageSquare, Facebook, Linkedin, Twitter
 } from 'lucide-react';
+import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 
 interface WidgetProps {
@@ -940,7 +940,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                       >
                       <div className="flex justify-between items-start mb-0.5 gap-2">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          {task.icon ? (
+                          {task.icon?.startsWith('icon:') ? (
+                            <div 
+                              className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+                              style={{ background: `${state.accentColor}10` }}
+                            >
+                              {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
+                              {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
+                              {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
+                              {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
+                              {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+                            </div>
+                          ) : task.icon ? (
                             <div 
                               className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
                               style={{ background: `${state.accentColor}10` }}

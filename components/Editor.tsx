@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
-import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown } from 'lucide-react';
 import EmbedModal from './EmbedModal.tsx';
 
 interface EditorProps {
@@ -29,6 +29,15 @@ const PASTEL_PALETTE = [
   '#06b6d4', // Cyan
   '#0ea5e9', // Sky
   '#3b82f6', // Blue
+];
+
+// Yellow/Gold Game Icon Codes
+const GAME_ICONS = [
+  'icon:coin',
+  'icon:trophy',
+  'icon:gem',
+  'icon:sword',
+  'icon:crown'
 ];
 
 const Editor: React.FC<EditorProps> = ({
@@ -127,11 +136,14 @@ const Editor: React.FC<EditorProps> = ({
     setEditForm({ ...task });
   };
 
+  const getRandomGameIcon = () => GAME_ICONS[Math.floor(Math.random() * GAME_ICONS.length)];
+
   const saveEdit = () => {
     if (editForm) {
+      // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
       const nextTask = {
         ...editForm,
-        icon: editForm.icon || getFaviconUrl(editForm.link)
+        icon: editForm.icon || getFaviconUrl(editForm.link) || getRandomGameIcon()
       };
 
       // Validate XP Limit before saving
@@ -311,7 +323,15 @@ const Editor: React.FC<EditorProps> = ({
                 {editingId !== task.id ? (
                   <div className="p-4 flex items-center justify-between">
                     <div className="truncate mr-4 flex items-center gap-2">
-                      {task.icon ? (
+                      {task.icon?.startsWith('icon:') ? (
+                        <div className="h-6 w-6 rounded-full border border-white/10 bg-yellow-500/10 flex items-center justify-center">
+                          {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
+                          {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
+                          {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
+                          {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
+                          {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+                        </div>
+                      ) : task.icon ? (
                         <img
                           src={task.icon}
                           alt=""
