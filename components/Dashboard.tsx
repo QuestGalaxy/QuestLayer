@@ -286,14 +286,55 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
             <Loader2 className="animate-spin text-indigo-500" size={32} />
           </div>
         ) : projects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 rounded-[32px] border border-white/5 bg-slate-900/50 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-              <FolderOpen size={32} className="text-slate-500" />
-            </div>
-            <div>
-              <h3 className="text-white font-bold text-lg">No widgets yet</h3>
-              <p className="text-slate-500 text-sm mt-1">Create your first quest campaign to get started.</p>
-            </div>
+          <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-8 md:p-12 text-center">
+             {/* Background Effects */}
+             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px]" />
+             </div>
+
+             <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                <div className="space-y-4">
+                   <div className="w-20 h-20 mx-auto rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6 shadow-xl shadow-indigo-500/10 rotate-3">
+                      <Zap size={40} className="text-indigo-400" />
+                   </div>
+                   <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight leading-tight">
+                      Ready to Gamify <br/> Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Community?</span>
+                   </h2>
+                   <p className="text-slate-400 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+                      QuestLayer helps you turn passive visitors into active community members through rewarding quests and daily engagement.
+                   </p>
+                </div>
+
+                {/* Steps Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                   <div className="bg-white/5 border border-white/5 p-6 rounded-2xl hover:bg-white/10 transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4 font-black text-lg">1</div>
+                      <h4 className="text-white font-bold uppercase mb-2">Create Widget</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed">Set up your project branding, colors, and theme in seconds.</p>
+                   </div>
+                   <div className="bg-white/5 border border-white/5 p-6 rounded-2xl hover:bg-white/10 transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4 font-black text-lg">2</div>
+                      <h4 className="text-white font-bold uppercase mb-2">Add Quests</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed">Define social tasks, daily logins, and custom actions for XP.</p>
+                   </div>
+                   <div className="bg-white/5 border border-white/5 p-6 rounded-2xl hover:bg-white/10 transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 font-black text-lg">3</div>
+                      <h4 className="text-white font-bold uppercase mb-2">Embed & Grow</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed">Copy one line of code to launch your rewards program instantly.</p>
+                   </div>
+                </div>
+
+                <div className="pt-4">
+                   <button
+                     onClick={onCreateProject}
+                     className="group relative inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-sm hover:scale-105 transition-all shadow-xl hover:shadow-2xl hover:shadow-white/20"
+                   >
+                     <span>Launch First Campaign</span>
+                     <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                   </button>
+                </div>
+             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
