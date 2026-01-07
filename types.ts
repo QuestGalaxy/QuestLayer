@@ -25,6 +25,7 @@ export interface ThemeConfig {
 export interface AppState {
   projectId?: string;
   projectName: string;
+  projectDomain?: string; // New field for whitelisted domain
   accentColor: string;
   position: Position;
   activeTheme: ThemeType;

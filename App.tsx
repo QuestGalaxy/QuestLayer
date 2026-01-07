@@ -34,6 +34,7 @@ const App: React.FC = () => {
 
   const handleSetTasks = (newTasks: Task[]) => setState(prev => ({ ...prev, tasks: newTasks }));
   const handleSetName = (name: string) => setState(prev => ({ ...prev, projectName: name }));
+  const handleSetDomain = (domain: string) => setState(prev => ({ ...prev, projectDomain: domain }));
   const handleSetColor = (color: string) => setState(prev => ({ ...prev, accentColor: color }));
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
@@ -88,6 +89,7 @@ const App: React.FC = () => {
               setState({
                 projectId: project.id,
                 projectName: project.name,
+                projectDomain: project.domain, // Load domain
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,
@@ -154,6 +156,7 @@ const App: React.FC = () => {
           <Editor 
             state={state}
             setProjectName={handleSetName}
+            setProjectDomain={handleSetDomain}
             setAccentColor={handleSetColor}
             setPosition={handleSetPos}
             setActiveTheme={handleSetTheme}

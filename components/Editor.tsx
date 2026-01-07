@@ -1,12 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
-import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft } from 'lucide-react';
+import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft, AlertCircle } from 'lucide-react';
 import EmbedModal from './EmbedModal.tsx';
 
 interface EditorProps {
   state: AppState;
   setProjectName: (name: string) => void;
+  setProjectDomain: (domain: string) => void;
   setAccentColor: (color: string) => void;
   setPosition: (pos: Position) => void;
   setActiveTheme: (theme: ThemeType) => void;
@@ -33,6 +34,7 @@ const PASTEL_PALETTE = [
 const Editor: React.FC<EditorProps> = ({
   state,
   setProjectName,
+  setProjectDomain,
   setAccentColor,
   setPosition,
   setActiveTheme,
@@ -63,14 +65,28 @@ const Editor: React.FC<EditorProps> = ({
   };
 
 
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+  const calculateXPRemaining = () => {
+    const totalXP = state.tasks.reduce((acc, task) => acc + task.xp, 0);
+    return 1000 - totalXP;
+  };
+
   const addTask = () => {
+    const remaining = calculateXPRemaining();
+    if (remaining <= 0) {
+      setAlertMessage("You have reached the maximum 1000 XP limit.");
+      // Do NOT setEditingId or setEditForm here to prevent opening the edit UI
+      return;
+    }
+
     const newTask: Task = {
       id: Date.now(),
       title: 'New Quest',
       desc: 'Enter mission details...',
       link: 'https://',
       icon: '',
-      xp: 100
+      xp: Math.min(100, remaining) // Auto-cap at remaining
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -96,6 +112,17 @@ const Editor: React.FC<EditorProps> = ({
         ...editForm,
         icon: editForm.icon || getFaviconUrl(editForm.link)
       };
+
+      // Validate XP Limit before saving
+      const currentTasksXP = state.tasks
+        .filter(t => t.id !== editingId)
+        .reduce((acc, t) => acc + t.xp, 0);
+      
+      if (currentTasksXP + nextTask.xp > 1000) {
+        setAlertMessage(`Cannot save: Total XP would exceed 1000. Available: ${1000 - currentTasksXP}`);
+        return;
+      }
+
       setTasks(state.tasks.map(t => t.id === editingId ? nextTask : t));
       setEditingId(null);
       setEditForm(null);
@@ -202,6 +229,18 @@ const Editor: React.FC<EditorProps> = ({
               </div>
             </div>
 
+            <div className="flex gap-4 items-end">
+              <div className="flex-1 space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase">Website Domain</label>
+                <input 
+                  value={state.projectDomain || ''}
+                  onChange={(e) => setProjectDomain(e.target.value)}
+                  placeholder="e.g. my-awesome-app.com"
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
                 <Layout size={10} /> Widget Position
@@ -226,10 +265,14 @@ const Editor: React.FC<EditorProps> = ({
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
               <Target size={12} />
               <h3>Missions List</h3>
+              <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] ${calculateXPRemaining() < 0 ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-slate-400'}`}>
+                {1000 - calculateXPRemaining()}/1000 XP
+              </span>
             </div>
             <button 
               onClick={addTask}
-              className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-black text-[9px] uppercase hover:bg-indigo-500 transition-all flex items-center gap-1 shadow-lg shadow-indigo-600/20"
+              disabled={calculateXPRemaining() <= 0}
+              className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-black text-[9px] uppercase hover:bg-indigo-500 transition-all flex items-center gap-1 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={12} /> New Quest
             </button>
@@ -357,6 +400,26 @@ const Editor: React.FC<EditorProps> = ({
         onClose={() => setIsEmbedModalOpen(false)} 
         state={state} 
       />
+
+      {/* Alert Modal */}
+      {alertMessage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAlertMessage(null)} />
+          <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
+              <AlertCircle size={24} />
+            </div>
+            <h3 className="text-white font-black uppercase text-lg tracking-tight">Limit Reached</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">{alertMessage}</p>
+            <button 
+              onClick={() => setAlertMessage(null)}
+              className="mt-2 w-full py-3 bg-white text-black font-black uppercase text-xs rounded-xl hover:bg-slate-200 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

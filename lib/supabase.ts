@@ -69,6 +69,7 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
         .from('projects')
         .update({
           name: state.projectName, // Allow renaming
+          domain: state.projectDomain, // Save domain
           accent_color: state.accentColor,
           position: state.position,
           theme: state.activeTheme
@@ -82,6 +83,7 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
         .from('projects')
         .insert({
           name: state.projectName,
+          domain: state.projectDomain, // Save domain
           accent_color: state.accentColor,
           position: state.position,
           theme: state.activeTheme,

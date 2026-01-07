@@ -8,6 +8,7 @@ create table if not exists projects (
   name text not null,
   owner_id uuid references auth.users(id), -- Links to the admin user
   owner_wallet text, -- Store wallet address of the creator
+  domain text, -- The website where this widget will be embedded
   accent_color text default '#6366f1',
   position text default 'bottom-right',
   theme text default 'sleek',

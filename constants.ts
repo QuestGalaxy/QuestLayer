@@ -83,7 +83,7 @@ export const INITIAL_TASKS: Task[] = [
     desc: 'Explore QuestGalaxy and discover the latest quests and galaxy rewards.',
     link: 'https://questgalaxy.com/',
     icon: 'https://www.google.com/s2/favicons?domain=questgalaxy.com&sz=128',
-    xp: 400
+    xp: 200
   },
   {
     id: 2,
@@ -91,7 +91,7 @@ export const INITIAL_TASKS: Task[] = [
     desc: 'Follow @questgalaxycom for launches, raids, and drops.',
     link: 'https://x.com/questgalaxycom',
     icon: 'https://www.google.com/s2/favicons?domain=x.com&sz=128',
-    xp: 600
+    xp: 200
   },
   {
     id: 3,
@@ -99,7 +99,7 @@ export const INITIAL_TASKS: Task[] = [
     desc: 'Join the QuestGalaxy Telegram to meet the community and mods.',
     link: 'https://t.me/questgalaxy',
     icon: 'https://www.google.com/s2/favicons?domain=t.me&sz=128',
-    xp: 500
+    xp: 200
   },
   {
     id: 4,
@@ -107,6 +107,6 @@ export const INITIAL_TASKS: Task[] = [
     desc: 'Read the QuestGalaxy Medium for updates and deep dives.',
     link: 'https://medium.com/questgalaxy',
     icon: 'https://www.google.com/s2/favicons?domain=medium.com&sz=128',
-    xp: 700
+    xp: 200
   }
 ];
