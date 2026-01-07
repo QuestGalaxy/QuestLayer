@@ -517,10 +517,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const triggerStyle = (() => {
     if (isTransparentTheme) {
       return {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: 'rgba(2, 6, 23, 0.6)', // Darker background (slate-950 at 0.6)
         backdropFilter: 'blur(20px)',
         borderColor: `${state.accentColor}60`,
-        boxShadow: `0 0 20px ${state.accentColor}30`
+        boxShadow: `0 0 20px ${state.accentColor}30`,
+        color: state.accentColor
       };
     }
 
@@ -659,7 +660,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
               <button 
                 onClick={handleConnect} 
                 disabled={isConnecting}
-                style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}20` } : {})} 
+                style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})} 
                 className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[10px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isConnecting ? (

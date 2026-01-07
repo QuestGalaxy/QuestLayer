@@ -48,10 +48,10 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   glass: {
-    card: 'bg-slate-950/40 backdrop-blur-3xl rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
-    trigger: 'rounded-full bg-slate-950/40 backdrop-blur-xl border border-white/30 text-white shadow-xl',
+    card: 'bg-slate-950/60 backdrop-blur-3xl rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
+    trigger: 'rounded-full bg-slate-950/60 backdrop-blur-xl border border-white/30 shadow-xl',
     header: 'bg-white/5 border-b border-white/10 backdrop-blur-md',
-    button: 'rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white backdrop-blur-md transition-all active:scale-95 shadow-lg',
+    button: 'rounded-full bg-white/5 hover:bg-white/10 border border-white/20 backdrop-blur-md transition-all active:scale-95 shadow-lg',
     itemCard: 'bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-sm',
     iconBox: 'rounded-2xl bg-white/10 border border-white/20 shadow-inner',
     font: 'font-["Plus_Jakarta_Sans"]'
