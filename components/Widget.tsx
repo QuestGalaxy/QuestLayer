@@ -33,6 +33,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string | number>>(new Set());
+  const [isWidgetActive, setIsWidgetActive] = useState(false);
+  const effectiveConnected = isConnected && isWidgetActive;
 
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
@@ -53,7 +55,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   // --- SUPABASE SYNC ---
   useEffect(() => {
     const initSupabase = async () => {
-      if (!isConnected || !address) return;
+      if (!effectiveConnected || !address) return;
 
       try {
         let projectId = state.projectId;
@@ -214,7 +216,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     };
 
     initSupabase();
-  }, [isConnected, address, state.projectName, state.projectId]); // Added state.projectId dependency
+  }, [effectiveConnected, address, state.projectName, state.projectId]); // Added state.projectId dependency
 
   // --- XP ANIMATION ENGINE ---
   useEffect(() => {
@@ -244,17 +246,17 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   }, [state.userXP]);
 
   useEffect(() => {
-    if (!wasConnectedRef.current && isConnected) {
+    if (!wasConnectedRef.current && effectiveConnected) {
       playSound('connect');
     }
-    wasConnectedRef.current = isConnected;
-    if (!isConnected) {
+    wasConnectedRef.current = effectiveConnected;
+    if (!effectiveConnected) {
       isDisconnectingRef.current = false;
     }
-  }, [isConnected]);
+  }, [effectiveConnected]);
 
   useEffect(() => {
-    if (!isConnected || !walletKey) return;
+    if (!effectiveConnected || !walletKey) return;
     try {
       const cached = localStorage.getItem(walletKey);
       if (cached) {
@@ -287,10 +289,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     } catch {
       // Ignore cache errors and keep current state.
     }
-  }, [isConnected, walletKey, setState, dbUserId]);
+  }, [effectiveConnected, walletKey, setState, dbUserId]);
 
   useEffect(() => {
-    if (!isConnected || !walletKey) return;
+    if (!effectiveConnected || !walletKey) return;
     if (isDisconnectingRef.current) return;
     try {
       const payload = {
@@ -304,7 +306,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     } catch {
       // Ignore storage errors in case localStorage is unavailable.
     }
-  }, [isConnected, walletKey, state.tasks, state.userXP, state.currentStreak, state.dailyClaimed, sharedPlatforms]);
+  }, [effectiveConnected, walletKey, state.tasks, state.userXP, state.currentStreak, state.dailyClaimed, sharedPlatforms]);
 
   // --- AUDIO ENGINE ---
   const initAudio = () => {
@@ -364,7 +366,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const calculateLevel = (xp: number) => {
     // Use Global XP if available (connected), otherwise local XP (preview/unconnected)
-    const effectiveXP = isConnected ? (globalXP > xp ? globalXP : xp) : xp;
+    const effectiveXP = effectiveConnected ? (globalXP > xp ? globalXP : xp) : xp;
     
     const xpPerLevel = 3000;
     const lvl = Math.floor(effectiveXP / xpPerLevel) + 1;
@@ -568,13 +570,20 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const handleConnect = () => {
     if (isConnecting) return;
     initAudio();
-    open();
+    if (isConnected) {
+        setIsWidgetActive(true);
+        playSound('connect');
+    } else {
+        setIsWidgetActive(true);
+        open();
+    }
   };
 
   const handleDisconnect = () => {
-    if (!isConnected) return;
+    if (!effectiveConnected) return;
     isDisconnectingRef.current = true;
     void disconnect();
+    setIsWidgetActive(false);
     setIsOpen(false);
   };
 
@@ -667,7 +676,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           style={triggerStyle}
           className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
         >
-          {!isConnected ? (
+          {!effectiveConnected ? (
             <span className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
               <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
               Connect
@@ -712,7 +721,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 </span>
               </div>
               <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
-                {isConnected && (
+                {effectiveConnected && (
                   <button onClick={handleDisconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
                     <LogOut className="w-[10px] h-[10px] md:w-[12px] md:h-[12px]" />
                   </button>
@@ -728,7 +737,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
         {/* Body */}
         <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-5 space-y-3 md:space-y-5 custom-scroll">
-          {!isConnected ? (
+          {!effectiveConnected ? (
             <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
               <div className="space-y-2">
                 <div 
