@@ -32,6 +32,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const [dbProjectId, setDbProjectId] = useState<string | null>(null);
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
+  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string | number>>(new Set());
 
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
@@ -156,23 +157,25 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           });
         }
 
-        // 5. Filter completed tasks
+        // 5. Fetch completed tasks
         const { data: completions } = await supabase
           .from('task_completions')
           .select('task_id')
           .eq('user_id', userId);
 
         if (completions) {
-          const completedTaskIds = new Set(completions.map(c => c.task_id));
-          setState(prev => ({
-            ...prev,
-            tasks: prev.tasks.filter(t => {
-              const dbUuid = taskMapping[t.id];
-              // If task is in DB and completed, filter it out.
-              // If task is NOT in DB (unsaved), keep it (can't be completed in DB anyway).
-              return !dbUuid || !completedTaskIds.has(dbUuid);
-            })
-          }));
+          const dbCompletedIds = new Set(completions.map(c => c.task_id));
+          const localCompletedIds = new Set<string | number>();
+
+          state.tasks.forEach(t => {
+            const dbUuid = taskMapping[t.id];
+            // If task is in DB and completed, mark it.
+            if (dbUuid && dbCompletedIds.has(dbUuid)) {
+              localCompletedIds.add(t.id);
+            }
+          });
+          
+          setCompletedTaskIds(localCompletedIds);
         }
 
         // 6. Fetch Viral Boosts
@@ -436,9 +439,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           // Optimistic Update
           setState(prev => ({
             ...prev,
-            userXP: prev.userXP + task.xp,
-            tasks: prev.tasks.filter(t => t.id !== task.id)
+            userXP: prev.userXP + task.xp
           }));
+          setCompletedTaskIds(prev => new Set(prev).add(task.id));
           setLoadingId(null);
 
           // DB Update
@@ -929,10 +932,17 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   Missions
                 </p>
                 <div className="space-y-2 md:space-y-3 pb-2">
-                  {state.tasks.map(task => (
+                  {[...state.tasks].sort((a, b) => {
+                    const aCompleted = completedTaskIds.has(a.id);
+                    const bCompleted = completedTaskIds.has(b.id);
+                    if (aCompleted === bCompleted) return 0;
+                    return aCompleted ? 1 : -1;
+                  }).map(task => {
+                    const isCompleted = completedTaskIds.has(task.id);
+                    return (
                     <div 
                         key={task.id} 
-                        className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard}`}
+                        className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''}`}
                         style={{ 
                           borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
                           boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
@@ -964,7 +974,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                               />
                             </div>
                           ) : null}
-                          <h5 className={`text-[10px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}>
+                          <h5 className={`text-[10px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
                             {task.title}
                           </h5>
                         </div>
@@ -980,27 +990,32 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                       </p>
                       <button 
                         onClick={() => startQuest(task)} 
-                        disabled={loadingId !== null && loadingId !== task.id}
+                        disabled={isCompleted || (loadingId !== null && loadingId !== task.id)}
                         style={(!isLightTheme && !isTransparentTheme) ? { 
-                          backgroundColor: state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor,
-                          borderColor: state.activeTheme === 'gaming' ? '#b45309' : state.accentColor,
-                          color: state.activeTheme === 'gaming' ? 'black' : 'white'
+                          backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
+                          borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
+                          color: state.activeTheme === 'gaming' ? 'black' : 'white',
+                          cursor: isCompleted ? 'not-allowed' : 'pointer'
                         } : (isTransparentTheme ? { 
-                          borderColor: state.accentColor, 
-                          backgroundColor: loadingId === task.id ? `${state.accentColor}10` : 'transparent',
-                          color: 'white'
+                          borderColor: isCompleted ? '#94a3b8' : state.accentColor, 
+                          backgroundColor: isCompleted ? '#94a3b820' : (loadingId === task.id ? `${state.accentColor}10` : 'transparent'),
+                          color: isCompleted ? '#94a3b8' : 'white',
+                          cursor: isCompleted ? 'not-allowed' : 'pointer'
                         } : (loadingId === task.id ? { 
                           backgroundColor: '#f8fafc', 
                           color: '#1e293b', 
                           borderColor: '#cbd5e1' 
                         } : { 
-                          backgroundColor: state.accentColor, 
-                          color: 'white', 
-                          borderColor: state.accentColor 
+                          backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor, 
+                          color: isCompleted ? '#94a3b8' : 'white', 
+                          borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                          cursor: isCompleted ? 'not-allowed' : 'pointer'
                         }))} 
                         className={`w-full h-7 md:h-9 border-2 font-black text-[9px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
                       >
-                        {loadingId !== task.id ? (
+                        {isCompleted ? (
+                           <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
+                        ) : loadingId !== task.id ? (
                           <span className="flex items-center gap-1">Launch <ExternalLink size={7} /></span>
                         ) : (
                           <span className="flex items-center gap-1">Syncing <span className={`font-mono`} style={{ color: state.accentColor }}>{timerValue}s</span></span>
@@ -1013,7 +1028,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                         )}
                       </button>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             </div>
