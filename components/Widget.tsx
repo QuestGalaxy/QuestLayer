@@ -497,15 +497,37 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     initAudio();
     if (sharedPlatforms.includes(platform) || verifyingPlatforms.includes(platform)) return;
     const shareUrl = window.location.origin;
-    const shareText = `Engage with ${state.projectName} on QuestLayer and earn rewards!`;
+    
+    // Platform-specific marketing copy
+    let shareText = '';
+    const projectHashtag = `#${state.projectName.replace(/\s+/g, '')}`;
+    
+    switch(platform) {
+      case 'x': 
+        shareText = `🚀 Just started my journey on ${state.projectName}! \n\nCompleting quests and earning XP. Join me and level up! ⚡️\n\n${projectHashtag} #QuestLayer #Web3`;
+        break;
+      case 'tg': 
+        shareText = `Check out ${state.projectName} on QuestLayer! 🎮 I'm earning rewards by completing quests. Come join the leaderboard! 🚀`;
+        break;
+      case 'wa': 
+        shareText = `Hey! I'm using QuestLayer to earn rewards on ${state.projectName}. It's actually pretty cool, check it out here:`;
+        break;
+      case 'li': 
+        shareText = `Excited to be engaging with ${state.projectName} through their new QuestLayer integration. Gamifying the experience and earning rewards! 🚀 #Web3 #Community #Growth`;
+        break;
+      default: // fb and others
+        shareText = `Loving the new quest system on ${state.projectName}! 🎮 Earning XP and rewards for engaging with the community. Check it out!`;
+        break;
+    }
+
     let url = '';
 
     switch(platform) {
       case 'x': url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`; break;
       case 'tg': url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`; break;
       case 'wa': url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`; break;
-      case 'fb': url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`; break;
-      case 'li': url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`; break;
+      case 'fb': url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`; break;
+      case 'li': url = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText + ' ' + shareUrl)}`; break;
     }
 
     if (url) {
