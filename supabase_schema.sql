@@ -157,18 +157,41 @@ begin
   from end_users 
   where project_id = p_id;
 
-  -- Tasks Completed
-  select count(tc.id) into tasks_completed
-  from task_completions tc
-  join tasks t on tc.task_id = t.id
-  where t.project_id = p_id;
+  -- Tasks Completed (Regular Tasks + Viral Boosts + Daily Claims)
+  select 
+    (select count(tc.id) 
+     from task_completions tc
+     join tasks t on tc.task_id = t.id
+     where t.project_id = p_id)
+    +
+    (select count(vbc.id)
+     from viral_boost_completions vbc
+     where vbc.project_id = p_id)
+    +
+    (select count(dcl.id)
+     from daily_claim_logs dcl
+     where dcl.project_id = p_id)
+  into tasks_completed;
 
-  -- Active Users Weekly (Unique users who completed a task in last 7 days)
-  select count(distinct tc.user_id) into auw
-  from task_completions tc
-  join tasks t on tc.task_id = t.id
-  where t.project_id = p_id
-    and tc.created_at >= (now() - interval '7 days');
+  -- Active Users Weekly (Unique users who completed a task OR viral boost OR daily claim in last 7 days)
+  with active_users as (
+    select tc.user_id
+    from task_completions tc
+    join tasks t on tc.task_id = t.id
+    where t.project_id = p_id
+      and tc.created_at >= (now() - interval '7 days')
+    union
+    select vbc.user_id
+    from viral_boost_completions vbc
+    where vbc.project_id = p_id
+      and vbc.created_at >= (now() - interval '7 days')
+    union
+    select dcl.user_id
+    from daily_claim_logs dcl
+    where dcl.project_id = p_id
+      and dcl.created_at >= (now() - interval '7 days')
+  )
+  select count(distinct user_id) into auw from active_users;
 
   return json_build_object(
     'total_visits', total_visits,
@@ -191,4 +214,116 @@ as $$
   from user_progress up
   join end_users eu on up.user_id = eu.id
   where eu.wallet_address = wallet_addr;
+$$;
+
+-- 9. Viral Boost Completions (Social Shares)
+create table if not exists viral_boost_completions (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  user_id uuid references end_users(id) on delete cascade not null,
+  project_id uuid references projects(id) on delete cascade not null,
+  platform text not null, -- 'x', 'tg', 'wa', 'fb', 'li'
+  unique(user_id, project_id, platform)
+);
+
+-- Enable RLS for Viral Boosts
+alter table viral_boost_completions enable row level security;
+create policy "Users can read own viral boosts" on viral_boost_completions for select using (true);
+create policy "Users can insert own viral boosts" on viral_boost_completions for insert with check (true);
+
+-- 11. Daily Claim Logs (For Analytics)
+create table if not exists daily_claim_logs (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  user_id uuid references end_users(id) on delete cascade not null,
+  project_id uuid references projects(id) on delete cascade not null,
+  streak_at_claim integer,
+  xp_amount integer
+);
+
+-- RLS
+alter table daily_claim_logs enable row level security;
+create policy "Users can read own claim logs" on daily_claim_logs for select using (true);
+create policy "Users can insert own claim logs" on daily_claim_logs for insert with check (true);
+
+-- 10. Daily Claim Logic (Streak System)
+create or replace function claim_daily_bonus(u_id uuid)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  current_xp int;
+  current_streak int;
+  last_claim timestamptz;
+  new_streak int;
+  bonus_amount int;
+  now_utc timestamptz := now();
+  days_diff int;
+begin
+  -- Get current state
+  select xp, streak, last_claim_date 
+  into current_xp, current_streak, last_claim 
+  from user_progress 
+  where user_id = u_id;
+
+  -- Handle first time claim
+  if current_streak is null then
+    current_streak := 0;
+  end if;
+
+  if last_claim is null then
+    days_diff := 999; -- Treat as "long time ago"
+  else
+    -- Calculate difference in days between Now and Last Claim (UTC)
+    -- We cast to date to ignore time parts (midnight to midnight)
+    days_diff := (date(now_utc) - date(last_claim));
+  end if;
+
+  -- Check if already claimed today
+  if days_diff = 0 then
+    return json_build_object('success', false, 'message', 'Already claimed today');
+  end if;
+
+  -- Calculate New Streak
+  if days_diff = 1 then
+    -- Consecutive day: Increment streak
+    new_streak := current_streak + 1;
+    if new_streak > 5 then new_streak := 1; end if; -- Reset after 5 days cycle? Or cap at 5? Requirement says "cycle for 5 days" usually means 1->5 then reset or stay at 5. Let's assume reset cycle 1-5.
+    -- Actually, usually streak resets to 1 after 5 if it's a 5-day cycle reward. 
+    -- Let's stick to: 1,2,3,4,5 -> 1.
+  else
+    -- Missed a day (or first time): Reset to 1
+    new_streak := 1;
+  end if;
+
+  -- Calculate Bonus
+  -- Day 1: 100
+  -- Day 2: 200
+  -- Day 3: 400
+  -- Day 4: 800
+  -- Day 5: 1600
+  bonus_amount := 100 * power(2, new_streak - 1);
+
+  -- Update DB
+  update user_progress 
+  set 
+    xp = current_xp + bonus_amount,
+    streak = new_streak,
+    last_claim_date = now_utc
+  where user_id = u_id;
+
+  -- Log Claim for Analytics
+  insert into daily_claim_logs (user_id, project_id, streak_at_claim, xp_amount)
+  select u_id, project_id, new_streak, bonus_amount
+  from end_users
+  where id = u_id;
+
+  return json_build_object(
+    'success', true,
+    'new_streak', new_streak,
+    'bonus', bonus_amount,
+    'new_total_xp', current_xp + bonus_amount
+  );
+end;
 $$;

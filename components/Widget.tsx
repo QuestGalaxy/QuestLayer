@@ -130,15 +130,22 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           .single();
 
         if (progress) {
+          // Check if claimed today (UTC Comparison)
+          let isClaimedToday = false;
+          if (progress.last_claim_date) {
+            const lastClaim = new Date(progress.last_claim_date);
+            const now = new Date();
+            isClaimedToday = lastClaim.getUTCFullYear() === now.getUTCFullYear() &&
+                             lastClaim.getUTCMonth() === now.getUTCMonth() &&
+                             lastClaim.getUTCDate() === now.getUTCDate();
+          }
+
           // Sync DB state to Local State
           setState(prev => ({
             ...prev,
             userXP: progress.xp || 0,
             currentStreak: progress.streak || 1,
-            // Check if claimed today
-            dailyClaimed: progress.last_claim_date 
-              ? new Date(progress.last_claim_date).toDateString() === new Date().toDateString()
-              : false
+            dailyClaimed: isClaimedToday
           }));
         } else {
           // Initialize progress row
@@ -168,7 +175,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           }));
         }
 
-        // 6. Fetch Global XP
+        // 6. Fetch Viral Boosts
+        const { data: viralBoosts } = await supabase
+          .from('viral_boost_completions')
+          .select('platform')
+          .eq('user_id', userId)
+          .eq('project_id', projectId);
+        
+        if (viralBoosts) {
+          setSharedPlatforms(viralBoosts.map(v => v.platform));
+        }
+
+        // 7. Fetch Global XP
         const { data: globalXPData } = await supabase.rpc('get_global_xp', { wallet_addr: address });
         if (globalXPData !== null) {
           setGlobalXP(globalXPData);
@@ -247,7 +265,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           currentStreak: parsed.currentStreak ?? prev.currentStreak,
           dailyClaimed: parsed.dailyClaimed ?? prev.dailyClaimed
         }));
-        setSharedPlatforms(parsed.sharedPlatforms ?? []);
+        // We do NOT load sharedPlatforms from cache if connected, as DB is source of truth.
+        // But if unconnected (preview mode), we can respect it or just default to empty.
+        if (!dbUserId) {
+             setSharedPlatforms(parsed.sharedPlatforms ?? []);
+        }
       } else {
         const fresh = initialStateRef.current;
         setState(prev => ({
@@ -262,7 +284,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     } catch {
       // Ignore cache errors and keep current state.
     }
-  }, [isConnected, walletKey, setState]);
+  }, [isConnected, walletKey, setState, dbUserId]);
 
   useEffect(() => {
     if (!isConnected || !walletKey) return;
@@ -359,36 +381,43 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const claimDaily = async () => {
     if (state.dailyClaimed) return;
-    playSound('fanfare');
-    const bonus = 100 * Math.pow(2, state.currentStreak - 1);
     
-    // Optimistic Update
-    setState(prev => ({
-      ...prev,
-      userXP: prev.userXP + bonus,
-      currentStreak: (prev.currentStreak % 5) + 1,
-      dailyClaimed: true
-    }));
-
-    // DB Update
+    // DB Update & Calculation via RPC
     if (dbUserId) {
-      await supabase
-        .from('user_progress')
-        .update({
-          xp: state.userXP + bonus, // Note: using state.userXP here might be stale if setState is async, but visualXP is lagging anyway. 
-                                    // Better to use the calculated value or SQL increment.
-                                    // SQL increment is safer: xp = xp + bonus
-          streak: (state.currentStreak % 5) + 1,
-          last_claim_date: new Date().toISOString()
-        })
-        .eq('user_id', dbUserId);
+      try {
+        const { data, error } = await supabase.rpc('claim_daily_bonus', { u_id: dbUserId });
         
-      // Also strictly speaking we should increment XP in DB to avoid race conditions, but for this widget simple update is fine.
-      // Better:
-      // const { error } = await supabase.rpc('claim_bonus', { user_id: dbUserId, bonus_amount: bonus });
+        if (error) throw error;
+        
+        if (data && data.success) {
+          playSound('fanfare');
+          
+          // Update Local State with Server Response
+          setState(prev => ({
+            ...prev,
+            userXP: data.new_total_xp,
+            currentStreak: data.new_streak,
+            dailyClaimed: true
+          }));
 
-      // Update Global XP locally to reflect change immediately
-      setGlobalXP(prev => prev + bonus);
+          // Update Global XP locally to reflect change immediately
+          setGlobalXP(prev => prev + data.bonus);
+        } else {
+          console.warn('Claim failed:', data?.message);
+        }
+      } catch (err) {
+        console.error('Error claiming daily:', err);
+      }
+    } else {
+      // Local / Preview Mode Fallback
+      playSound('fanfare');
+      const bonus = 100 * Math.pow(2, state.currentStreak - 1);
+      setState(prev => ({
+        ...prev,
+        userXP: prev.userXP + bonus,
+        currentStreak: (prev.currentStreak % 5) + 1,
+        dailyClaimed: true
+      }));
     }
   };
 
@@ -465,13 +494,21 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           setState(prev => ({ ...prev, userXP: prev.userXP + 100 }));
           
           // DB Update
-          if (dbUserId) {
-             supabase.from('user_progress')
-               .update({ xp: state.userXP + 100 })
-               .eq('user_id', dbUserId)
-               .then(() => {
-                  setGlobalXP(prev => prev + 100);
-               });
+          if (dbUserId && dbProjectId) {
+             // 1. Log completion in DB
+             supabase.from('viral_boost_completions').insert({
+               user_id: dbUserId,
+               project_id: dbProjectId,
+               platform: platform
+             }).then(() => {
+               // 2. Update User XP
+               supabase.from('user_progress')
+                 .update({ xp: state.userXP + 100 })
+                 .eq('user_id', dbUserId)
+                 .then(() => {
+                    setGlobalXP(prev => prev + 100);
+                 });
+             });
           }
         }
       }, 10000);
