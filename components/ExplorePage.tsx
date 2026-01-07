@@ -6,11 +6,14 @@ interface ExplorePageProps {
   onBack: () => void;
 }
 
-const ExploreCard: React.FC<{ project: any; stats: any }> = ({ project, stats }) => {
+const ExploreCard: React.FC<{ project: any; stats: any; onImageError: (id: string) => void }> = ({ project, stats, onImageError }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   
   useEffect(() => {
-    if (!project.domain) return;
+    if (!project.domain) {
+        onImageError(project.id);
+        return;
+    }
     let isMounted = true;
 
     const fetchOg = async () => {
@@ -18,17 +21,29 @@ const ExploreCard: React.FC<{ project: any; stats: any }> = ({ project, stats })
         const url = `https://api.microlink.io/?url=${encodeURIComponent(project.domain.startsWith('http') ? project.domain : `https://${project.domain}`)}&palette=true&audio=false&video=false&iframe=false`;
         const res = await fetch(url);
         const data = await res.json();
-        if (isMounted && data.status === 'success' && data.data.image?.url) {
-          setOgImage(data.data.image.url);
+        if (isMounted) {
+            if (data.status === 'success' && data.data.image?.url) {
+                setOgImage(data.data.image.url);
+            } else {
+                onImageError(project.id);
+            }
         }
       } catch (e) {
-        // Ignore
+        if (isMounted) {
+            onImageError(project.id);
+        }
       }
     };
 
     fetchOg();
     return () => { isMounted = false; };
-  }, [project.domain]);
+  }, [project.domain, project.id, onImageError]);
+
+  if (!ogImage) return (
+    <div className="rounded-3xl border border-white/5 bg-slate-900/40 h-[380px] animate-pulse">
+        <div className="h-48 bg-white/5 rounded-t-3xl" />
+    </div>
+  );
 
   return (
     <div className="group relative rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all duration-500 hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)] flex flex-col h-full hover:-translate-y-1">
@@ -112,6 +127,15 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
+  const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
+
+  const handleImageError = (id: string) => {
+    setInvalidImages(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -163,8 +187,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onBack }) => {
     load();
   }, []);
 
-  // Filter projects first
+  // Filter projects first (including invalid images)
   const filteredProjects = projects.filter(p => 
+    !invalidImages.has(p.id) &&
     p.domain && (
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       p.domain.toLowerCase().includes(searchTerm.toLowerCase())
@@ -238,9 +263,9 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onBack }) => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedProjects.map((project) => (
-                  <ExploreCard key={project.id} project={project} stats={project.stats} />
+                  <ExploreCard key={project.id} project={project} stats={project.stats} onImageError={handleImageError} />
                 ))}
-              </div>
+            </div>
 
               {/* Pagination Controls */}
               {totalPages > 1 && (

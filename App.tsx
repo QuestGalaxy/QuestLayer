@@ -140,6 +140,9 @@ const App: React.FC = () => {
         onDisconnect={() => {
           setCurrentPage('landing');
         }}
+        onExplore={() => {
+          setCurrentPage('explore');
+        }}
       />
     );
   }
