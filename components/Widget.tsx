@@ -1042,7 +1042,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         >
           <Zap className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current w-[8px] h-[8px] md:w-[10px] md:h-[10px]`} style={!isLightTheme ? { color: state.accentColor } : {}} />
           <a
-            href="https://questlayer.vercel.app/"
+            href="https://questlayer.questgalaxy.com/"
             target="_blank"
             rel="noreferrer"
             className={`text-[7px] md:text-[9px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'} hover:opacity-80 transition-opacity`}
