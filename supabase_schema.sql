@@ -203,6 +203,77 @@ begin
 end;
 $$;
 
+-- Get Global Stats (All Projects for an Owner)
+create or replace function get_global_dashboard_stats(owner_addr text)
+returns json
+language plpgsql
+security definer
+as $$
+declare
+  total_projects bigint;
+  total_visits bigint;
+  daily_visits bigint;
+  total_users bigint;
+  total_actions bigint;
+begin
+  -- Total Projects
+  select count(*) into total_projects 
+  from projects 
+  where owner_wallet = owner_addr;
+
+  -- Total Visits (Across all owned projects)
+  select count(*) into total_visits 
+  from analytics_events ae
+  join projects p on ae.project_id = p.id
+  where p.owner_wallet = owner_addr 
+    and ae.event_type = 'view';
+
+  -- Daily Visits (Across all owned projects)
+  select count(*) into daily_visits 
+  from analytics_events ae
+  join projects p on ae.project_id = p.id
+  where p.owner_wallet = owner_addr 
+    and ae.event_type = 'view'
+    and ae.created_at >= current_date;
+
+  -- Total Unique Users (Across all owned projects)
+  -- Note: A user connecting to 2 different projects counts as 2 "users" in this context usually, 
+  -- but "distinct wallet_address" would mean unique people.
+  -- Let's count distinct wallet addresses across the ecosystem.
+  select count(distinct eu.wallet_address) into total_users
+  from end_users eu
+  join projects p on eu.project_id = p.id
+  where p.owner_wallet = owner_addr;
+
+  -- Total Actions (Tasks + Viral + Claims)
+  select 
+    (select count(tc.id) 
+     from task_completions tc
+     join tasks t on tc.task_id = t.id
+     join projects p on t.project_id = p.id
+     where p.owner_wallet = owner_addr)
+    +
+    (select count(vbc.id)
+     from viral_boost_completions vbc
+     join projects p on vbc.project_id = p.id
+     where p.owner_wallet = owner_addr)
+    +
+    (select count(dcl.id)
+     from daily_claim_logs dcl
+     join projects p on dcl.project_id = p.id
+     where p.owner_wallet = owner_addr)
+  into total_actions;
+
+  return json_build_object(
+    'total_projects', total_projects,
+    'total_visits', total_visits,
+    'daily_visits', daily_visits,
+    'total_users', total_users,
+    'total_actions', total_actions
+  );
+end;
+$$;
+
 -- 8. Global Stats Helper
 -- Returns the total XP for a given wallet address across all projects
 create or replace function get_global_xp(wallet_addr text)

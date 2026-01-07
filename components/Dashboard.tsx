@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchProjects, fetchProjectStats } from '../lib/supabase';
-import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi } from 'lucide-react';
+import { fetchProjects, fetchProjectStats, fetchGlobalDashboardStats } from '../lib/supabase';
+import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi, BarChart3, Zap, Layers } from 'lucide-react';
 import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 interface DashboardProps {
@@ -8,6 +8,64 @@ interface DashboardProps {
   onCreateProject: () => void;
   onDisconnect: () => void;
 }
+
+const GlobalStats: React.FC<{ ownerAddress: string }> = ({ ownerAddress }) => {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await fetchGlobalDashboardStats(ownerAddress);
+        setStats(data);
+      } catch (e) {
+        console.error('Failed to load global stats', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (ownerAddress) load();
+  }, [ownerAddress]);
+
+  if (loading) return <div className="h-32 w-full animate-pulse bg-slate-900/50 rounded-3xl mb-8"></div>;
+  if (!stats) return null;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div className="bg-slate-900/40 border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-slate-900 hover:border-indigo-500/30 transition-all">
+        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
+          <Activity size={20} />
+        </div>
+        <p className="text-3xl font-black text-white mb-1">{stats.total_visits || 0}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Total Views</p>
+      </div>
+
+      <div className="bg-slate-900/40 border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-slate-900 hover:border-emerald-500/30 transition-all">
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
+          <Users size={20} />
+        </div>
+        <p className="text-3xl font-black text-white mb-1">{stats.total_users || 0}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Unique Users</p>
+      </div>
+
+      <div className="bg-slate-900/40 border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-slate-900 hover:border-amber-500/30 transition-all">
+        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-110 transition-transform">
+          <Zap size={20} />
+        </div>
+        <p className="text-3xl font-black text-white mb-1">{stats.total_actions || 0}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Actions Completed</p>
+      </div>
+
+      <div className="bg-slate-900/40 border border-white/5 p-5 rounded-3xl flex flex-col items-center justify-center text-center group hover:bg-slate-900 hover:border-pink-500/30 transition-all">
+        <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 mb-3 group-hover:scale-110 transition-transform">
+          <Layers size={20} />
+        </div>
+        <p className="text-3xl font-black text-white mb-1">{stats.total_projects || 0}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Active Widgets</p>
+      </div>
+    </div>
+  );
+};
 
 const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project, onSelect }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
@@ -219,6 +277,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
             </button>
           </div>
         </div>
+
+        {/* Global Analytics Overview */}
+        {address && <GlobalStats ownerAddress={address} />}
 
         {loading ? (
           <div className="flex items-center justify-center h-64">

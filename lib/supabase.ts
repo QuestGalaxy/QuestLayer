@@ -58,6 +58,12 @@ export const fetchProjectStats = async (projectId: string) => {
   return data;
 };
 
+export const fetchGlobalDashboardStats = async (ownerAddress: string) => {
+  const { data, error } = await supabase.rpc('get_global_dashboard_stats', { owner_addr: ownerAddress });
+  if (error) throw error;
+  return data;
+};
+
 export const syncProjectToSupabase = async (state: AppState, ownerAddress?: string): Promise<{ projectId: string, error?: any }> => {
   try {
     // 1. Get or Create Project
