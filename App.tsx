@@ -10,10 +10,11 @@ import { syncProjectToSupabase } from './lib/supabase';
 import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 import Dashboard from './components/Dashboard.tsx';
+import ExplorePage from './components/ExplorePage.tsx';
 import { fetchProjectDetails } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore'>('landing');
   const [view, setView] = useState<'editor' | 'preview'>('editor');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -74,6 +75,17 @@ const App: React.FC = () => {
         onLaunch={() => {
           setCurrentPage('dashboard');
         }}
+        onExplore={() => {
+          setCurrentPage('explore');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'explore') {
+    return (
+      <ExplorePage
+        onBack={() => setCurrentPage('landing')}
       />
     );
   }

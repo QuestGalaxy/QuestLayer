@@ -27,6 +27,16 @@ export const fetchProjects = async (ownerAddress: string) => {
   return data;
 };
 
+export const fetchAllProjects = async () => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
 export const fetchProjectDetails = async (projectId: string) => {
   const { data: project, error: projectError } = await supabase
     .from('projects')

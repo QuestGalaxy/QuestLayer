@@ -61,7 +61,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         let projectId = state.projectId;
 
         // Fallback: Try to find project by name if ID is missing (legacy/unsynced state)
-        if (!projectId && state.projectName) {
+        // ONLY if not in preview mode. In preview, we rely on state.projectId being explicitly set.
+        if (!projectId && state.projectName && !isPreview) {
           const { data: projects } = await supabase
             .from('projects')
             .select('id')

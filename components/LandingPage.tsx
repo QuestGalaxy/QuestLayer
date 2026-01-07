@@ -5,9 +5,10 @@ import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
 interface LandingPageProps {
   onLaunch: () => void;
+  onExplore: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
@@ -145,11 +146,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
                >
                  {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building' : 'Connect to Build')}
                  {!isConnected && !isConnecting && <Wallet size={14} />}
-               </button>
-               <button className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all">
-                 View Demo
-               </button>
-             </div>
+              </button>
+              
+              <button 
+                onClick={onExplore}
+                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center gap-2 group"
+              >
+                <Globe size={14} className="group-hover:text-indigo-400 transition-colors" />
+                Explore
+              </button>
+            </div>
            </div>
         </div>
 
@@ -333,8 +339,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch }) => {
                 </span>
               </button>
               
-              <button className="w-full md:w-auto px-12 py-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-sm tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3">
-                <Globe size={18} /> Documentation
+              <button 
+                onClick={onExplore}
+                className="w-full md:w-auto px-12 py-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-sm tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3"
+              >
+                <Globe size={18} /> Explore Ecosystem
               </button>
            </div>
 
