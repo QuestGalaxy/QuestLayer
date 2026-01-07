@@ -266,7 +266,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         };
         setState(prev => ({
           ...prev,
-          tasks: parsed.tasks ?? prev.tasks,
+          // In preview mode, we NEVER want to overwrite the tasks with cached data,
+          // as the user is actively editing them.
+          tasks: isPreview ? prev.tasks : (parsed.tasks ?? prev.tasks),
           userXP: parsed.userXP ?? prev.userXP,
           currentStreak: parsed.currentStreak ?? prev.currentStreak,
           dailyClaimed: parsed.dailyClaimed ?? prev.dailyClaimed
