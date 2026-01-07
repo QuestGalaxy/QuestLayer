@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchProjects } from '../lib/supabase';
-import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { fetchProjects, fetchProjectStats } from '../lib/supabase';
+import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi } from 'lucide-react';
 import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 interface DashboardProps {
@@ -12,16 +12,16 @@ interface DashboardProps {
 const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project, onSelect }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
+  const [stats, setStats] = useState<any>(null);
 
+  // Fetch OG Image
   useEffect(() => {
     if (!project.domain) return;
-
     let isMounted = true;
     setLoadingImage(true);
 
     const fetchOg = async () => {
       try {
-        // Use microlink to get OG data safely
         const url = `https://api.microlink.io/?url=${encodeURIComponent(project.domain.startsWith('http') ? project.domain : `https://${project.domain}`)}&palette=true&audio=false&video=false&iframe=false`;
         const res = await fetch(url);
         const data = await res.json();
@@ -29,16 +29,36 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project
           setOgImage(data.data.image.url);
         }
       } catch (e) {
-        // Ignore errors, fallback to icon
+        // Ignore
       } finally {
         if (isMounted) setLoadingImage(false);
       }
     };
 
     fetchOg();
-
     return () => { isMounted = false; };
   }, [project.domain]);
+
+  // Fetch Analytics Stats
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await fetchProjectStats(project.id);
+        setStats(data);
+      } catch (e) {
+        console.error('Failed to load stats', e);
+      }
+    };
+    loadStats();
+  }, [project.id]);
+
+  // Online Status: Check if last_ping_at is within 5 minutes
+  const isOnline = React.useMemo(() => {
+    if (!project.last_ping_at) return false;
+    const lastPing = new Date(project.last_ping_at).getTime();
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    return lastPing > fiveMinutesAgo;
+  }, [project.last_ping_at]);
 
   return (
     <div
@@ -68,8 +88,21 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project
         </div>
 
         {/* Theme Badge */}
-        <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-mono text-slate-300 uppercase shadow-sm">
-          {project.theme}
+        <div className="absolute top-4 right-4 flex gap-2">
+           {/* Online Status Tag */}
+           {isOnline && (
+            <div className="px-2 py-1 rounded-lg bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-[10px] font-black text-emerald-400 uppercase shadow-sm flex items-center gap-1.5 animate-in fade-in">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Online
+            </div>
+          )}
+          
+          <div className="px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-mono text-slate-300 uppercase shadow-sm">
+            {project.theme}
+          </div>
         </div>
       </div>
 
@@ -86,6 +119,41 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project
             </span>
           </div>
         )}
+
+        {/* Analytics Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+           {/* Daily Visits */}
+           <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+             <p className="text-[9px] text-slate-500 font-bold uppercase flex items-center gap-1 mb-0.5">
+               <Eye size={10} /> Daily Visits
+             </p>
+             <p className="text-sm font-black text-white">{stats?.daily_visits || 0}</p>
+           </div>
+           
+           {/* Connected Wallets */}
+           <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+             <p className="text-[9px] text-slate-500 font-bold uppercase flex items-center gap-1 mb-0.5">
+               <Users size={10} /> Connected
+             </p>
+             <p className="text-sm font-black text-white">{stats?.connected_wallets || 0}</p>
+           </div>
+
+           {/* Tasks Completed */}
+           <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+             <p className="text-[9px] text-slate-500 font-bold uppercase flex items-center gap-1 mb-0.5">
+               <CheckCircle size={10} /> Completed
+             </p>
+             <p className="text-sm font-black text-white">{stats?.tasks_completed || 0}</p>
+           </div>
+
+           {/* Total Visits */}
+           <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+             <p className="text-[9px] text-slate-500 font-bold uppercase flex items-center gap-1 mb-0.5">
+               <Activity size={10} /> Total Visits
+             </p>
+             <p className="text-sm font-black text-white">{stats?.total_visits || 0}</p>
+           </div>
+        </div>
 
         <div className="mt-auto flex items-center gap-4 text-[10px] font-bold uppercase text-slate-500 pt-4 border-t border-white/5">
           <span className="flex items-center gap-1.5">

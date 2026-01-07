@@ -47,6 +47,17 @@ export const fetchProjectDetails = async (projectId: string) => {
   return { project, tasks };
 };
 
+export const logProjectView = async (projectId: string) => {
+  const { error } = await supabase.rpc('log_project_view', { p_id: projectId });
+  if (error) console.error('Error logging view:', error);
+};
+
+export const fetchProjectStats = async (projectId: string) => {
+  const { data, error } = await supabase.rpc('get_project_stats', { p_id: projectId });
+  if (error) throw error;
+  return data;
+};
+
 export const syncProjectToSupabase = async (state: AppState, ownerAddress?: string): Promise<{ projectId: string, error?: any }> => {
   try {
     // 1. Get or Create Project

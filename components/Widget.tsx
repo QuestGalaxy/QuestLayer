@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { THEMES } from '../constants.ts';
-import { supabase } from '../lib/supabase';
+import { supabase, logProjectView } from '../lib/supabase';
 import { 
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2, 
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, 
@@ -76,6 +76,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         }
 
         setDbProjectId(projectId);
+
+        // 7. Log View Analytics (Once per session/mount)
+        if (!isPreview) {
+          logProjectView(projectId);
+        }
 
         // 2. Fetch Tasks Mappings (Read-Only)
         // We only map tasks that exist in the DB. New unsaved tasks won't have IDs.
