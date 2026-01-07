@@ -167,15 +167,15 @@ const App: React.FC = () => {
         </aside>
 
         {/* Preview Area */}
-        <main className={`${view === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 relative overflow-hidden ${previewTheme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-500 p-4 md:p-8`}>
+        <main className={`${view === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 relative overflow-hidden ${previewTheme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-500 p-0 md:p-8`}>
           {/* Mock Website Container */}
           <div
             ref={previewRef}
-            className={`w-full h-full border rounded-[2rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col group transition-all duration-500 ${
+            className={`w-full h-full border-0 md:border rounded-none md:rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col group transition-all duration-500 ${
               previewTheme === 'dark'
                 ? 'bg-slate-950 border-white/5'
                 : 'bg-white border-slate-200'
-            } ${previewMode === 'mobile' ? 'max-w-[420px] mx-auto' : ''}`}
+            } ${previewMode === 'mobile' ? 'max-w-[420px] mx-auto border rounded-[2.5rem]' : ''}`}
           >
                   
                   {/* Mock Browser Header */}
@@ -235,7 +235,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* View Switcher Overlay (Desktop Only) */}
-                  <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md p-1 rounded-full border border-white/10 z-40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md p-1 rounded-full border border-white/10 z-[60] opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => setPreviewMode('desktop')}
                       className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${
@@ -277,6 +277,12 @@ const App: React.FC = () => {
                       <Layout size={12} /> {isFullscreen ? 'Exit' : 'Fullscreen'}
                     </button>
                   </div>
+
+            {/* Focus Mask */}
+            <div 
+              className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] z-[50] transition-all duration-500 opacity-100 ${isWidgetOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+              onClick={() => setIsWidgetOpen(false)}
+            />
 
             {/* Widget Component inside the mock browser container */}
             <Widget 

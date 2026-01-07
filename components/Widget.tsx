@@ -665,7 +665,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
             setIsOpen(prev => !prev);
           }}
           style={triggerStyle}
-          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'}`}
+          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
         >
           {!isConnected ? (
             <span className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
