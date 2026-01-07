@@ -11,7 +11,7 @@ import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 import Dashboard from './components/Dashboard.tsx';
 import ExplorePage from './components/ExplorePage.tsx';
-import { fetchProjectDetails } from './lib/supabase';
+import { fetchProjectDetails, deleteProject } from './lib/supabase';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore'>('landing');
@@ -142,6 +142,22 @@ const App: React.FC = () => {
         }}
         onExplore={() => {
           setCurrentPage('explore');
+        }}
+        onDeleteProject={async (id) => {
+            try {
+                await deleteProject(id);
+                // Force a reload to refresh dashboard list
+                // Since we are in parent, we can just toggle page or rely on Dashboard internal state
+                // But Dashboard uses useEffect on mount.
+                // Simplest is to just re-mount dashboard or let dashboard handle it.
+                // For now, let's toggle page briefly or just alert.
+                // Better UX: Trigger a state update in App that forces Dashboard remount
+                setCurrentPage('landing');
+                setTimeout(() => setCurrentPage('dashboard'), 50);
+            } catch (e) {
+                console.error(e);
+                alert("Failed to delete project");
+            }
         }}
       />
     );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { fetchProjects, fetchProjectStats, fetchGlobalDashboardStats } from '../lib/supabase';
-import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi, BarChart3, Zap, Layers } from 'lucide-react';
+import { fetchProjects, fetchProjectStats, fetchGlobalDashboardStats, deleteProject } from '../lib/supabase';
+import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi, BarChart3, Zap, Layers, Trash2, AlertTriangle, X } from 'lucide-react';
 import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 interface DashboardProps {
@@ -8,6 +8,7 @@ interface DashboardProps {
   onCreateProject: () => void;
   onDisconnect: () => void;
   onExplore: () => void;
+  onDeleteProject: (projectId: string) => void;
 }
 
 const GlobalStats: React.FC<{ ownerAddress: string }> = ({ ownerAddress }) => {
@@ -68,10 +69,34 @@ const GlobalStats: React.FC<{ ownerAddress: string }> = ({ ownerAddress }) => {
   );
 };
 
-const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project, onSelect }) => {
+const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () => void }> = ({ project, onSelect, onDelete }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    try {
+      await onDelete();
+    } catch (error) {
+      console.error("Delete failed", error);
+      setIsDeleting(false);
+      setShowConfirm(false);
+    }
+  };
+
+  const cancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowConfirm(false);
+  };
 
   // Fetch OG Image
   useEffect(() => {
@@ -222,13 +247,52 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project
           <span className="flex items-center gap-1.5 ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform">
             Edit <ArrowRight size={12} />
           </span>
+          <button 
+            onClick={handleDeleteClick}
+            disabled={isDeleting}
+            className="p-1.5 -mr-1.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors ml-2"
+            title="Delete Widget"
+          >
+             {isDeleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+          </button>
         </div>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {showConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-xs shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-4 text-red-500">
+               <div className="p-2 bg-red-500/10 rounded-lg">
+                 <AlertTriangle size={20} />
+               </div>
+               <h4 className="font-bold text-white uppercase text-sm">Delete Widget?</h4>
+            </div>
+            <p className="text-slate-400 text-xs leading-relaxed mb-6">
+              Are you sure you want to delete <span className="text-white font-bold">"{project.name}"</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button 
+                onClick={cancelDelete}
+                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold uppercase transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold uppercase transition-colors flex items-center justify-center gap-2"
+              >
+                {isDeleting ? <Loader2 size={12} className="animate-spin" /> : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect, onExplore }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect, onExplore, onDeleteProject }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { disconnect } = useDisconnect();
@@ -346,7 +410,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} onSelect={() => onSelectProject(p.id)} />
+              <ProjectCard 
+                key={p.id} 
+                project={p} 
+                onSelect={() => onSelectProject(p.id)} 
+                onDelete={() => onDeleteProject(p.id)}
+              />
             ))}
           </div>
         )}

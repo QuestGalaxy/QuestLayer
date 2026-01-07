@@ -57,6 +57,18 @@ export const fetchProjectDetails = async (projectId: string) => {
   return { project, tasks };
 };
 
+export const deleteProject = async (projectId: string) => {
+  // Delete the project (cascade delete should handle tasks, users, etc. if configured in DB)
+  // If not configured, we might need to delete related rows manually first.
+  // Assuming standard CASCADE setup on foreign keys in Supabase Schema.
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', projectId);
+  
+  if (error) throw error;
+};
+
 export const logProjectView = async (projectId: string) => {
   const { error } = await supabase.rpc('log_project_view', { p_id: projectId });
   if (error) console.error('Error logging view:', error);
