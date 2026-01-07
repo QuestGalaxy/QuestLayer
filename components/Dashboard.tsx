@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchProjects } from '../lib/supabase';
-import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut } from 'lucide-react';
+import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 interface DashboardProps {
@@ -8,6 +8,98 @@ interface DashboardProps {
   onCreateProject: () => void;
   onDisconnect: () => void;
 }
+
+const ProjectCard: React.FC<{ project: any; onSelect: () => void }> = ({ project, onSelect }) => {
+  const [ogImage, setOgImage] = useState<string | null>(null);
+  const [loadingImage, setLoadingImage] = useState(false);
+
+  useEffect(() => {
+    if (!project.domain) return;
+
+    let isMounted = true;
+    setLoadingImage(true);
+
+    const fetchOg = async () => {
+      try {
+        // Use microlink to get OG data safely
+        const url = `https://api.microlink.io/?url=${encodeURIComponent(project.domain.startsWith('http') ? project.domain : `https://${project.domain}`)}&palette=true&audio=false&video=false&iframe=false`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (isMounted && data.status === 'success' && data.data.image?.url) {
+          setOgImage(data.data.image.url);
+        }
+      } catch (e) {
+        // Ignore errors, fallback to icon
+      } finally {
+        if (isMounted) setLoadingImage(false);
+      }
+    };
+
+    fetchOg();
+
+    return () => { isMounted = false; };
+  }, [project.domain]);
+
+  return (
+    <div
+      onClick={onSelect}
+      className="group relative cursor-pointer rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.1)] flex flex-col h-full"
+    >
+      {/* Card Header / Image Area */}
+      <div className="relative h-32 w-full bg-slate-950/50 border-b border-white/5 overflow-hidden">
+        {ogImage ? (
+          <img 
+            src={ogImage} 
+            alt="Preview" 
+            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105 transform"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity">
+            <Layout size={64} className="text-white" />
+          </div>
+        )}
+        
+        {/* Floating Icon Badge */}
+        <div 
+          className="absolute -bottom-5 left-6 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg z-10 border-2 border-slate-900"
+          style={{ backgroundColor: project.accent_color }}
+        >
+          <Layout size={20} />
+        </div>
+
+        {/* Theme Badge */}
+        <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-mono text-slate-300 uppercase shadow-sm">
+          {project.theme}
+        </div>
+      </div>
+
+      <div className="p-6 pt-8 flex-1 flex flex-col">
+        <h3 className="text-xl font-bold text-white mb-1 truncate group-hover:text-indigo-400 transition-colors">
+          {project.name}
+        </h3>
+        
+        {project.domain && (
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-4 truncate">
+            <Globe size={12} className="shrink-0" />
+            <span className="truncate hover:text-indigo-300 transition-colors">
+              {project.domain.replace(/^https?:\/\//, '')}
+            </span>
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center gap-4 text-[10px] font-bold uppercase text-slate-500 pt-4 border-t border-white/5">
+          <span className="flex items-center gap-1.5">
+            <Calendar size={12} />
+            {new Date(project.created_at).toLocaleDateString()}
+          </span>
+          <span className="flex items-center gap-1.5 ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform">
+            Edit <ArrowRight size={12} />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect }) => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -77,37 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((p) => (
-              <div
-                key={p.id}
-                onClick={() => onSelectProject(p.id)}
-                className="group relative cursor-pointer rounded-3xl border border-white/10 bg-slate-900/40 p-6 transition-all hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg"
-                    style={{ backgroundColor: p.accent_color }}
-                  >
-                    <Layout size={20} />
-                  </div>
-                  <div className="px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] font-mono text-slate-400 uppercase">
-                    {p.theme}
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-bold text-white mb-2 truncate group-hover:text-indigo-400 transition-colors">
-                  {p.name}
-                </h3>
-                
-                <div className="flex items-center gap-4 text-[10px] font-bold uppercase text-slate-500 mt-4">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar size={12} />
-                    {new Date(p.created_at).toLocaleDateString()}
-                  </span>
-                  <span className="flex items-center gap-1.5 ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform">
-                    Edit <ArrowRight size={12} />
-                  </span>
-                </div>
-              </div>
+              <ProjectCard key={p.id} project={p} onSelect={() => onSelectProject(p.id)} />
             ))}
           </div>
         )}
