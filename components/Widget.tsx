@@ -443,20 +443,45 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
           // DB Update
           if (dbUserId) {
-            const dbTaskId = taskMap[task.id];
-            if (dbTaskId) {
-               supabase.from('task_completions').insert({
-                 user_id: dbUserId,
-                 task_id: dbTaskId
-               }).then(() => {
-                 supabase.from('user_progress')
-                   .update({ xp: state.userXP + task.xp }) // Again, careful with stale state. 
+            const completeTaskInDb = async () => {
+              let dbTaskId = taskMap[task.id];
+
+              // Fallback: If not in map, try to find it by title in the DB right now
+              if (!dbTaskId && dbProjectId) {
+                const { data: foundTask } = await supabase
+                  .from('tasks')
+                  .select('id')
+                  .eq('project_id', dbProjectId)
+                  .eq('title', task.title)
+                  .single();
+                if (foundTask) dbTaskId = foundTask.id;
+              }
+
+              if (dbTaskId) {
+                 await supabase.from('task_completions').insert({
+                   user_id: dbUserId,
+                   task_id: dbTaskId
+                 });
+                 
+                 // Fetch latest XP to be safe (race conditions)
+                 const { data: userProgress } = await supabase
+                   .from('user_progress')
+                   .select('xp')
                    .eq('user_id', dbUserId)
-                   .then(() => {
-                      setGlobalXP(prev => prev + task.xp);
-                   });
-               });
-            }
+                   .single();
+                 
+                 const currentDbXP = userProgress?.xp || state.userXP;
+
+                 await supabase.from('user_progress')
+                   .update({ xp: currentDbXP + task.xp }) 
+                   .eq('user_id', dbUserId);
+                   
+                 setGlobalXP(prev => prev + task.xp);
+              } else {
+                console.error("Task ID not found for completion", task);
+              }
+            };
+            completeTaskInDb();
           }
           return 0;
         }

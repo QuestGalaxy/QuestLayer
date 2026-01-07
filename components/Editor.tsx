@@ -44,9 +44,30 @@ const Editor: React.FC<EditorProps> = ({
 }) => {
   const getFaviconUrl = (link: string) => {
     try {
-      const url = new URL(link);
-      if (!url.hostname) return '';
-      return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+      if (!link || link.length < 4) return '';
+      let validLink = link.trim();
+      
+      // Remove trailing slashes or dots from the end of the string before parsing
+      // This prevents "key2web3." from being treated as the hostname root
+      validLink = validLink.replace(/[\/.]+$/, ''); 
+
+      if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
+        validLink = `https://${validLink}`;
+      }
+      
+      const url = new URL(validLink);
+      let hostname = url.hostname;
+
+      // Double check: remove trailing dot if URL constructor left it
+      if (hostname.endsWith('.')) {
+        hostname = hostname.slice(0, -1);
+      }
+
+      // Ensure hostname has at least one dot and a valid TLD length (at least 2 chars)
+      const parts = hostname.split('.');
+      if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
+
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
     } catch {
       return '';
     }
@@ -132,9 +153,15 @@ const Editor: React.FC<EditorProps> = ({
   useEffect(() => {
     if (!editForm) return;
     if (editForm.icon) return;
-    const faviconUrl = getFaviconUrl(editForm.link);
-    if (!faviconUrl) return;
-    setEditForm(prev => (prev ? { ...prev, icon: faviconUrl } : null));
+
+    // Debounce favicon extraction to avoid partial URL parsing while typing
+    const timeoutId = setTimeout(() => {
+      const faviconUrl = getFaviconUrl(editForm.link);
+      if (!faviconUrl) return;
+      setEditForm(prev => (prev ? { ...prev, icon: faviconUrl } : null));
+    }, 800);
+
+    return () => clearTimeout(timeoutId);
   }, [editForm?.link, editForm?.icon]);
 
   return (
