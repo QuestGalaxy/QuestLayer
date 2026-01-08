@@ -377,16 +377,16 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
             <div className="max-w-7xl mx-auto space-y-10">
             
             {/* Hero URL Input */}
-            <div className="py-20 text-center space-y-6">
-                <div>
-                    <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tight mb-4 drop-shadow-2xl">
+            <div className="py-12 md:py-20 text-center space-y-6">
+                <div className="px-4">
+                    <h1 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tight mb-4 drop-shadow-2xl">
                         Browse the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Web3</span>
                     </h1>
-                    <p className="text-slate-300 text-sm md:text-lg font-medium max-w-lg mx-auto leading-relaxed drop-shadow-lg">
+                    <p className="text-slate-300 text-xs md:text-lg font-medium max-w-lg mx-auto leading-relaxed drop-shadow-lg">
                         Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.
                     </p>
                 </div>
-                <div className="max-w-2xl mx-auto relative">
+            <div className="max-w-2xl mx-auto relative px-4">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20" />
                 <div className="relative bg-slate-900 border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
                     <div className="pl-4 pr-3 text-slate-500">

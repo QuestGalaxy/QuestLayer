@@ -115,55 +115,57 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore, onBrowse
       <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col items-center z-10">
         
         {/* --- HERO SECTION --- */}
-        <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000">
+        <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000 w-full">
            <div className="flex flex-col items-center">
              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-6">
                 <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20 glow-orange">
                   <img
                     src="/logoLayer.webp"
                     alt="QuestLayer logo"
-                    className="h-12 w-12 object-contain"
+                    className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
                   />
                 </div>
-                <h1 className="pixel-text text-4xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                <h1 className="pixel-text text-3xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
                   QUESTLAYER
                 </h1>
              </div>
-             <p className="text-xl sm:text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.1] tracking-tight">
+             <p className="text-lg sm:text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.2] tracking-tight px-4">
                Turn Any Website Into an Interactive <br className="hidden sm:block" />
                <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
              </p>
-             <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full">
-                <Sparkles size={14} className="text-orange-400 animate-spin-slow" />
-                <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-[0.3em]">
+             <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full max-w-[90vw]">
+                <Sparkles size={14} className="text-orange-400 animate-spin-slow shrink-0" />
+                <p className="text-slate-400 text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] truncate">
                   One embed • No redirects • Instant Web3
                 </p>
              </div>
-             <div className="mt-4 flex items-center justify-center gap-4">
+             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
                <button
                  onClick={handleStartBuilding}
                  disabled={isConnecting}
-                 className="px-6 py-3 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                 className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                >
                  {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building' : 'Connect to Build')}
                  {!isConnected && !isConnecting && <Wallet size={14} />}
               </button>
               
-              <button 
-                onClick={onExplore}
-                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center gap-2 group"
-              >
-                <Globe size={14} className="group-hover:text-indigo-400 transition-colors" />
-                Explore
-              </button>
+              <div className="flex gap-4 w-full sm:w-auto">
+                <button 
+                  onClick={onExplore}
+                  className="flex-1 sm:flex-none px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <Globe size={14} className="group-hover:text-indigo-400 transition-colors" />
+                  Explore
+                </button>
 
-              <button 
-                onClick={onBrowse}
-                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center gap-2 group"
-              >
-                <LogIn size={14} className="group-hover:text-indigo-400 transition-colors" />
-                Browse
-              </button>
+                <button 
+                  onClick={onBrowse}
+                  className="flex-1 sm:flex-none px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <LogIn size={14} className="group-hover:text-indigo-400 transition-colors" />
+                  Browse
+                </button>
+              </div>
             </div>
            </div>
         </div>
