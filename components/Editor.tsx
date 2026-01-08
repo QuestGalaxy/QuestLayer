@@ -112,6 +112,7 @@ const SPONSORED_TASKS: Task[] = [
     isSponsored: true
   }
 ];
+const XP_PRESETS = [10, 25, 50, 100, 250, 500];
 import EmbedModal from './EmbedModal.tsx';
 import GlobalFooter from './GlobalFooter';
 import { DEMO_TASKS } from '../constants';
@@ -283,6 +284,16 @@ const Editor: React.FC<EditorProps> = ({
     setEditingId(newTask.id);
     setEditForm(newTask);
   };
+
+  const getTotalXPExcludingEditing = () =>
+    state.tasks
+      .filter(t => t.id !== editingId)
+      .reduce((acc, t) => acc + t.xp, 0);
+
+  const getEditMaxXP = () => Math.max(0, getDynamicLimit() - getTotalXPExcludingEditing());
+
+  const getEditRemainingXP = (currentXP: number) =>
+    Math.max(0, getDynamicLimit() - (getTotalXPExcludingEditing() + currentXP));
 
   const removeTask = (id: string | number) => {
     setTasks(state.tasks.filter(t => t.id !== id));
@@ -704,24 +715,54 @@ const Editor: React.FC<EditorProps> = ({
                         className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-16 text-white outline-none resize-none focus:border-indigo-500"
                       />
                     </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1 space-y-1">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
-                        <input 
-                          value={editForm?.link}
-                          onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
-                          placeholder="https://..."
-                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
-                        />
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
+                      <input 
+                        value={editForm?.link}
+                        onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
+                        placeholder="https://..."
+                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2">
+                        <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">XP Reward</p>
+                          <p className="text-[11px] font-bold text-white">
+                            {editForm?.xp ?? 0} XP
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Remaining</p>
+                          <p className="text-[11px] font-bold text-emerald-300">
+                            {getEditRemainingXP(editForm?.xp ?? 0)} XP
+                          </p>
+                        </div>
                       </div>
-                      <div className="w-20 space-y-1">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase text-center block">XP</label>
-                        <input 
-                          type="number"
-                          value={editForm?.xp}
-                          onChange={(e) => setEditForm(prev => prev ? { ...prev, xp: parseInt(e.target.value) || 0 } : null)}
-                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-center text-white focus:border-indigo-500"
-                        />
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        {XP_PRESETS.map((preset) => {
+                          const isActive = editForm?.xp === preset;
+                          const isDisabled = preset > getEditMaxXP();
+                          return (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() =>
+                                setEditForm(prev =>
+                                  prev ? { ...prev, xp: Math.min(preset, getEditMaxXP()) } : null
+                                )
+                              }
+                              disabled={isDisabled}
+                              className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
+                                isActive
+                                  ? 'bg-indigo-500/20 text-indigo-200 border-indigo-500/40 shadow-lg shadow-indigo-500/20'
+                                  : 'bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/20 hover:bg-white/10'
+                              } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            >
+                              {preset}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                     <div className="space-y-1">
@@ -779,15 +820,27 @@ const Editor: React.FC<EditorProps> = ({
       {alertMessage && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAlertMessage(null)} />
-          <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
-              <AlertCircle size={24} />
+          <div className="relative w-full max-w-sm bg-slate-950 border border-white/10 rounded-2xl p-6 shadow-[0_30px_80px_-50px_rgba(99,102,241,0.8)] flex flex-col items-center text-center gap-4 overflow-hidden">
+            <div className="absolute -top-24 -left-16 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
+            <div className="absolute -bottom-24 -right-16 h-48 w-48 rounded-full bg-rose-500/20 blur-3xl" />
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-rose-500/20 border border-white/10 flex items-center justify-center text-indigo-300">
+              <AlertCircle size={26} />
             </div>
-            <h3 className="text-white font-black uppercase text-lg tracking-tight">Limit Reached</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">{alertMessage}</p>
+            <div className="relative flex flex-col items-center gap-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+                Widget XP Cap
+              </span>
+              <h3 className="text-white font-black uppercase text-xl tracking-tight">Limit Reached</h3>
+            </div>
+            <p className="relative text-slate-300 text-sm leading-relaxed">
+              Each widget can only hold up to <span className="text-white font-black">1000 XP</span>. Remove or reduce missions to add more.
+            </p>
+            {alertMessage && (
+              <p className="relative text-slate-500 text-xs leading-relaxed">{alertMessage}</p>
+            )}
             <button 
               onClick={() => setAlertMessage(null)}
-              className="mt-2 w-full py-3 bg-white text-black font-black uppercase text-xs rounded-xl hover:bg-slate-200 transition-colors"
+              className="relative mt-2 w-full py-3 bg-white text-black font-black uppercase text-xs rounded-xl hover:bg-slate-200 transition-colors"
             >
               Got it
             </button>
