@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users } from 'lucide-react';
-import { fetchProjectStats, supabase } from '../lib/supabase';
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
+import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
+import ProfileMenuButton from './ProfileMenuButton';
 
 interface LeaderboardPageProps {
   onBack: () => void;
@@ -185,9 +186,23 @@ const ProjectCard: React.FC<{
 const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
+  const { disconnect } = useDisconnect();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<ProjectLeaderboard[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
+  const [nextLevelXP, setNextLevelXP] = useState(3000);
+
+  useEffect(() => {
+    const loadUserStats = async () => {
+      if (address) {
+        const stats = await fetchUserXP(address);
+        setUserStats(stats);
+        setNextLevelXP(stats.level * 3000);
+      }
+    };
+    loadUserStats();
+  }, [address]);
 
   useEffect(() => {
     if (!address) {
@@ -304,6 +319,19 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-y-auto">
+      <div className="fixed top-6 right-6 z-50">
+        <ProfileMenuButton
+          isConnected={isConnected}
+          address={address}
+          xp={userStats.xp}
+          level={userStats.level}
+          nextLevelXP={nextLevelXP}
+          onConnect={() => open()}
+          onDisconnect={() => disconnect()}
+          onHome={onBack}
+          onLeaderboard={() => {}}
+        />
+      </div>
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.35),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(14,165,233,0.3),transparent_55%)]" />

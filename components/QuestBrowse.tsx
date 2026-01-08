@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
-import { Globe, ArrowRight, Loader2, Search, Zap, ExternalLink, Activity, Users, ChevronLeft, ChevronRight, X, Layout, Wallet, User, Star, LogOut, Trophy, ShoppingBag, ChevronDown } from 'lucide-react';
+import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout } from 'lucide-react';
 import Widget from './Widget';
+import ProfileMenuButton from './ProfileMenuButton';
 import { INITIAL_TASKS } from '../constants';
 import { AppState, Position, ThemeType } from '../types';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
@@ -117,18 +118,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
   const [nextLevelXP, setNextLevelXP] = useState(3000);
   const [projects, setProjects] = useState<any[]>([]);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const loadUserStats = async () => {
@@ -167,6 +156,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
   const [currentUrl, setCurrentUrl] = useState('');
   const [widgetState, setWidgetState] = useState<AppState>(DEFAULT_WIDGET_STATE);
   const [isWidgetOpen, setIsWidgetOpen] = useState(true);
+  const [isIframeLoading, setIsIframeLoading] = useState(false);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -227,6 +217,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
       validUrl = `https://${validUrl}`;
     }
     
+    setIsIframeLoading(true);
     setCurrentUrl(validUrl);
     setWidgetState({
         ...DEFAULT_WIDGET_STATE,
@@ -238,6 +229,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
   };
 
   const handleBrowseProjectById = async (projectId: string, domain?: string) => {
+    setIsIframeLoading(true);
     try {
       const { project, tasks } = await fetchProjectDetails(projectId);
       if (!project) return;
@@ -403,6 +395,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
 
   useEffect(() => {
     if (!initialBrowseRequest) return;
+    setIsBrowsing(true);
+    setIsIframeLoading(true);
     if (initialBrowseRequest.projectId) {
       void handleBrowseProjectById(initialBrowseRequest.projectId, initialBrowseRequest.url);
     } else if (initialBrowseRequest.url) {
@@ -464,7 +458,24 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
                     className="w-full h-full border-none"
                     title="Quest Browser"
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                    onLoad={() => setIsIframeLoading(false)}
                 />
+
+                {isIframeLoading && (
+                    <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+                        <div className="flex flex-col items-center gap-4 text-center">
+                            <div className="h-12 w-12 rounded-2xl border border-indigo-400/30 bg-indigo-500/10 p-3">
+                                <Loader2 className="h-6 w-6 animate-spin text-indigo-300" />
+                            </div>
+                            <div className="text-xs font-black uppercase tracking-widest text-indigo-200">
+                                Loading quest site
+                            </div>
+                            <div className="h-1.5 w-40 overflow-hidden rounded-full bg-white/10">
+                                <div className="h-full w-full animate-pulse bg-gradient-to-r from-indigo-400/30 via-indigo-400/70 to-indigo-400/30" />
+                            </div>
+                        </div>
+                    </div>
+                )}
                 
                 {/* Widget Overlay */}
                 <Widget 
@@ -492,142 +503,21 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
         </button>
 
         {/* Wallet Connect / Profile Button */}
-        <div className="fixed top-6 right-6 z-50" ref={profileRef}>
-            {isConnected ? (
-                <div className="relative">
-                    <div 
-                        onClick={() => setIsProfileOpen(!isProfileOpen)}
-                        className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 pr-5 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
-                                 <User size={18} className="text-white" />
-                            </div>
-                        </div>
-                        <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                                 <span className="text-xs font-black text-white uppercase tracking-wider">Lvl {userStats.level}</span>
-                                 <span className="w-1 h-1 rounded-full bg-slate-600" />
-                                 <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-                                    <Star size={10} fill="currentColor" /> {userStats.xp} XP
-                                 </span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                                 <span className="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
-                                    {address?.slice(0, 4)}...{address?.slice(-4)}
-                                 </span>
-                            </div>
-                        </div>
-                        <ChevronDown size={14} className={`text-slate-400 group-hover:text-white transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
-                    </div>
-
-                    {isProfileOpen && (
-                        <div className="absolute top-full right-0 mt-4 w-72 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                             {/* Header */}
-                             <div className="p-6 border-b border-white/5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20">
-                                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
-                                            <User size={32} className="text-white" />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="text-lg font-black text-white tracking-tight">User</div>
-                                        <div className="flex items-center gap-2 text-xs font-mono text-slate-400 mb-2">
-                                            {address?.slice(0, 6)}...{address?.slice(-4)}
-                                            <ExternalLink size={12} className="hover:text-white cursor-pointer transition-colors" />
-                                        </div>
-                                        {/* Level Progress */}
-                                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                            <div 
-                                                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                                                style={{ width: `${Math.min((userStats.xp / nextLevelXP) * 100, 100)}%` }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between mt-1">
-                                            <span className="text-[9px] font-bold text-slate-500 uppercase">Lvl {userStats.level}</span>
-                                            <span className="text-[9px] font-bold text-slate-500 uppercase">{userStats.xp} / {nextLevelXP} XP</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Level</div>
-                                        <div className="text-xl font-black text-white">{userStats.level}</div>
-                                    </div>
-                                    <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5 flex flex-col items-center">
-                                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">XP</div>
-                                        <div className="text-xl font-black text-indigo-400">{userStats.xp}</div>
-                                    </div>
-                                </div>
-                             </div>
-                             
-                             {/* Menu */}
-                             <div className="p-2 space-y-1">
-                                <button
-                                    onClick={() => {
-                                      setIsProfileOpen(false);
-                                      onLeaderboard();
-                                    }}
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
-                                >
-                                    <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500 group-hover:bg-yellow-500/20 transition-colors">
-                                        <Trophy size={18} />
-                                    </div>
-                                    <span className="font-bold text-sm">Leaderboard</span>
-                                </button>
-                                <div className="relative group">
-                                    <button
-                                        disabled
-                                        className="w-full flex items-center gap-3 p-3 rounded-xl text-slate-600 cursor-not-allowed"
-                                    >
-                                        <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 transition-colors">
-                                            <ShoppingBag size={18} />
-                                        </div>
-                                        <span className="font-bold text-sm">Marketplace</span>
-                                    </button>
-                                    <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-56 -translate-x-1/2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-300 opacity-0 transition-opacity group-hover:opacity-100">
-                                        Spend XP points and levels to buy rewards (coming soon).
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                        disabled
-                                        className="flex items-center justify-center gap-2 p-3 rounded-xl border border-white/5 text-slate-600 font-bold text-xs uppercase tracking-widest cursor-not-allowed"
-                                    >
-                                        Mint
-                                    </button>
-                                    <button
-                                        disabled
-                                        className="flex items-center justify-center gap-2 p-3 rounded-xl border border-white/5 text-slate-600 font-bold text-xs uppercase tracking-widest cursor-not-allowed"
-                                    >
-                                        Stake
-                                    </button>
-                                </div>
-                                <div className="h-px bg-white/5 my-2 mx-3" />
-                                <button 
-                                    onClick={() => disconnect()}
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all group"
-                                >
-                                    <div className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:text-red-400 transition-colors">
-                                        <LogOut size={18} />
-                                    </div>
-                                    <span className="font-bold text-sm">Disconnect</span>
-                                </button>
-                             </div>
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <button
-                    onClick={() => open()}
-                    className="group flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-in fade-in slide-in-from-top-4 duration-700"
-                >
-                    <Wallet size={16} className="group-hover:-rotate-12 transition-transform" />
-                    <span>Connect</span>
-                </button>
-            )}
+        <div className="fixed top-6 right-6 z-50">
+            <ProfileMenuButton
+                isConnected={isConnected}
+                address={address}
+                xp={userStats.xp}
+                level={userStats.level}
+                nextLevelXP={nextLevelXP}
+                onConnect={() => open()}
+                onDisconnect={() => disconnect()}
+                onHome={() => {
+                  setIsBrowsing(false);
+                  setIsIframeLoading(false);
+                }}
+                onLeaderboard={onLeaderboard}
+            />
         </div>
 
         {/* Video Background */}
