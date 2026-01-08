@@ -12,13 +12,17 @@ import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 import Dashboard from './components/Dashboard.tsx';
 import ExplorePage from './components/ExplorePage.tsx';
 import QuestBrowse from './components/QuestBrowse.tsx';
+import LeaderboardPage from './components/LeaderboardPage.tsx';
 import { fetchProjectDetails, deleteProject } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse'>(() => {
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard'>(() => {
     // Check URL path on initial load
     if (window.location.pathname === '/questbrowse') {
       return 'questbrowse';
+    }
+    if (window.location.pathname === '/leaderboard') {
+      return 'leaderboard';
     }
     return 'landing';
   });
@@ -28,6 +32,8 @@ const App: React.FC = () => {
     const handlePopState = () => {
         if (window.location.pathname === '/questbrowse') {
             setCurrentPage('questbrowse');
+        } else if (window.location.pathname === '/leaderboard') {
+            setCurrentPage('leaderboard');
         } else if (window.location.pathname === '/') {
             setCurrentPage('landing');
         }
@@ -109,6 +115,9 @@ const App: React.FC = () => {
         }
         twUrl.setAttribute('content', window.location.href);
 
+    } else if (currentPage === 'leaderboard') {
+        window.history.pushState(null, '', '/leaderboard');
+        document.title = 'QuestLayer Leaderboard - Your XP Legacy';
     } else if (currentPage === 'landing') {
         window.history.pushState(null, '', '/');
         document.title = 'QuestLayer - Turn Any Website Into a Quest';
@@ -121,6 +130,7 @@ const App: React.FC = () => {
   const [previewTheme, setPreviewTheme] = useState<'dark' | 'light'>('dark');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const [pendingBrowseRequest, setPendingBrowseRequest] = useState<{ projectId?: string; url?: string } | null>(null);
   
   const [state, setState] = useState<AppState>({
     projectName: 'Vortex Protocol',
@@ -197,6 +207,21 @@ const App: React.FC = () => {
     return (
       <QuestBrowse
         onBack={() => setCurrentPage('landing')}
+        onLeaderboard={() => setCurrentPage('leaderboard')}
+        initialBrowseRequest={pendingBrowseRequest}
+        onBrowseHandled={() => setPendingBrowseRequest(null)}
+      />
+    );
+  }
+
+  if (currentPage === 'leaderboard') {
+    return (
+      <LeaderboardPage
+        onBack={() => setCurrentPage('questbrowse')}
+        onContinue={({ projectId, domain }) => {
+          setPendingBrowseRequest({ projectId, url: domain || undefined });
+          setCurrentPage('questbrowse');
+        }}
       />
     );
   }

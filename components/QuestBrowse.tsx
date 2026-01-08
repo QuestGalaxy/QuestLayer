@@ -8,6 +8,9 @@ import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react'
 
 interface QuestBrowseProps {
   onBack: () => void;
+  onLeaderboard: () => void;
+  initialBrowseRequest?: { projectId?: string; url?: string } | null;
+  onBrowseHandled?: () => void;
 }
 
 const DEFAULT_WIDGET_STATE: AppState = {
@@ -107,7 +110,7 @@ const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onIm
   );
 };
 
-const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
+const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initialBrowseRequest, onBrowseHandled }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -234,6 +237,45 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
     setIsWidgetOpen(true);
   };
 
+  const handleBrowseProjectById = async (projectId: string, domain?: string) => {
+    try {
+      const { project, tasks } = await fetchProjectDetails(projectId);
+      if (!project) return;
+      const newState: AppState = {
+        projectId: project.id,
+        projectName: project.name,
+        projectDomain: project.domain,
+        accentColor: project.accent_color,
+        position: project.position as Position,
+        activeTheme: project.theme as ThemeType,
+        tasks: tasks.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          desc: t.description,
+          link: t.link,
+          icon: t.icon_url,
+          xp: t.xp_reward
+        })),
+        userXP: 0,
+        currentStreak: 1,
+        dailyClaimed: false
+      };
+
+      setWidgetState(newState);
+      const resolvedDomain = project.domain || domain;
+      if (resolvedDomain) {
+        const url = resolvedDomain.startsWith('http') ? resolvedDomain : `https://${resolvedDomain}`;
+        setCurrentUrl(url);
+      }
+      setIsBrowsing(true);
+      setIsWidgetOpen(true);
+    } catch (error) {
+      if (domain) {
+        handleBrowseUrl(domain);
+      }
+    }
+  };
+
   const [currentProjectIndex, setCurrentProjectIndex] = useState<number>(-1);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -358,6 +400,16 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  useEffect(() => {
+    if (!initialBrowseRequest) return;
+    if (initialBrowseRequest.projectId) {
+      void handleBrowseProjectById(initialBrowseRequest.projectId, initialBrowseRequest.url);
+    } else if (initialBrowseRequest.url) {
+      handleBrowseUrl(initialBrowseRequest.url);
+    }
+    onBrowseHandled?.();
+  }, [initialBrowseRequest]);
 
   if (isBrowsing) {
     return (
@@ -513,18 +565,46 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                              
                              {/* Menu */}
                              <div className="p-2 space-y-1">
-                                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
+                                <button
+                                    onClick={() => {
+                                      setIsProfileOpen(false);
+                                      onLeaderboard();
+                                    }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+                                >
                                     <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500 group-hover:bg-yellow-500/20 transition-colors">
                                         <Trophy size={18} />
                                     </div>
                                     <span className="font-bold text-sm">Leaderboard</span>
                                 </button>
-                                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
-                                    <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 group-hover:bg-pink-500/20 transition-colors">
-                                        <ShoppingBag size={18} />
+                                <div className="relative group">
+                                    <button
+                                        disabled
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl text-slate-600 cursor-not-allowed"
+                                    >
+                                        <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 transition-colors">
+                                            <ShoppingBag size={18} />
+                                        </div>
+                                        <span className="font-bold text-sm">Marketplace</span>
+                                    </button>
+                                    <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-56 -translate-x-1/2 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-slate-300 opacity-0 transition-opacity group-hover:opacity-100">
+                                        Spend XP points and levels to buy rewards (coming soon).
                                     </div>
-                                    <span className="font-bold text-sm">Marketplace</span>
-                                </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        disabled
+                                        className="flex items-center justify-center gap-2 p-3 rounded-xl border border-white/5 text-slate-600 font-bold text-xs uppercase tracking-widest cursor-not-allowed"
+                                    >
+                                        Mint
+                                    </button>
+                                    <button
+                                        disabled
+                                        className="flex items-center justify-center gap-2 p-3 rounded-xl border border-white/5 text-slate-600 font-bold text-xs uppercase tracking-widest cursor-not-allowed"
+                                    >
+                                        Stake
+                                    </button>
+                                </div>
                                 <div className="h-px bg-white/5 my-2 mx-3" />
                                 <button 
                                     onClick={() => disconnect()}
