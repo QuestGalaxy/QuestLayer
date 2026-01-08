@@ -128,43 +128,41 @@ const ProjectCard: React.FC<{
           </button>
         )}
 
-        <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-5">
+        <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400">Top 10 leaderboard</div>
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-indigo-300">
-              <Trophy size={12} /> Elite
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Top 10 leaderboard</div>
+            <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-indigo-300">
+              <Trophy size={10} /> Elite
             </div>
           </div>
-          <div className="mt-4 space-y-3">
+          <div className="mt-3 space-y-2">
             {data.leaderboard.length === 0 && (
-              <div className="text-xs text-slate-500">No leaderboard activity yet.</div>
+              <div className="text-[10px] text-slate-500">No leaderboard activity yet.</div>
             )}
             {data.leaderboard.slice(0, isExpanded ? 10 : 3).map((entry, index) => {
               const isYou = userWallet && entry.wallet?.toLowerCase() === userWallet.toLowerCase();
               return (
                 <div
                   key={`${entry.wallet}-${index}`}
-                  className={`flex items-center justify-between rounded-2xl border px-4 py-3 text-xs font-bold uppercase tracking-widest ${
+                  className={`flex items-center justify-between rounded-xl px-3 py-2 text-[10px] font-semibold uppercase tracking-widest ${
                     isYou
-                      ? 'border-indigo-400/40 bg-indigo-500/20 text-white'
-                      : 'border-white/5 bg-white/5 text-slate-300'
+                      ? 'bg-indigo-500/15 text-white'
+                      : 'bg-white/5 text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
+                      className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black ${
                         index === 0 ? 'bg-yellow-400/80 text-black' : 'bg-white/10 text-slate-300'
                       }`}
                     >
-                      {index === 0 ? <Crown size={14} /> : index + 1}
+                      {index === 0 ? <Crown size={12} /> : index + 1}
                     </div>
-                    <div className="flex flex-col">
-                      <span>{isYou ? 'You' : `${entry.wallet.slice(0, 4)}...${entry.wallet.slice(-4)}`}</span>
-                      {isYou && <span className="text-[9px] text-indigo-200">Current position</span>}
-                    </div>
+                    <span>{isYou ? 'You' : `${entry.wallet.slice(0, 4)}...${entry.wallet.slice(-4)}`}</span>
+                    {isYou && <span className="text-[9px] text-indigo-200">• you</span>}
                   </div>
-                  <div className="flex items-center gap-2 text-indigo-200">
-                    <Star size={12} /> {formatNumber(entry.xp)} XP
+                  <div className="flex items-center gap-1 text-indigo-200">
+                    <Star size={10} /> {formatNumber(entry.xp)}
                   </div>
                 </div>
               );
@@ -173,7 +171,7 @@ const ProjectCard: React.FC<{
           {data.leaderboard.length > 3 && (
             <button
               onClick={() => setIsExpanded(prev => !prev)}
-              className="mt-4 text-[10px] font-black uppercase tracking-widest text-indigo-300 hover:text-indigo-200"
+              className="mt-3 text-[9px] font-black uppercase tracking-widest text-indigo-300 hover:text-indigo-200"
             >
               {isExpanded ? 'Show less' : 'Show full leaderboard'}
             </button>
