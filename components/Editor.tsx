@@ -295,6 +295,49 @@ const Editor: React.FC<EditorProps> = ({
   const getEditRemainingXP = (currentXP: number) =>
     Math.max(0, getDynamicLimit() - (getTotalXPExcludingEditing() + currentXP));
 
+  const themeButtonStyles: Record<ThemeType, { base: string; active: string; inactive: string }> = {
+    sleek: {
+      base: 'border',
+      active: 'border-indigo-400 bg-indigo-500/15 text-indigo-100',
+      inactive: 'border-white/10 bg-white/5 text-slate-300 hover:border-indigo-400/60 hover:text-white'
+    },
+    cyber: {
+      base: 'border',
+      active: 'border-emerald-300 bg-emerald-400/15 text-emerald-100 shadow-[0_0_20px_rgba(52,211,153,0.35)]',
+      inactive: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-300/70 hover:bg-emerald-500/10 hover:text-emerald-100'
+    },
+    minimal: {
+      base: 'border',
+      active: 'border-slate-200 bg-white text-slate-900',
+      inactive: 'border-slate-500/30 bg-slate-900/40 text-slate-300 hover:bg-slate-800/60'
+    },
+    gaming: {
+      base: 'border',
+      active: 'border-amber-300 bg-amber-400/15 text-amber-100 shadow-[0_0_20px_rgba(251,191,36,0.35)]',
+      inactive: 'border-amber-500/30 bg-amber-500/5 text-amber-300/70 hover:bg-amber-500/10 hover:text-amber-100'
+    },
+    brutal: {
+      base: 'border',
+      active: 'border-white bg-white text-black shadow-[4px_4px_0_rgba(255,255,255,0.8)]',
+      inactive: 'border-white/60 bg-black text-white hover:shadow-[4px_4px_0_rgba(255,255,255,0.35)]'
+    },
+    glass: {
+      base: 'border backdrop-blur-sm',
+      active: 'border-cyan-200/60 bg-white/15 text-cyan-100',
+      inactive: 'border-white/15 bg-white/5 text-slate-200 hover:bg-white/10'
+    },
+    terminal: {
+      base: 'border',
+      active: 'border-green-300 bg-green-500/15 text-green-100',
+      inactive: 'border-green-500/30 bg-green-500/5 text-green-300/70 hover:bg-green-500/10 hover:text-green-100'
+    },
+    aura: {
+      base: 'border',
+      active: 'border-rose-300 bg-rose-500/15 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.25)]',
+      inactive: 'border-rose-500/30 bg-rose-500/5 text-rose-300/70 hover:bg-rose-500/10 hover:text-rose-100'
+    }
+  };
+
   const removeTask = (id: string | number) => {
     setTasks(state.tasks.filter(t => t.id !== id));
     if (editingId === id) {
@@ -395,10 +438,12 @@ const Editor: React.FC<EditorProps> = ({
                       <button
                         key={t}
                         onClick={() => setActiveTheme(t)}
-                        className={`min-w-[calc((100%-24px)/4)] p-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${
-                          state.activeTheme === t 
-                            ? 'border-indigo-500 bg-indigo-500/10 text-white' 
-                            : 'border-white/5 bg-white/5 text-slate-400'
+                        className={`min-w-[calc((100%-24px)/4)] p-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${
+                          themeButtonStyles[t].base
+                        } ${
+                          state.activeTheme === t
+                            ? themeButtonStyles[t].active
+                            : themeButtonStyles[t].inactive
                         }`}
                       >
                         {t}
@@ -406,9 +451,6 @@ const Editor: React.FC<EditorProps> = ({
                     ))}
                 </div>
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-slate-950/80 to-transparent" />
-                <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 flex items-center text-slate-400 animate-bounce">
-                  <ArrowRight size={12} />
-                </div>
               </div>
             </div>
 
