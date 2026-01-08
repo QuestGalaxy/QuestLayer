@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAllProjects, fetchProjectStats, fetchProjectDetails } from '../lib/supabase';
-import { Globe, ArrowRight, Loader2, Search, Zap, ExternalLink, Activity, Users, ChevronLeft, ChevronRight, X, Layout } from 'lucide-react';
+import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
+import { Globe, ArrowRight, Loader2, Search, Zap, ExternalLink, Activity, Users, ChevronLeft, ChevronRight, X, Layout, Wallet, User, Star } from 'lucide-react';
 import Widget from './Widget';
 import { INITIAL_TASKS } from '../constants';
 import { AppState, Position, ThemeType } from '../types';
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
 interface QuestBrowseProps {
   onBack: () => void;
@@ -107,7 +108,21 @@ const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onIm
 };
 
 const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
+  const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
   const [projects, setProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadUserStats = async () => {
+        if (address) {
+            const stats = await fetchUserXP(address);
+            setUserStats(stats);
+        }
+    };
+    loadUserStats();
+  }, [address]);
+
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [urlInput, setUrlInput] = useState('');
@@ -407,6 +422,45 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
         >
             <ArrowRight size={20} className="rotate-180" />
         </button>
+
+        {/* Wallet Connect / Profile Button */}
+        <div className="absolute top-6 right-6 z-50">
+            {isConnected ? (
+                <div 
+                    onClick={() => open()}
+                    className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 pr-5 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
+                >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
+                             <User size={18} className="text-white" />
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                             <span className="text-xs font-black text-white uppercase tracking-wider">Lvl {userStats.level}</span>
+                             <span className="w-1 h-1 rounded-full bg-slate-600" />
+                             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                                <Star size={10} fill="currentColor" /> {userStats.xp} XP
+                             </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                             <span className="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
+                                {address?.slice(0, 4)}...{address?.slice(-4)}
+                             </span>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <button
+                    onClick={() => open()}
+                    className="group flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] animate-in fade-in slide-in-from-top-4 duration-700"
+                >
+                    <Wallet size={16} className="group-hover:-rotate-12 transition-transform" />
+                    <span>Connect</span>
+                </button>
+            )}
+        </div>
 
         {/* Video Background */}
         <div className="absolute top-0 left-0 w-full h-[500px] overflow-hidden pointer-events-none opacity-30 mask-linear-fade">

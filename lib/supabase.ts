@@ -86,6 +86,23 @@ export const fetchGlobalDashboardStats = async (ownerAddress: string) => {
   return data;
 };
 
+export const fetchUserXP = async (walletAddress: string) => {
+  // Use the RPC to get aggregated global XP across all projects
+  const { data: globalXP, error } = await supabase.rpc('get_global_xp', { wallet_addr: walletAddress });
+
+  if (error) {
+      console.error('Error fetching user XP:', error);
+      return { xp: 0, level: 1 };
+  }
+  
+  const xp = globalXP || 0;
+  // Calculate Level based on standard formula (same as Widget.tsx)
+  const xpPerLevel = 3000;
+  const level = Math.floor(xp / xpPerLevel) + 1;
+
+  return { xp, level };
+};
+
 export const syncProjectToSupabase = async (state: AppState, ownerAddress?: string): Promise<{ projectId: string, error?: any }> => {
   try {
     // 1. Get or Create Project
