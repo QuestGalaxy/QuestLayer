@@ -1,7 +1,77 @@
 
 import React, { useEffect, useState } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
-import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown } from 'lucide-react';
+import { 
+  Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, 
+  ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare, 
+  Send, Globe, Calendar, Zap, Heart
+} from 'lucide-react';
+
+const TASK_TEMPLATES = [
+  {
+    id: 'tpl-twitter-follow',
+    title: 'Follow on X',
+    desc: 'Follow our official X account for the latest updates and announcements.',
+    link: 'https://x.com/',
+    icon: 'icon:twitter',
+    xp: 50,
+    category: 'Social'
+  },
+  {
+    id: 'tpl-twitter-repost',
+    title: 'Repost a Post',
+    desc: 'Help us spread the word by reposting our latest announcement on X.',
+    link: 'https://x.com/',
+    icon: 'icon:repost',
+    xp: 100,
+    category: 'Social'
+  },
+  {
+    id: 'tpl-twitter-like',
+    title: 'Like a Post',
+    desc: 'Show some love to our latest announcement on X by liking it.',
+    link: 'https://x.com/',
+    icon: 'icon:heart',
+    xp: 25,
+    category: 'Social'
+  },
+  {
+    id: 'tpl-discord-join',
+    title: 'Join Discord',
+    desc: 'Join our community server to chat with other members and get support.',
+    link: 'https://discord.gg/',
+    icon: 'icon:discord',
+    xp: 150,
+    category: 'Community'
+  },
+  {
+    id: 'tpl-telegram-join',
+    title: 'Join Telegram',
+    desc: 'Subscribe to our Telegram channel for instant notifications.',
+    link: 'https://t.me/',
+    icon: 'icon:telegram',
+    xp: 50,
+    category: 'Community'
+  },
+  {
+    id: 'tpl-visit-web',
+    title: 'Visit Website',
+    desc: 'Explore our platform and learn more about what we do.',
+    link: 'https://',
+    icon: 'icon:globe',
+    xp: 10,
+    category: 'General'
+  },
+  {
+    id: 'tpl-daily-checkin',
+    title: 'Daily Check-in',
+    desc: 'Return daily to claim your streak and bonus XP rewards.',
+    link: '',
+    icon: 'icon:calendar',
+    xp: 20,
+    category: 'Daily'
+  }
+];
 import EmbedModal from './EmbedModal.tsx';
 import GlobalFooter from './GlobalFooter';
 
@@ -118,6 +188,26 @@ const Editor: React.FC<EditorProps> = ({
       link: 'https://',
       icon: '',
       xp: Math.min(100, remaining) // Auto-cap at remaining
+    };
+    setTasks([newTask, ...state.tasks]);
+    setEditingId(newTask.id);
+    setEditForm(newTask);
+  };
+
+  const addTemplateTask = (template: typeof TASK_TEMPLATES[0]) => {
+    const remaining = calculateXPRemaining();
+    if (remaining <= 0) {
+      setAlertMessage("You have reached the maximum 1000 XP limit.");
+      return;
+    }
+
+    const newTask: Task = {
+      id: Date.now(),
+      title: template.title,
+      desc: template.desc,
+      link: template.link,
+      icon: template.icon,
+      xp: Math.min(template.xp, remaining)
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -299,6 +389,38 @@ const Editor: React.FC<EditorProps> = ({
           </div>
         </section>
 
+        {/* Quick Templates Section */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <Zap size={12} className="text-indigo-500" />
+            <h3>Quick Templates</h3>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {TASK_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                onClick={() => addTemplateTask(tpl)}
+                disabled={calculateXPRemaining() <= 0}
+                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="h-8 w-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  {tpl.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                  {tpl.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                  {tpl.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+                  {tpl.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                  {tpl.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                  {tpl.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                  {tpl.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-black text-white uppercase">{tpl.title}</p>
+                  <p className="text-[8px] font-bold text-indigo-400">{tpl.xp} XP</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Missions Section */}
         <section className="space-y-6">
           <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-2 z-20">
@@ -331,6 +453,13 @@ const Editor: React.FC<EditorProps> = ({
                           {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
                           {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
                           {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+                          {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                          {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                          {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+                          {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                          {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                          {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                          {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
                         </div>
                       ) : task.icon ? (
                         <img

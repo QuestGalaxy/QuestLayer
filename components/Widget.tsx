@@ -5,7 +5,7 @@ import { THEMES } from '../constants.ts';
 import { 
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2, 
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown, 
-  MessageSquare, Facebook, Linkedin, Twitter
+  MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart
 } from 'lucide-react';
 import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
@@ -994,6 +994,13 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                               {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
                               {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
                               {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+                              {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                              {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                              {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+                              {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                              {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                              {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                              {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
                             </div>
                           ) : task.icon ? (
                             <div 
