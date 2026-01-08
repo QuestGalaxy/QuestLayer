@@ -480,7 +480,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
             <div className="max-w-7xl mx-auto space-y-10">
             
             {/* Hero URL Input */}
-            <div className="py-12 md:py-20 text-center space-y-6">
+            <div className="py-12 md:py-20 text-center space-y-6 mt-[10px]">
                 <div className="px-4">
                     <h1 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tight mb-4 drop-shadow-2xl">
                         Browse the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Web3</span>
