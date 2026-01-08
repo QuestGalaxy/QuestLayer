@@ -378,60 +378,77 @@ const Editor: React.FC<EditorProps> = ({
       {/* Internal Scroll Area */}
       <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-10 pb-32">
         {/* Style & Layout Section */}
-        <section className="space-y-4">
+        <section className="space-y-3">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Palette size={12} />
             <h3>Style & Layout</h3>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setActiveTheme(t)}
-                className={`p-3 rounded-xl border text-[10px] font-black uppercase transition-all ${
-                  state.activeTheme === t 
-                    ? 'border-indigo-500 bg-indigo-500/10 text-white' 
-                    : 'border-white/5 bg-white/5 text-slate-400'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-          
           <div className="space-y-4 bg-slate-950/50 p-4 rounded-3xl border border-white/5">
-            <div className="space-y-2.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
-                <Droplets size={10} /> Accent Palette
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {PASTEL_PALETTE.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setAccentColor(color)}
-                    className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 ${
-                      state.accentColor.toLowerCase() === color.toLowerCase() 
-                        ? 'border-white ring-2 ring-indigo-500/50 scale-110' 
-                        : 'border-transparent'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
-                ))}
-                <div className="relative group flex items-center justify-center w-7 h-7 rounded-full border-2 border-white/10 overflow-hidden bg-slate-800">
-                  <input 
-                    type="color" 
-                    value={state.accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
-                  />
-                  <Plus size={14} className="text-slate-400 group-hover:text-white transition-colors" />
+            <div className="grid grid-cols-2 gap-2">
+              {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setActiveTheme(t)}
+                  className={`p-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${
+                    state.activeTheme === t 
+                      ? 'border-indigo-500 bg-indigo-500/10 text-white' 
+                      : 'border-white/5 bg-white/5 text-slate-400'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-3 py-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
+                  <Droplets size={10} /> Accent Palette
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {PASTEL_PALETTE.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setAccentColor(color)}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 ${
+                        state.accentColor.toLowerCase() === color.toLowerCase() 
+                          ? 'border-white ring-2 ring-indigo-500/50 scale-110' 
+                          : 'border-transparent'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                  <div className="relative group flex items-center justify-center w-7 h-7 rounded-full border-2 border-white/10 overflow-hidden bg-slate-800">
+                    <input 
+                      type="color" 
+                      value={state.accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+                    />
+                    <Plus size={14} className="text-slate-400 group-hover:text-white transition-colors" />
+                  </div>
                 </div>
+              </div>
+              <div className="w-40 space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
+                  <Layout size={10} /> Position
+                </label>
+                <select 
+                  value={state.position}
+                  onChange={(e) => setPosition(e.target.value as Position)}
+                  className="w-full h-[38px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
+                >
+                  <option value="bottom-right">Bottom Right</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="top-right">Top Right</option>
+                  <option value="top-left">Top Left</option>
+                </select>
               </div>
             </div>
 
-            <div className="flex gap-4 items-end">
-              <div className="flex-1 space-y-1.5">
+            <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-500 uppercase">Project Name</label>
                 <input 
                   value={state.projectName}
@@ -439,10 +456,8 @@ const Editor: React.FC<EditorProps> = ({
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
-            </div>
 
-            <div className="flex gap-4 items-end">
-              <div className="flex-1 space-y-1.5">
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-500 uppercase">Website Domain</label>
                 <input 
                   value={state.projectDomain || ''}
@@ -451,22 +466,6 @@ const Editor: React.FC<EditorProps> = ({
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
-                <Layout size={10} /> Widget Position
-              </label>
-              <select 
-                value={state.position}
-                onChange={(e) => setPosition(e.target.value as Position)}
-                className="w-full h-[40px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
-              >
-                <option value="bottom-right">Bottom Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="top-right">Top Right</option>
-                <option value="top-left">Top Left</option>
-              </select>
             </div>
           </div>
         </section>
