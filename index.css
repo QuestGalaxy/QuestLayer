@@ -120,6 +120,15 @@
   animation: aurora-shift 10s ease infinite;
 }
 
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .card-scanline {
   animation: scanline 5s ease-in-out infinite;
 }

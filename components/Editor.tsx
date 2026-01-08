@@ -432,7 +432,7 @@ const Editor: React.FC<EditorProps> = ({
                 <span>Theme</span>
               </div>
               <div className="relative">
-                <div className="flex gap-2 overflow-x-auto custom-scroll pb-1">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                   {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[])
                     .map((t) => (
                       <button
@@ -451,6 +451,9 @@ const Editor: React.FC<EditorProps> = ({
                     ))}
                 </div>
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-slate-950/80 to-transparent" />
+                <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 flex items-center text-slate-400 animate-bounce">
+                  <ArrowRight size={12} />
+                </div>
               </div>
             </div>
 
