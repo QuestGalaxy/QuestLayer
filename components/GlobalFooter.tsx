@@ -43,7 +43,17 @@ const GlobalFooter: React.FC = () => {
             <path d="M8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12Z" fill="white" />
           </svg>
         </div>
-        <span className="text-[9px] uppercase tracking-[0.3em] text-slate-500">© {year} All rights reserved</span>
+        <div className="flex flex-col items-center gap-1">
+          <a 
+            href="https://questgalaxy.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[9px] uppercase tracking-[0.3em] text-slate-500 hover:text-indigo-400 transition-colors"
+          >
+            powered by <span className="font-black text-slate-400">QuestGalaxy</span>
+          </a>
+          <span className="text-[9px] uppercase tracking-[0.3em] text-slate-600/50">© {year} All rights reserved</span>
+        </div>
       </div>
     </footer>
   );
