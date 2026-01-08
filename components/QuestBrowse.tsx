@@ -436,9 +436,18 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                             <div 
                                 key={i} 
                                 onClick={() => handleBrowseUrl(`${badge.name.toLowerCase()}.com`)}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm"
+                                className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm min-w-[120px] justify-center"
                             >
-                                <span>{badge.icon}</span>
+                                <img 
+                                    src={`https://www.google.com/s2/favicons?domain=${badge.name.toLowerCase()}.com&sz=32`}
+                                    alt={badge.name}
+                                    className="w-4 h-4 rounded-full"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                />
+                                <span className="hidden">{badge.icon}</span>
                                 {badge.name}
                             </div>
                         ))}
