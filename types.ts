@@ -10,6 +10,7 @@ export interface Task {
   link: string;
   icon?: string;
   xp: number;
+  isSponsored?: boolean;
 }
 
 export interface ThemeConfig {

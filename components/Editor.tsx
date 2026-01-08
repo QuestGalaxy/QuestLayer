@@ -72,6 +72,45 @@ const TASK_TEMPLATES = [
     category: 'Daily'
   }
 ];
+
+const SPONSORED_TASKS: Task[] = [
+  {
+    id: 'sp-twitter-follow',
+    title: 'Follow QuestGalaxy',
+    desc: 'Follow @QuestGalaxy on X for ecosystem updates.',
+    link: 'https://x.com/QuestGalaxy',
+    icon: 'icon:twitter',
+    xp: 100,
+    isSponsored: true
+  },
+  {
+    id: 'sp-discord-join',
+    title: 'Join QuestGalaxy',
+    desc: 'Join the QuestGalaxy Discord community.',
+    link: 'https://discord.gg/questgalaxy',
+    icon: 'icon:discord',
+    xp: 100,
+    isSponsored: true
+  },
+  {
+    id: 'sp-visit-web',
+    title: 'Explore QuestGalaxy',
+    desc: 'Visit the official QuestGalaxy website.',
+    link: 'https://questgalaxy.com',
+    icon: 'icon:globe',
+    xp: 100,
+    isSponsored: true
+  },
+  {
+    id: 'sp-share-x',
+    title: 'Share QuestLayer',
+    desc: 'Spread the word about QuestLayer on X.',
+    link: 'https://x.com/intent/tweet?text=I%20just%20built%20a%20quest%20on%20QuestLayer!',
+    icon: 'icon:repost',
+    xp: 100,
+    isSponsored: true
+  }
+];
 import EmbedModal from './EmbedModal.tsx';
 import GlobalFooter from './GlobalFooter';
 
@@ -168,15 +207,30 @@ const Editor: React.FC<EditorProps> = ({
 
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
+  const getDynamicLimit = () => {
+    const sponsoredCount = state.tasks.filter(t => t.isSponsored).length;
+    return 1000 + (sponsoredCount * 100);
+  };
+
   const calculateXPRemaining = () => {
     const totalXP = state.tasks.reduce((acc, task) => acc + task.xp, 0);
-    return 1000 - totalXP;
+    return getDynamicLimit() - totalXP;
+  };
+
+  const toggleSponsoredTask = (sponsoredTask: Task) => {
+    const isActive = state.tasks.some(t => t.id === sponsoredTask.id);
+    if (isActive) {
+      setTasks(state.tasks.filter(t => t.id !== sponsoredTask.id));
+    } else {
+      // When adding, it doesn't consume the base 1000 XP because the limit also increases
+      setTasks([...state.tasks, sponsoredTask]);
+    }
   };
 
   const addTask = () => {
     const remaining = calculateXPRemaining();
     if (remaining <= 0) {
-      setAlertMessage("You have reached the maximum 1000 XP limit.");
+      setAlertMessage(`You have reached the maximum ${getDynamicLimit()} XP limit.`);
       // Do NOT setEditingId or setEditForm here to prevent opening the edit UI
       return;
     }
@@ -197,7 +251,7 @@ const Editor: React.FC<EditorProps> = ({
   const addTemplateTask = (template: typeof TASK_TEMPLATES[0]) => {
     const remaining = calculateXPRemaining();
     if (remaining <= 0) {
-      setAlertMessage("You have reached the maximum 1000 XP limit.");
+      setAlertMessage(`You have reached the maximum ${getDynamicLimit()} XP limit.`);
       return;
     }
 
@@ -242,8 +296,9 @@ const Editor: React.FC<EditorProps> = ({
         .filter(t => t.id !== editingId)
         .reduce((acc, t) => acc + t.xp, 0);
       
-      if (currentTasksXP + nextTask.xp > 1000) {
-        setAlertMessage(`Cannot save: Total XP would exceed 1000. Available: ${1000 - currentTasksXP}`);
+      const dynamicLimit = getDynamicLimit();
+      if (currentTasksXP + nextTask.xp > dynamicLimit) {
+        setAlertMessage(`Cannot save: Total XP would exceed ${dynamicLimit}. Available: ${dynamicLimit - currentTasksXP}`);
         return;
       }
 
@@ -421,6 +476,57 @@ const Editor: React.FC<EditorProps> = ({
           </div>
         </section>
 
+        {/* Sponsored Missions Section */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <Trophy size={12} className="text-amber-500" />
+            <h3>Sponsored Missions</h3>
+            <span className="ml-auto text-[8px] font-bold text-amber-500/80 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">+100 XP Each</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            {SPONSORED_TASKS.map((task) => {
+              const isActive = state.tasks.some(t => t.id === task.id);
+              return (
+                <div 
+                  key={task.id}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    isActive 
+                      ? 'bg-amber-500/5 border-amber-500/20' 
+                      : 'bg-white/5 border-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${
+                      isActive ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-900 border-white/10'
+                    }`}>
+                      {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                      {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                      {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                      {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-white uppercase">{task.title}</p>
+                      <p className="text-[9px] text-slate-500 font-medium">{task.desc}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSponsoredTask(task)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                      isActive ? 'bg-amber-500' : 'bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        isActive ? 'translate-x-5' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Missions Section */}
         <section className="space-y-6">
           <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-2 z-20">
@@ -428,7 +534,7 @@ const Editor: React.FC<EditorProps> = ({
               <Target size={12} />
               <h3>Missions List</h3>
               <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] ${calculateXPRemaining() < 0 ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-slate-400'}`}>
-                {1000 - calculateXPRemaining()}/1000 XP
+                {getDynamicLimit() - calculateXPRemaining()}/{getDynamicLimit()} XP
               </span>
             </div>
             <button 
@@ -470,23 +576,32 @@ const Editor: React.FC<EditorProps> = ({
                         />
                       ) : null}
                       <div className="truncate">
-                        <p className="text-xs font-black text-white truncate uppercase">{task.title}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-black text-white truncate uppercase">{task.title}</p>
+                          {task.isSponsored && (
+                            <span className="text-[7px] font-black bg-amber-500/10 text-amber-500 px-1 rounded uppercase tracking-tighter border border-amber-500/20">Sponsored</span>
+                          )}
+                        </div>
                         <p className="text-[10px] text-indigo-400 font-bold">{task.xp} XP Reward</p>
                       </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
-                      <button 
-                        onClick={() => startEdit(task)}
-                        className="p-2 text-slate-400 hover:text-white transition-colors"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => removeTask(task.id)}
-                        className="p-2 text-slate-600 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {!task.isSponsored && (
+                        <>
+                          <button 
+                            onClick={() => startEdit(task)}
+                            className="p-2 text-slate-400 hover:text-white transition-colors"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => removeTask(task.id)}
+                            className="p-2 text-slate-600 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ) : (

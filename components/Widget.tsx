@@ -44,7 +44,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const isDisconnectingRef = useRef(false);
   const initialStateRef = useRef(state);
   const cacheScope = globalThis.location?.origin ?? 'unknown-origin';
-  const walletKey = address ? `questlayer:wallet:${address.toLowerCase()}:${cacheScope}` : '';
+  // Include project identifier in cache key to avoid cross-project pollution
+  const projectScope = state.projectId || state.projectName.replace(/\s+/g, '-').toLowerCase() || 'default';
+  const walletKey = address ? `questlayer:wallet:${address.toLowerCase()}:${cacheScope}:${projectScope}` : '';
 
   const activeTheme = THEMES[state.activeTheme];
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
@@ -1018,6 +1020,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                           <h5 className={`text-[10px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
                             {task.title}
                           </h5>
+                          {task.isSponsored && (
+                            <span 
+                              className={`text-[6px] md:text-[7px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                              style={{ 
+                                backgroundColor: `${state.accentColor}10`, 
+                                borderColor: `${state.accentColor}20`,
+                                color: state.accentColor 
+                              }}
+                            >
+                              Sponsored
+                            </span>
+                          )}
                         </div>
                         <span 
                           className={`text-[8px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
