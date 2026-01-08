@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
-import { Globe, ArrowRight, Loader2, Search, Zap, ExternalLink, Activity, Users, ChevronLeft, ChevronRight, X, Layout, Wallet, User, Star } from 'lucide-react';
+import { Globe, ArrowRight, Loader2, Search, Zap, ExternalLink, Activity, Users, ChevronLeft, ChevronRight, X, Layout, Wallet, User, Star, LogOut, Trophy, ShoppingBag, ChevronDown } from 'lucide-react';
 import Widget from './Widget';
 import { INITIAL_TASKS } from '../constants';
 import { AppState, Position, ThemeType } from '../types';
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 
 interface QuestBrowseProps {
   onBack: () => void;
@@ -110,8 +110,21 @@ const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onIm
 const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
+  const { disconnect } = useDisconnect();
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
   const [projects, setProjects] = useState<any[]>([]);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const loadUserStats = async () => {
@@ -418,38 +431,99 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
       <div className="flex-1 relative">
         <button 
             onClick={onBack}
-            className="absolute top-6 left-6 z-50 p-2 text-slate-400 hover:text-white transition-colors bg-slate-950/50 backdrop-blur-md rounded-xl border border-white/10"
+            className="fixed top-6 left-6 z-50 p-2 text-slate-400 hover:text-white transition-colors bg-slate-950/50 backdrop-blur-md rounded-xl border border-white/10 shadow-lg"
         >
             <ArrowRight size={20} className="rotate-180" />
         </button>
 
         {/* Wallet Connect / Profile Button */}
-        <div className="absolute top-6 right-6 z-50">
+        <div className="fixed top-6 right-6 z-50" ref={profileRef}>
             {isConnected ? (
-                <div 
-                    onClick={() => open()}
-                    className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 pr-5 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
-                >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
-                             <User size={18} className="text-white" />
+                <div className="relative">
+                    <div 
+                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                        className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 pr-5 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
+                                 <User size={18} className="text-white" />
+                            </div>
                         </div>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                 <span className="text-xs font-black text-white uppercase tracking-wider">Lvl {userStats.level}</span>
+                                 <span className="w-1 h-1 rounded-full bg-slate-600" />
+                                 <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                                    <Star size={10} fill="currentColor" /> {userStats.xp} XP
+                                 </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                                 <span className="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
+                                    {address?.slice(0, 4)}...{address?.slice(-4)}
+                                 </span>
+                            </div>
+                        </div>
+                        <ChevronDown size={14} className={`text-slate-400 group-hover:text-white transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
                     </div>
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                             <span className="text-xs font-black text-white uppercase tracking-wider">Lvl {userStats.level}</span>
-                             <span className="w-1 h-1 rounded-full bg-slate-600" />
-                             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-                                <Star size={10} fill="currentColor" /> {userStats.xp} XP
-                             </span>
+
+                    {isProfileOpen && (
+                        <div className="absolute top-full right-0 mt-4 w-72 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                             {/* Header */}
+                             <div className="p-6 border-b border-white/5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20">
+                                        <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
+                                            <User size={32} className="text-white" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-lg font-black text-white tracking-tight">User</div>
+                                        <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                                            {address?.slice(0, 6)}...{address?.slice(-4)}
+                                            <ExternalLink size={12} className="hover:text-white cursor-pointer transition-colors" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5 flex flex-col items-center">
+                                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Level</div>
+                                        <div className="text-xl font-black text-white">{userStats.level}</div>
+                                    </div>
+                                    <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5 flex flex-col items-center">
+                                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">XP</div>
+                                        <div className="text-xl font-black text-indigo-400">{userStats.xp}</div>
+                                    </div>
+                                </div>
+                             </div>
+                             
+                             {/* Menu */}
+                             <div className="p-2 space-y-1">
+                                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
+                                    <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500 group-hover:bg-yellow-500/20 transition-colors">
+                                        <Trophy size={18} />
+                                    </div>
+                                    <span className="font-bold text-sm">Leaderboard</span>
+                                </button>
+                                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
+                                    <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 group-hover:bg-pink-500/20 transition-colors">
+                                        <ShoppingBag size={18} />
+                                    </div>
+                                    <span className="font-bold text-sm">Marketplace</span>
+                                </button>
+                                <div className="h-px bg-white/5 my-2 mx-3" />
+                                <button 
+                                    onClick={() => disconnect()}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all group"
+                                >
+                                    <div className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:text-red-400 transition-colors">
+                                        <LogOut size={18} />
+                                    </div>
+                                    <span className="font-bold text-sm">Disconnect</span>
+                                </button>
+                             </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                             <span className="text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
-                                {address?.slice(0, 4)}...{address?.slice(-4)}
-                             </span>
-                        </div>
-                    </div>
+                    )}
                 </div>
             ) : (
                 <button
