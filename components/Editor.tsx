@@ -5,7 +5,7 @@ import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { 
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, 
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare, 
-  Send, Globe, Calendar, Zap, Heart, ArrowRight
+  Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info
 } from 'lucide-react';
 
 const TASK_TEMPLATES = [
@@ -132,16 +132,13 @@ interface EditorProps {
 const PASTEL_PALETTE = [
   '#6366f1', // Indigo (Default)
   '#8b5cf6', // Violet
-  '#d946ef', // Fuchsia
-  '#ec4899', // Pink
-  '#f43f5e', // Rose
-  '#f97316', // Orange
-  '#eab308', // Yellow
-  '#22c55e', // Green
-  '#10b981', // Emerald
   '#06b6d4', // Cyan
   '#0ea5e9', // Sky
-  '#3b82f6', // Blue
+  '#22c55e', // Green
+  '#f59e0b', // Amber
+  '#f97316', // Orange
+  '#f43f5e', // Rose
+  '#d946ef' // Fuchsia
 ];
 
 // Yellow/Gold Game Icon Codes
@@ -462,7 +459,7 @@ const Editor: React.FC<EditorProps> = ({
                 <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
                   <Droplets size={10} /> Accent Palette
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {PASTEL_PALETTE.map((color) => (
                     <button
                       key={color}
@@ -564,6 +561,17 @@ const Editor: React.FC<EditorProps> = ({
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Trophy size={12} className="text-amber-500" />
             <h3>Sponsored Missions</h3>
+            <span className="relative ml-1 inline-flex items-center group">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                <Info size={12} />
+              </button>
+              <span className="pointer-events-none absolute left-1/2 top-6 z-20 w-44 -translate-x-1/2 rounded-lg border border-white/10 bg-slate-900/95 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-slate-300 opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+                Add sponsors to raise the widget XP cap.
+              </span>
+            </span>
             <span className="ml-auto text-[8px] font-bold text-amber-500/80 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">+100 XP Each</span>
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -682,6 +690,35 @@ const Editor: React.FC<EditorProps> = ({
           </div>
 
           <div className="space-y-3">
+            {state.tasks.length === 0 && (
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-950/80 via-slate-950/60 to-indigo-500/10 p-4 text-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="absolute -top-10 -right-8 h-24 w-24 rounded-full bg-indigo-500/20 blur-2xl animate-float-slow" />
+                <div className="absolute -bottom-12 -left-10 h-28 w-28 rounded-full bg-rose-500/20 blur-2xl animate-float-slow" />
+                <div className="relative flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-200 animate-float">
+                    <Sparkles size={16} />
+                  </div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.35em] text-slate-400">Mission List</div>
+                </div>
+                <div className="relative mt-3 grid grid-cols-3 gap-2 text-center text-[9px] font-black uppercase tracking-widest">
+                  <div className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2 py-2">
+                    <Zap size={14} className="text-amber-300 animate-float" />
+                    Add tasks
+                  </div>
+                  <div className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2 py-2">
+                    <Globe size={14} className="text-sky-300 animate-float" />
+                    See live
+                  </div>
+                  <div className="flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2 py-2">
+                    <Share2 size={14} className="text-emerald-300 animate-float" />
+                    Save embed
+                  </div>
+                </div>
+                <div className="relative mt-3 rounded-xl border border-dashed border-white/15 bg-white/5 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
+                  No missions yet
+                </div>
+              </div>
+            )}
             {state.tasks.map((task) => (
               <div key={task.id} className="bg-white/5 rounded-2xl border border-white/5 overflow-hidden transition-all group">
                 {editingId !== task.id ? (
