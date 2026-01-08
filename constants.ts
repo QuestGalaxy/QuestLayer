@@ -76,37 +76,43 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
   }
 };
 
-export const INITIAL_TASKS: Task[] = [
+export const DEMO_TASKS: Task[] = [
   {
-    id: 1,
+    id: 'demo-1',
     title: 'Visit Website',
     desc: 'Explore QuestGalaxy and discover the latest quests and galaxy rewards.',
     link: 'https://questgalaxy.com/',
     icon: 'https://www.google.com/s2/favicons?domain=questgalaxy.com&sz=128',
-    xp: 200
+    xp: 200,
+    isDemo: true
   },
   {
-    id: 2,
+    id: 'demo-2',
     title: 'Follow X',
     desc: 'Follow @questgalaxycom for launches, raids, and drops.',
     link: 'https://x.com/questgalaxycom',
     icon: 'https://www.google.com/s2/favicons?domain=x.com&sz=128',
-    xp: 200
+    xp: 200,
+    isDemo: true
   },
   {
-    id: 3,
+    id: 'demo-3',
     title: 'Join Telegram',
     desc: 'Join the QuestGalaxy Telegram to meet the community and mods.',
     link: 'https://t.me/questgalaxy',
     icon: 'https://www.google.com/s2/favicons?domain=t.me&sz=128',
-    xp: 200
+    xp: 200,
+    isDemo: true
   },
   {
-    id: 4,
+    id: 'demo-4',
     title: 'Follow Medium',
     desc: 'Read the QuestGalaxy Medium for updates and deep dives.',
     link: 'https://medium.com/questgalaxy',
     icon: 'https://www.google.com/s2/favicons?domain=medium.com&sz=128',
-    xp: 200
+    xp: 200,
+    isDemo: true
   }
 ];
+
+export const INITIAL_TASKS: Task[] = [];

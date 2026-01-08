@@ -1037,6 +1037,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                               Sponsored
                             </span>
                           )}
+                          {task.isDemo && (
+                            <span 
+                              className={`text-[6px] md:text-[7px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                              style={{ 
+                                backgroundColor: `${state.accentColor}10`, 
+                                borderColor: `${state.accentColor}20`,
+                                color: state.accentColor 
+                              }}
+                            >
+                              Demo
+                            </span>
+                          )}
                         </div>
                         <span 
                           className={`text-[8px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}

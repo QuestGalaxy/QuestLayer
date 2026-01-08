@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { 
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, 
@@ -113,6 +114,7 @@ const SPONSORED_TASKS: Task[] = [
 ];
 import EmbedModal from './EmbedModal.tsx';
 import GlobalFooter from './GlobalFooter';
+import { DEMO_TASKS } from '../constants';
 
 interface EditorProps {
   state: AppState;
@@ -209,7 +211,8 @@ const Editor: React.FC<EditorProps> = ({
 
   const getDynamicLimit = () => {
     const sponsoredCount = state.tasks.filter(t => t.isSponsored).length;
-    return 1000 + (sponsoredCount * 100);
+    const sponsoredBonus = sponsoredCount * 100;
+    return 1000 + sponsoredBonus;
   };
 
   const calculateXPRemaining = () => {
@@ -222,10 +225,23 @@ const Editor: React.FC<EditorProps> = ({
     if (isActive) {
       setTasks(state.tasks.filter(t => t.id !== sponsoredTask.id));
     } else {
-      // When adding, it doesn't consume the base 1000 XP because the limit also increases
       setTasks([...state.tasks, sponsoredTask]);
     }
   };
+
+  const toggleDemoTask = (demoTask: Task) => {
+     const isActive = state.tasks.some(t => t.id === demoTask.id);
+     if (isActive) {
+       setTasks(state.tasks.filter(t => t.id !== demoTask.id));
+     } else {
+       const remaining = calculateXPRemaining();
+       if (remaining < demoTask.xp) {
+         setAlertMessage(`Not enough XP remaining to add this Demo Quest. Available: ${remaining} XP`);
+         return;
+       }
+       setTasks([...state.tasks, demoTask]);
+     }
+   };
 
   const addTask = () => {
     const remaining = calculateXPRemaining();
@@ -527,6 +543,58 @@ const Editor: React.FC<EditorProps> = ({
           </div>
         </section>
 
+        {/* Demo Quests Section */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <Layout size={12} className="text-indigo-500" />
+            <h3>Demo Quests</h3>
+            <span className="ml-auto text-[8px] font-bold text-indigo-500/80 bg-indigo-500/10 px-1.5 py-0.5 rounded uppercase">Predefined</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            {DEMO_TASKS.map((task) => {
+              const isActive = state.tasks.some(t => t.id === task.id);
+              return (
+                <div 
+                  key={task.id}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    isActive 
+                      ? 'bg-indigo-500/5 border-indigo-500/20' 
+                      : 'bg-white/5 border-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${
+                      isActive ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-slate-900 border-white/10'
+                    }`}>
+                      {task.icon && task.icon.startsWith('http') ? (
+                        <img src={task.icon} alt="" className="w-4 h-4 rounded-full" />
+                      ) : (
+                        <Globe size={14} className="text-slate-400" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-white uppercase">{task.title}</p>
+                      <p className="text-[9px] text-slate-500 font-medium">{task.desc}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleDemoTask(task)}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                      isActive ? 'bg-indigo-500' : 'bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                        isActive ? 'translate-x-5' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Missions Section */}
         <section className="space-y-6">
           <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-2 z-20">
@@ -581,12 +649,15 @@ const Editor: React.FC<EditorProps> = ({
                           {task.isSponsored && (
                             <span className="text-[7px] font-black bg-amber-500/10 text-amber-500 px-1 rounded uppercase tracking-tighter border border-amber-500/20">Sponsored</span>
                           )}
+                          {task.isDemo && (
+                            <span className="text-[7px] font-black bg-indigo-500/10 text-indigo-400 px-1 rounded uppercase tracking-tighter border border-indigo-500/20">Demo</span>
+                          )}
                         </div>
                         <p className="text-[10px] text-indigo-400 font-bold">{task.xp} XP Reward</p>
                       </div>
                     </div>
                     <div className="flex gap-1 shrink-0">
-                      {!task.isSponsored && (
+                      {!task.isSponsored ? (
                         <>
                           <button 
                             onClick={() => startEdit(task)}
@@ -601,6 +672,14 @@ const Editor: React.FC<EditorProps> = ({
                             <Trash2 size={16} />
                           </button>
                         </>
+                      ) : (
+                        <button 
+                          onClick={() => removeTask(task.id)}
+                          className="p-2 text-slate-600 hover:text-red-400 transition-colors"
+                          title="Remove from list"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       )}
                     </div>
                   </div>
@@ -697,8 +776,8 @@ const Editor: React.FC<EditorProps> = ({
       />
 
       {/* Alert Modal */}
-      {alertMessage && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-200">
+      {alertMessage && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAlertMessage(null)} />
           <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center gap-4">
             <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-2">
@@ -713,7 +792,8 @@ const Editor: React.FC<EditorProps> = ({
               Got it
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

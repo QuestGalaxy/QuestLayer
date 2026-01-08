@@ -11,6 +11,7 @@ export interface Task {
   icon?: string;
   xp: number;
   isSponsored?: boolean;
+  isDemo?: boolean;
 }
 
 export interface ThemeConfig {
