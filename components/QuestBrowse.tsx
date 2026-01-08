@@ -205,7 +205,70 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
 
   const [currentProjectIndex, setCurrentProjectIndex] = useState<number>(-1);
 
-  // ... (inside handleProjectClick)
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Auto-scrolling logic
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let animationFrameId: number;
+    let startTime: number | null = null;
+    const scrollSpeed = 0.5; // pixels per frame
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      
+      if (!isDragging) {
+        if (scrollContainer.scrollLeft >= (scrollContainer.scrollWidth / 2)) {
+          scrollContainer.scrollLeft = 0;
+        } else {
+          scrollContainer.scrollLeft += scrollSpeed;
+        }
+      }
+      
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isDragging]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.pageX - (scrollRef.current?.offsetLeft || 0));
+    setScrollLeft(scrollRef.current?.scrollLeft || 0);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - (scrollRef.current?.offsetLeft || 0);
+    const walk = (x - startX) * 2; // scroll-fast
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollLeft - walk;
+    }
+  };
+
+  const handleBadgeClick = (badge: any) => {
+      if (!isDragging) {
+          handleBrowseUrl(`${badge.name.toLowerCase()}.com`);
+      }
+  };
+  
+  // ... rest of component
   const handleProjectClick = async (project: any) => {
     if (!project.domain) return;
     
@@ -335,30 +398,16 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col overflow-y-auto custom-scroll h-screen">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-white/5 bg-slate-950/80 backdrop-blur-xl shrink-0">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={onBack}
-              className="p-2 -ml-2 text-slate-400 hover:text-white transition-colors"
-            >
-              <ArrowRight size={20} className="rotate-180" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <Globe className="text-white" size={20} />
-              </div>
-              <span className="text-xl font-black italic tracking-tighter text-white uppercase">
-                Quest<span className="text-indigo-500">Browse</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+      
       {/* Content */}
       <div className="flex-1 relative">
+        <button 
+            onClick={onBack}
+            className="absolute top-6 left-6 z-50 p-2 text-slate-400 hover:text-white transition-colors bg-slate-950/50 backdrop-blur-md rounded-xl border border-white/10"
+        >
+            <ArrowRight size={20} className="rotate-180" />
+        </button>
+
         {/* Video Background */}
         <div className="absolute top-0 left-0 w-full h-[500px] overflow-hidden pointer-events-none opacity-30 mask-linear-fade">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950 z-10" />
@@ -410,7 +459,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                 
                 {/* Scrolling Badges */}
                 <div className="absolute top-full left-0 w-full pt-6 overflow-hidden">
-                    <div className="flex gap-4 animate-scroll whitespace-nowrap">
+                    <div 
+                        ref={scrollRef}
+                        className="flex gap-2 overflow-x-hidden whitespace-nowrap scrollbar-hide cursor-grab active:cursor-grabbing pb-4 px-1"
+                        onMouseDown={handleMouseDown}
+                        onMouseLeave={handleMouseLeave}
+                        onMouseUp={handleMouseUp}
+                        onMouseMove={handleMouseMove}
+                    >
                         {[
                             { name: 'Uniswap', icon: '🦄' },
                             { name: 'Aave', icon: '👻' },
@@ -435,13 +491,13 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                         ].map((badge, i) => (
                             <div 
                                 key={i} 
-                                onClick={() => handleBrowseUrl(`${badge.name.toLowerCase()}.com`)}
-                                className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm min-w-[120px] justify-center"
+                                onClick={() => handleBadgeClick(badge)}
+                                className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm min-w-[120px] justify-center shrink-0 select-none"
                             >
                                 <img 
                                     src={`https://www.google.com/s2/favicons?domain=${badge.name.toLowerCase()}.com&sz=32`}
                                     alt={badge.name}
-                                    className="w-4 h-4 rounded-full"
+                                    className="w-4 h-4 rounded-full pointer-events-none"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                         (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');

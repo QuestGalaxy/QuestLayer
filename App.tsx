@@ -15,7 +15,57 @@ import QuestBrowse from './components/QuestBrowse.tsx';
 import { fetchProjectDetails, deleteProject } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse'>(() => {
+    // Check URL path on initial load
+    if (window.location.pathname === '/questbrowse') {
+      return 'questbrowse';
+    }
+    return 'landing';
+  });
+
+  // Handle URL updates and back button
+  useEffect(() => {
+    const handlePopState = () => {
+        if (window.location.pathname === '/questbrowse') {
+            setCurrentPage('questbrowse');
+        } else if (window.location.pathname === '/') {
+            setCurrentPage('landing');
+        }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Update URL when page changes
+  useEffect(() => {
+    if (currentPage === 'questbrowse') {
+        window.history.pushState(null, '', '/questbrowse');
+        document.title = 'QuestBrowse - Browse Web3 & Earn XP';
+        // Add meta tags dynamically
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+            metaDesc = document.createElement('meta');
+            metaDesc.setAttribute('name', 'description');
+            document.head.appendChild(metaDesc);
+        }
+        metaDesc.setAttribute('content', 'Turn any website into an interactive quest. Browse decentralized ecosystems, earn XP, and unlock rewards simply by surfing your favorite protocols.');
+        
+        // Open Graph
+        let ogTitle = document.querySelector('meta[property="og:title"]');
+        if (!ogTitle) {
+            ogTitle = document.createElement('meta');
+            ogTitle.setAttribute('property', 'og:title');
+            document.head.appendChild(ogTitle);
+        }
+        ogTitle.setAttribute('content', 'QuestBrowse - Browse Web3 & Earn XP');
+        
+    } else if (currentPage === 'landing') {
+        window.history.pushState(null, '', '/');
+        document.title = 'QuestLayer - Turn Any Website Into a Quest';
+    }
+  }, [currentPage]);
+
   const [view, setView] = useState<'editor' | 'preview'>('editor');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
