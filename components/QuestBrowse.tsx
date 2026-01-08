@@ -398,11 +398,11 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                         value={urlInput}
                         onChange={(e) => setUrlInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(urlInput)}
-                        className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 text-lg h-12"
+                        className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 text-lg h-12 min-w-0"
                     />
                     <button 
                         onClick={() => handleBrowseUrl(urlInput)}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 h-12 rounded-xl font-bold uppercase tracking-wide transition-all"
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 h-12 rounded-xl font-bold uppercase tracking-wide transition-all shrink-0"
                     >
                         Go
                     </button>
