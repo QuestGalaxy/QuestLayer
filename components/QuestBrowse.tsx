@@ -114,6 +114,20 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
   
+  const handleNextProject = () => {
+    if (projects.length === 0) return;
+    const nextIndex = (currentProjectIndex + 1) % projects.length; // Loop back to start
+    const nextProject = projects[nextIndex];
+    handleProjectClick(nextProject);
+  };
+
+  const handlePrevProject = () => {
+    if (projects.length === 0) return;
+    const prevIndex = (currentProjectIndex - 1 + projects.length) % projects.length; // Loop back to end
+    const prevProject = projects[prevIndex];
+    handleProjectClick(prevProject);
+  };
+
   // Browsing State
   const [isBrowsing, setIsBrowsing] = useState(false);
   const [currentUrl, setCurrentUrl] = useState('');
@@ -189,10 +203,17 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
     setIsWidgetOpen(true);
   };
 
+  const [currentProjectIndex, setCurrentProjectIndex] = useState<number>(-1);
+
+  // ... (inside handleProjectClick)
   const handleProjectClick = async (project: any) => {
     if (!project.domain) return;
     
-    // Load full project details including tasks
+    // Find index in projects array for navigation
+    const index = projects.findIndex(p => p.id === project.id);
+    setCurrentProjectIndex(index);
+
+    // ... (rest of function)
     try {
         const { tasks } = await fetchProjectDetails(project.id);
         const newState: AppState = {
@@ -255,16 +276,37 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                 >
                     <X size={20} />
                 </button>
-                <div className="flex-1 max-w-3xl mx-auto relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                        <Globe size={14} />
+                <div className="flex-1 max-w-3xl mx-auto relative flex items-center gap-4">
+                    <div className="flex-1 relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                            <Globe size={14} />
+                        </div>
+                        <input 
+                            value={currentUrl}
+                            onChange={(e) => setCurrentUrl(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(currentUrl)}
+                            className="w-full bg-slate-950 border border-white/10 rounded-full py-1.5 pl-9 pr-24 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 font-mono"
+                        />
+                        <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 pr-1">
+                            <div className="w-px h-4 bg-white/10 mr-1" />
+                            <button 
+                                onClick={handlePrevProject}
+                                disabled={currentProjectIndex === -1 && projects.length === 0}
+                                className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Previous Project"
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            <button 
+                                onClick={handleNextProject}
+                                disabled={currentProjectIndex === -1 && projects.length === 0}
+                                className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Next Project"
+                            >
+                                <ChevronRight size={14} />
+                            </button>
+                        </div>
                     </div>
-                    <input 
-                        value={currentUrl}
-                        onChange={(e) => setCurrentUrl(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(currentUrl)}
-                        className="w-full bg-slate-950 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 font-mono"
-                    />
                 </div>
                 <div className="w-10" /> {/* Spacer */}
             </div>
@@ -321,9 +363,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
           
           {/* Hero URL Input */}
           <div className="py-10 text-center space-y-6">
-            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
-                Browse the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Web3</span>
-            </h1>
+            <div>
+                <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight mb-2">
+                    Browse the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Web3</span>
+                </h1>
+                <p className="text-slate-400 text-sm md:text-base font-medium max-w-lg mx-auto leading-relaxed">
+                    Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.
+                </p>
+            </div>
             <div className="max-w-2xl mx-auto relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20" />
                 <div className="relative bg-slate-900 border border-white/10 rounded-2xl p-2 flex items-center shadow-2xl">
