@@ -42,11 +42,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const animationFrameRef = useRef<number | null>(null);
   const wasConnectedRef = useRef(false);
   const isDisconnectingRef = useRef(false);
-  const initialStateRef = useRef(state);
   const cacheScope = globalThis.location?.origin ?? 'unknown-origin';
-  // Include project identifier in cache key to avoid cross-project pollution
-  const projectScope = state.projectId || state.projectName.replace(/\s+/g, '-').toLowerCase() || 'default';
+  const projectScope = state.projectId ?? (state.projectName ? `name:${state.projectName}` : 'unknown-project');
   const walletKey = address ? `questlayer:wallet:${address.toLowerCase()}:${cacheScope}:${projectScope}` : '';
+  const projectScopeRef = useRef<string | null>(null);
 
   const activeTheme = THEMES[state.activeTheme];
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
@@ -55,6 +54,28 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const positionClasses = isPreview ? 'absolute' : 'fixed';
 
   // --- SUPABASE SYNC ---
+  useEffect(() => {
+    if (projectScopeRef.current && projectScopeRef.current !== projectScope) {
+      setCompletedTaskIds(new Set());
+      setTaskMap({});
+      setDbProjectId(null);
+      setDbUserId(null);
+      setSharedPlatforms([]);
+    }
+    projectScopeRef.current = projectScope;
+  }, [projectScope]);
+
+  useEffect(() => {
+    if (!effectiveConnected || !address) return;
+    const fetchGlobalXP = async () => {
+      const { data: globalXPData } = await supabase.rpc('get_global_xp', { wallet_addr: address });
+      if (globalXPData !== null) {
+        setGlobalXP(globalXPData);
+      }
+    };
+    fetchGlobalXP();
+  }, [effectiveConnected, address]);
+
   useEffect(() => {
     const initSupabase = async () => {
       if (!effectiveConnected || !address) return;
@@ -194,12 +215,6 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           setSharedPlatforms(viralBoosts.map(v => v.platform));
         }
 
-        // 7. Fetch Global XP
-        const { data: globalXPData } = await supabase.rpc('get_global_xp', { wallet_addr: address });
-        if (globalXPData !== null) {
-          setGlobalXP(globalXPData);
-        }
-
       } catch (err: any) {
         console.error('Supabase sync error details:', {
           message: err.message,
@@ -280,16 +295,6 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         if (!dbUserId) {
              setSharedPlatforms(parsed.sharedPlatforms ?? []);
         }
-      } else {
-        const fresh = initialStateRef.current;
-        setState(prev => ({
-          ...prev,
-          tasks: fresh.tasks,
-          userXP: fresh.userXP,
-          currentStreak: fresh.currentStreak,
-          dailyClaimed: fresh.dailyClaimed
-        }));
-        setSharedPlatforms([]);
       }
     } catch {
       // Ignore cache errors and keep current state.
