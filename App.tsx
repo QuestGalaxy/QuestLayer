@@ -21,6 +21,9 @@ const App: React.FC = () => {
     if (window.location.pathname === '/questbrowse') {
       return 'questbrowse';
     }
+    if (window.location.pathname === '/explore') {
+      return 'explore';
+    }
     if (window.location.pathname === '/leaderboard') {
       return 'leaderboard';
     }
@@ -34,6 +37,8 @@ const App: React.FC = () => {
             setCurrentPage('questbrowse');
         } else if (window.location.pathname === '/leaderboard') {
             setCurrentPage('leaderboard');
+        } else if (window.location.pathname === '/explore') {
+            setCurrentPage('explore');
         } else if (window.location.pathname === '/') {
             setCurrentPage('landing');
         }
@@ -115,6 +120,9 @@ const App: React.FC = () => {
         }
         twUrl.setAttribute('content', window.location.href);
 
+    } else if (currentPage === 'explore') {
+        window.history.pushState(null, '', '/explore');
+        document.title = 'QuestLayer Explore';
     } else if (currentPage === 'leaderboard') {
         window.history.pushState(null, '', '/leaderboard');
         document.title = 'QuestLayer Leaderboard - Your XP Legacy';

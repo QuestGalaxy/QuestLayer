@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users } from 'lucide-react';
 import { fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
+import GlobalFooter from './GlobalFooter';
 
 interface LeaderboardPageProps {
   onBack: () => void;
@@ -407,37 +408,52 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
           <>
             <div className="mt-10 grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
               {paginatedProjects.map(project => (
-              <ProjectCard
-                key={project.project.id}
-                data={project}
-                userWallet={address || undefined}
-                onContinue={onContinue}
-              />
-            ))}
+                <ProjectCard
+                  key={project.project.id}
+                  data={project}
+                  userWallet={address || undefined}
+                  onContinue={onContinue}
+                />
+              ))}
             </div>
             {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-4">
+              <div className="flex justify-center items-center gap-4 mt-12 pb-10">
                 <button
                   onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  Prev
+                  <ChevronLeft size={20} />
                 </button>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Page {currentPage} / {totalPages}
+                
+                <div className="flex items-center gap-2">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                        currentPage === i + 1
+                          ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
                 </div>
+
                 <button
                   onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
-                  Next
+                  <ChevronRight size={20} />
                 </button>
               </div>
             )}
           </>
         )}
+        <GlobalFooter />
       </div>
     </div>
   );

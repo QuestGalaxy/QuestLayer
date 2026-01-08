@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown } from 'lucide-react';
 import EmbedModal from './EmbedModal.tsx';
+import GlobalFooter from './GlobalFooter';
 
 interface EditorProps {
   state: AppState;
@@ -438,6 +439,9 @@ const Editor: React.FC<EditorProps> = ({
               {isPublishing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />} 
               {isPublishing ? 'Saving Project...' : 'Save & Publish Widget'}
             </button>
+            <div className="mt-16">
+              <GlobalFooter />
+            </div>
           </div>
         </section>
       </div>

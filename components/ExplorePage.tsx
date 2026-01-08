@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAllProjects, fetchProjectStats } from '../lib/supabase';
-import { Layout, Globe, ArrowRight, Loader2, Search, Zap, ExternalLink, Activity, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Layout, Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import GlobalFooter from './GlobalFooter';
 
 interface ExplorePageProps {
   onBack: () => void;
@@ -95,27 +96,6 @@ const ExploreCard: React.FC<{ project: any; stats: any; onImageError: (id: strin
           </div>
         )}
 
-        <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-           <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5" title="Total Visits">
-                <Activity size={14} className="text-slate-500" />
-                <span className="text-xs font-bold text-slate-300">{stats?.total_visits || 0}</span>
-              </div>
-              <div className="flex items-center gap-1.5" title="Active Users">
-                <Users size={14} className="text-slate-500" />
-                <span className="text-xs font-bold text-slate-300">{stats?.connected_wallets || 0}</span>
-              </div>
-           </div>
-
-           <a 
-             href={project.domain?.startsWith('http') ? project.domain : `https://${project.domain}`}
-             target="_blank"
-             rel="noopener noreferrer"
-             className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-indigo-500 hover:scale-110 transition-all"
-           >
-             <ExternalLink size={18} />
-           </a>
-        </div>
       </div>
     </div>
   );
@@ -313,6 +293,7 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onBack }) => {
           )}
         </div>
       </div>
+      <GlobalFooter />
     </div>
   );
 };

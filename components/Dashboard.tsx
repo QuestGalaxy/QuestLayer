@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { fetchProjects, fetchProjectStats, fetchGlobalDashboardStats, deleteProject } from '../lib/supabase';
-import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi, BarChart3, Zap, Layers, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Plus, Layout, ArrowRight, Loader2, Calendar, FolderOpen, LogOut, Globe, ExternalLink, Image as ImageIcon, Users, Eye, CheckCircle, Activity, Wifi, BarChart3, Zap, Layers, Trash2, AlertTriangle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
+import GlobalFooter from './GlobalFooter';
 
 interface DashboardProps {
   onSelectProject: (projectId: string) => void;
@@ -296,6 +297,8 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
 const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect, onExplore, onBrowse, onDeleteProject }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
   const { disconnect } = useDisconnect();
   const { address } = useAppKitAccount();
 
@@ -318,6 +321,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
     };
     load();
   }, [address]);
+
+  const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
+  const paginatedProjects = projects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [projects.length]);
 
   return (
     <div className="flex-1 overflow-y-auto px-6 py-10 bg-slate-950">
@@ -416,17 +429,58 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
              </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((p) => (
-              <ProjectCard 
-                key={p.id} 
-                project={p} 
-                onSelect={() => onSelectProject(p.id)} 
-                onDelete={() => onDeleteProject(p.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedProjects.map((p) => (
+                <ProjectCard 
+                  key={p.id} 
+                  project={p} 
+                  onSelect={() => onSelectProject(p.id)} 
+                  onDelete={() => onDeleteProject(p.id)}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-12 pb-10">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                
+                <div className="flex items-center gap-2">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                        currentPage === i + 1
+                          ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </>
         )}
+      </div>
+      <div className="mt-12">
+        <GlobalFooter />
       </div>
     </div>
   );

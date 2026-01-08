@@ -3,6 +3,7 @@ import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP }
 import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout } from 'lucide-react';
 import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
+import GlobalFooter from './GlobalFooter';
 import { INITIAL_TASKS } from '../constants';
 import { AppState, Position, ThemeType } from '../types';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
@@ -685,6 +686,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
           )}
         </div>
       </div>
+      <GlobalFooter />
       </div>
     </div>
   );
