@@ -112,6 +112,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
+  const [nextLevelXP, setNextLevelXP] = useState(3000);
   const [projects, setProjects] = useState<any[]>([]);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -131,6 +132,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
         if (address) {
             const stats = await fetchUserXP(address);
             setUserStats(stats);
+            // Calculate XP needed for next level based on formula: level * 3000
+            setNextLevelXP(stats.level * 3000);
         }
     };
     loadUserStats();
@@ -477,11 +480,22 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack }) => {
                                             <User size={32} className="text-white" />
                                         </div>
                                     </div>
-                                    <div>
+                                    <div className="flex-1">
                                         <div className="text-lg font-black text-white tracking-tight">User</div>
-                                        <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                                        <div className="flex items-center gap-2 text-xs font-mono text-slate-400 mb-2">
                                             {address?.slice(0, 6)}...{address?.slice(-4)}
                                             <ExternalLink size={12} className="hover:text-white cursor-pointer transition-colors" />
+                                        </div>
+                                        {/* Level Progress */}
+                                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                            <div 
+                                                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                                style={{ width: `${Math.min((userStats.xp / nextLevelXP) * 100, 100)}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between mt-1">
+                                            <span className="text-[9px] font-bold text-slate-500 uppercase">Lvl {userStats.level}</span>
+                                            <span className="text-[9px] font-bold text-slate-500 uppercase">{userStats.xp} / {nextLevelXP} XP</span>
                                         </div>
                                     </div>
                                 </div>
