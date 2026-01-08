@@ -5,7 +5,7 @@ import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { 
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, 
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare, 
-  Send, Globe, Calendar, Zap, Heart
+  Send, Globe, Calendar, Zap, Heart, ArrowRight
 } from 'lucide-react';
 
 const TASK_TEMPLATES = [
@@ -384,20 +384,32 @@ const Editor: React.FC<EditorProps> = ({
             <h3>Style & Layout</h3>
           </div>
           <div className="space-y-4 bg-slate-950/50 p-4 rounded-3xl border border-white/5">
-            <div className="grid grid-cols-2 gap-2">
-              {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setActiveTheme(t)}
-                  className={`p-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${
-                    state.activeTheme === t 
-                      ? 'border-indigo-500 bg-indigo-500/10 text-white' 
-                      : 'border-white/5 bg-white/5 text-slate-400'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <div className="flex items-center text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <span>Theme</span>
+              </div>
+              <div className="relative">
+                <div className="flex gap-2 overflow-x-auto custom-scroll pb-1">
+                  {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[])
+                    .map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setActiveTheme(t)}
+                        className={`min-w-[calc((100%-24px)/4)] p-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${
+                          state.activeTheme === t 
+                            ? 'border-indigo-500 bg-indigo-500/10 text-white' 
+                            : 'border-white/5 bg-white/5 text-slate-400'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                </div>
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-slate-950/80 to-transparent" />
+                <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 flex items-center text-slate-400 animate-bounce">
+                  <ArrowRight size={12} />
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/60 px-3 py-2">
