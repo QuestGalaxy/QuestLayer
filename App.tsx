@@ -139,6 +139,7 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [pendingBrowseRequest, setPendingBrowseRequest] = useState<{ projectId?: string; url?: string } | null>(null);
+  const lastPublishedRef = useRef<string | null>(null);
   
   const [state, setState] = useState<AppState>({
     projectName: 'Vortex Protocol',
@@ -160,11 +161,36 @@ const App: React.FC = () => {
 
   const { address } = useAppKitAccount();
 
+  const buildPublishSnapshot = (snapshotState: AppState) => {
+    const tasks = snapshotState.tasks.map(task => ({
+      title: task.title,
+      desc: task.desc,
+      link: task.link,
+      icon: task.icon,
+      xp: task.xp,
+      isSponsored: task.isSponsored ?? false
+    }));
+    return JSON.stringify({
+      projectId: snapshotState.projectId ?? null,
+      projectName: snapshotState.projectName,
+      projectDomain: snapshotState.projectDomain ?? null,
+      accentColor: snapshotState.accentColor,
+      position: snapshotState.position,
+      activeTheme: snapshotState.activeTheme,
+      tasks
+    });
+  };
+
   const handlePublish = async () => {
     if (!address) return;
+    const snapshot = buildPublishSnapshot(state);
+    if (state.projectId && lastPublishedRef.current === snapshot) {
+      return;
+    }
     const { projectId } = await syncProjectToSupabase(state, address);
     if (projectId) {
       setState(prev => ({ ...prev, projectId }));
+      lastPublishedRef.current = buildPublishSnapshot({ ...state, projectId });
     }
   };
 
@@ -242,6 +268,26 @@ const App: React.FC = () => {
           try {
             const { project, tasks } = await fetchProjectDetails(id);
             if (project) {
+              lastPublishedRef.current = buildPublishSnapshot({
+                projectId: project.id,
+                projectName: project.name,
+                projectDomain: project.domain,
+                accentColor: project.accent_color,
+                position: project.position as Position,
+                activeTheme: project.theme as ThemeType,
+                tasks: tasks.map((t: any) => ({
+                  id: t.id,
+                  title: t.title,
+                  desc: t.description,
+                  link: t.link,
+                  icon: t.icon_url,
+                  xp: t.xp_reward,
+                  isSponsored: t.is_sponsored
+                })),
+                userXP: 0,
+                currentStreak: 1,
+                dailyClaimed: false
+              });
               setState({
                 projectId: project.id,
                 projectName: project.name,
@@ -269,6 +315,7 @@ const App: React.FC = () => {
         }}
         onCreateProject={() => {
           // Reset State
+          lastPublishedRef.current = null;
           setState({
             projectName: 'New Project',
             accentColor: '#6366f1',
