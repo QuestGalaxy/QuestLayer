@@ -11,10 +11,11 @@ import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 import Dashboard from './components/Dashboard.tsx';
 import ExplorePage from './components/ExplorePage.tsx';
+import QuestBrowse from './components/QuestBrowse.tsx';
 import { fetchProjectDetails, deleteProject } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore'>('landing');
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse'>('landing');
   const [view, setView] = useState<'editor' | 'preview'>('editor');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
@@ -78,6 +79,9 @@ const App: React.FC = () => {
         onExplore={() => {
           setCurrentPage('explore');
         }}
+        onBrowse={() => {
+          setCurrentPage('questbrowse');
+        }}
       />
     );
   }
@@ -85,6 +89,14 @@ const App: React.FC = () => {
   if (currentPage === 'explore') {
     return (
       <ExplorePage
+        onBack={() => setCurrentPage('landing')}
+      />
+    );
+  }
+
+  if (currentPage === 'questbrowse') {
+    return (
+      <QuestBrowse
         onBack={() => setCurrentPage('landing')}
       />
     );
@@ -142,6 +154,9 @@ const App: React.FC = () => {
         }}
         onExplore={() => {
           setCurrentPage('explore');
+        }}
+        onBrowse={() => {
+          setCurrentPage('questbrowse');
         }}
         onDeleteProject={async (id) => {
             try {
@@ -232,7 +247,19 @@ const App: React.FC = () => {
                      </div>
                   </header>
 
-                  {/* Mock Content */}
+                  {/* Mock Content or Iframe */}
+                  {state.projectDomain && state.projectDomain.includes('.') && state.projectDomain.length > 4 ? (
+                    <div className="flex-1 w-full h-full bg-white relative">
+                      <iframe
+                        src={state.projectDomain.startsWith('http') ? state.projectDomain : `https://${state.projectDomain}`}
+                        className="w-full h-full border-none"
+                        title="Website Preview"
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                      />
+                      {/* Overlay to intercept clicks on iframe when in editor mode so widget can be used */}
+                      <div className="absolute inset-0 pointer-events-none" />
+                    </div>
+                  ) : (
                   <div className={`flex-1 overflow-y-auto custom-scroll p-10 space-y-20 ${previewTheme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
                      {/* Hero section mock */}
                      <div className="space-y-6 max-w-2xl">
@@ -264,6 +291,7 @@ const App: React.FC = () => {
                         <p className={`text-[9px] font-black uppercase tracking-[1em] ${previewTheme === 'dark' ? 'text-white' : 'text-slate-700'}`}>Main Content Block</p>
                      </div>
                   </div>
+                  )}
 
                   {/* View Switcher Overlay (Desktop Only) */}
                   <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md p-1 rounded-full border border-white/10 z-[60] opacity-0 group-hover:opacity-100 transition-opacity">

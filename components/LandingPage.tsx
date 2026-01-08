@@ -6,9 +6,10 @@ import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 interface LandingPageProps {
   onLaunch: () => void;
   onExplore: () => void;
+  onBrowse: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore, onBrowse }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
@@ -154,6 +155,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore }) => {
               >
                 <Globe size={14} className="group-hover:text-indigo-400 transition-colors" />
                 Explore
+              </button>
+
+              <button 
+                onClick={onBrowse}
+                className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center gap-2 group"
+              >
+                <LogIn size={14} className="group-hover:text-indigo-400 transition-colors" />
+                Browse
               </button>
             </div>
            </div>
