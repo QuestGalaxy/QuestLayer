@@ -100,6 +100,14 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
     setShowConfirm(false);
   };
 
+  const getProjectInitials = (name: string) => {
+    const cleaned = name?.trim() || '';
+    if (!cleaned) return 'QL';
+    const parts = cleaned.split(/\s+/).filter(Boolean);
+    const letters = parts.slice(0, 2).map(part => part[0]).join('');
+    return letters.toUpperCase();
+  };
+
   // Fetch OG Image
   useEffect(() => {
     if (!project.domain) return;
@@ -108,11 +116,12 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
 
     const fetchOg = async () => {
       try {
-        const url = `https://api.microlink.io/?url=${encodeURIComponent(project.domain.startsWith('http') ? project.domain : `https://${project.domain}`)}&palette=true&audio=false&video=false&iframe=false`;
+        const target = project.domain.startsWith('http') ? project.domain : `https://${project.domain}`;
+        const url = `/api/og?url=${encodeURIComponent(target)}`;
         const res = await fetch(url);
         const data = await res.json();
-        if (isMounted && data.status === 'success' && data.data.image?.url) {
-          setOgImage(data.data.image.url);
+        if (isMounted && data?.image) {
+          setOgImage(data.image);
         }
       } catch (e) {
         // Ignore
@@ -160,8 +169,19 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
             className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105 transform"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity">
-            <Layout size={64} className="text-white" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="absolute inset-0 opacity-70"
+              style={{
+                background: `radial-gradient(120% 120% at 10% 10%, ${project.accent_color}55, transparent 60%), radial-gradient(120% 120% at 90% 90%, ${project.accent_color}33, transparent 65%), linear-gradient(135deg, #0f172a 0%, #0b1120 60%)`
+              }}
+            />
+            <div className="relative flex flex-col items-center justify-center text-white/80">
+              <span className="text-3xl font-black tracking-tight">
+                {getProjectInitials(project.name)}
+              </span>
+              <span className="text-[9px] uppercase tracking-[0.35em] text-white/40">Widget</span>
+            </div>
           </div>
         )}
         

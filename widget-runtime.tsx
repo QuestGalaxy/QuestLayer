@@ -67,6 +67,9 @@ const ensureMount = (): HTMLDivElement => {
     ].join('; ');
     document.body.appendChild(host);
   }
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const scale = Number.isFinite(rootFontSize) && rootFontSize > 0 && rootFontSize < 16 ? 16 / rootFontSize : 1;
+  host.style.setProperty('--questlayer-scale', String(scale));
 
   const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
 

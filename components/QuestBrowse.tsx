@@ -38,12 +38,13 @@ const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onIm
 
     const fetchOg = async () => {
       try {
-        const url = `https://api.microlink.io/?url=${encodeURIComponent(project.domain.startsWith('http') ? project.domain : `https://${project.domain}`)}&palette=true&audio=false&video=false&iframe=false`;
+        const target = project.domain.startsWith('http') ? project.domain : `https://${project.domain}`;
+        const url = `/api/og?url=${encodeURIComponent(target)}`;
         const res = await fetch(url);
         const data = await res.json();
         if (isMounted) {
-            if (data.status === 'success' && data.data.image?.url) {
-                setOgImage(data.data.image.url);
+            if (data?.image) {
+                setOgImage(data.image);
             } else {
                 onImageError(project.id);
             }

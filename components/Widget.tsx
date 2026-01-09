@@ -609,6 +609,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const isBottom = state.position.includes('bottom');
   const isRight = state.position.includes('right');
+  const widgetScaleStyle = {
+    transform: 'scale(var(--questlayer-scale, 1))',
+    transformOrigin: `${isBottom ? 'bottom' : 'top'} ${isRight ? 'right' : 'left'}`
+  };
   const wrapperClasses = [
     positionClasses,
     'z-[2147483000]',
@@ -677,7 +681,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
       )}
 
-      <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}>
+      <div
+        className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}
+        style={widgetScaleStyle}
+      >
         <button
           onClick={() => {
             if (!isOpen) initAudio();
