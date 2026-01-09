@@ -41,11 +41,8 @@ const ExploreCard: React.FC<{ project: any; stats: any; onImageError: (id: strin
     return () => { isMounted = false; };
   }, [project.domain, project.id, onImageError]);
 
-  if (!ogImage) return (
-    <div className="rounded-3xl border border-white/5 bg-slate-900/40 h-[380px] animate-pulse">
-        <div className="h-48 bg-white/5 rounded-t-3xl" />
-    </div>
-  );
+  const fallbackAccent = project.accent_color || '#6366f1';
+  const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();
 
   return (
     <div className="group relative rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all duration-500 hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)] flex flex-col h-full hover:-translate-y-1">
@@ -53,15 +50,27 @@ const ExploreCard: React.FC<{ project: any; stats: any; onImageError: (id: strin
       <div className="relative h-48 w-full bg-slate-950/50 border-b border-white/5">
         <div className="absolute inset-0 overflow-hidden">
             {ogImage ? (
-            <img 
-                src={ogImage} 
-                alt={project.name} 
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110"
-            />
+              <img 
+                  src={ogImage} 
+                  alt={project.name} 
+                  className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110"
+                  onError={() => {
+                    setOgImage(null);
+                    onImageError(project.id);
+                  }}
+              />
             ) : (
-            <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 transition-opacity">
-                <Layout size={64} className="text-white" />
-            </div>
+              <div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{
+                  background: `radial-gradient(120% 120% at 20% 10%, ${fallbackAccent}55 0%, transparent 55%), linear-gradient(135deg, rgba(15,23,42,0.95), rgba(2,6,23,0.95))`
+                }}
+              >
+                <div className="flex flex-col items-center gap-2 text-white/80">
+                  <Layout size={48} className="text-white/60" />
+                  <span className="text-sm font-black tracking-widest">{fallbackLabel}</span>
+                </div>
+              </div>
             )}
             
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
@@ -170,7 +179,6 @@ const ExplorePage: React.FC<ExplorePageProps> = ({ onBack }) => {
 
   // Filter projects first (including invalid images)
   const filteredProjects = projects.filter(p => 
-    !invalidImages.has(p.id) &&
     p.domain && (
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       p.domain.toLowerCase().includes(searchTerm.toLowerCase())
