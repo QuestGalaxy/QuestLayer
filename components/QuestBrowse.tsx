@@ -191,6 +191,9 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
   const [widgetState, setWidgetState] = useState<AppState>(DEFAULT_WIDGET_STATE);
   const [isWidgetOpen, setIsWidgetOpen] = useState(true);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
+  const [iframeBlocked, setIframeBlocked] = useState(false);
+  const iframeLoadTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -274,6 +277,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
       validUrl = `https://${validUrl}`;
     }
 
+    if (iframeLoadTimeoutRef.current) {
+      clearTimeout(iframeLoadTimeoutRef.current);
+    }
+    setIframeBlocked(false);
     setIsIframeLoading(true);
     setCurrentUrl(validUrl);
     setWidgetState({
@@ -283,13 +290,23 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     });
     setIsBrowsing(true);
     setIsWidgetOpen(true);
+    iframeLoadTimeoutRef.current = setTimeout(() => {
+      setIframeBlocked(true);
+      setIsIframeLoading(false);
+      setIsWidgetOpen(false);
+    }, 6000);
   };
 
   const handleBrowseProjectById = async (projectId: string, domain?: string) => {
     setIsIframeLoading(true);
+    if (iframeLoadTimeoutRef.current) {
+      clearTimeout(iframeLoadTimeoutRef.current);
+    }
+    setIframeBlocked(false);
     try {
       const { project, tasks } = await fetchProjectDetails(projectId);
       if (!project) return;
+      const projectOnline = isProjectOnline(project);
       const newState: AppState = {
         projectId: project.id,
         projectName: project.name,
@@ -317,7 +334,12 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
         setCurrentUrl(url);
       }
       setIsBrowsing(true);
-      setIsWidgetOpen(true);
+      setIsWidgetOpen(!projectOnline);
+      iframeLoadTimeoutRef.current = setTimeout(() => {
+        setIframeBlocked(true);
+        setIsIframeLoading(false);
+        setIsWidgetOpen(false);
+      }, 6000);
     } catch (error) {
       if (domain) {
         handleBrowseUrl(domain);
@@ -460,6 +482,9 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+  const currentProjectOnline = currentProjectIndex >= 0 && projects[currentProjectIndex]
+    ? isProjectOnline(projects[currentProjectIndex])
+    : false;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -476,6 +501,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     }
     onBrowseHandled?.();
   }, [initialBrowseRequest]);
+
+  useEffect(() => {
+    return () => {
+      if (iframeLoadTimeoutRef.current) {
+        clearTimeout(iframeLoadTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (isBrowsing) {
     return (
@@ -532,11 +565,30 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
             {/* Browser Content */}
             <div className="flex-1 relative bg-white">
                 <iframe 
+                    ref={iframeRef}
                     src={currentUrl}
                     className="w-full h-full border-none"
                     title="Quest Browser"
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                    onLoad={() => setIsIframeLoading(false)}
+                    onLoad={() => {
+                        if (iframeLoadTimeoutRef.current) {
+                            clearTimeout(iframeLoadTimeoutRef.current);
+                        }
+                        setIsIframeLoading(false);
+                        let isBlocked = false;
+                        try {
+                            const href = iframeRef.current?.contentWindow?.location?.href || '';
+                            if (!href || href === 'about:blank' || href.startsWith('chrome-error://')) {
+                                isBlocked = true;
+                            }
+                        } catch {
+                            isBlocked = false;
+                        }
+                        setIframeBlocked(isBlocked);
+                        if (isBlocked) {
+                            setIsWidgetOpen(false);
+                        }
+                    }}
                 />
 
                 {isIframeLoading && (
@@ -554,15 +606,111 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
                         </div>
                     </div>
                 )}
+
+                {iframeBlocked && (
+                    <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/85 backdrop-blur-md">
+                        <div className="relative w-full max-w-xl p-6 sm:p-8 rounded-3xl border border-white/10 bg-slate-900/80 shadow-[0_30px_80px_rgba(15,23,42,0.6)] text-left overflow-hidden">
+                            <div className="absolute -top-20 -right-20 h-48 w-48 rounded-full bg-indigo-500/20 blur-3xl" />
+                            <div className="absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-purple-500/20 blur-3xl" />
+                            <div className="relative space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-14 w-14 rounded-2xl border border-indigo-400/30 bg-indigo-500/10 p-3 shadow-lg">
+                                        <Globe className="h-8 w-8 text-indigo-200" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[11px] font-black uppercase tracking-[0.35em] text-indigo-300/80">
+                                            QuestBrowse
+                                        </div>
+                                        <div className="text-xl font-black text-white tracking-tight">
+                                            This site blocks embedding
+                                        </div>
+                                        <div className="text-xs text-slate-400">
+                                            Some sites (like OpenSea) refuse to load inside an iframe.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <div className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-3 text-xs text-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.35)]">
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-indigo-400/30 bg-indigo-500/15 text-indigo-200 shadow-lg transition-transform group-hover:-translate-y-0.5 group-hover:scale-105">
+                                                <Search size={14} className="animate-[pulse_2s_ease-in-out_infinite]" />
+                                            </span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">
+                                                1. Browse
+                                            </span>
+                                        </div>
+                                        <p className="text-[12px] leading-relaxed text-slate-100">
+                                            Enter a domain or pick a project card to preview it.
+                                        </p>
+                                    </div>
+                                    <div className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-3 text-xs text-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.35)]">
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/15 text-amber-200 shadow-lg transition-transform group-hover:-translate-y-0.5 group-hover:scale-105">
+                                                <Zap size={14} className="animate-[bounce_2.4s_ease-in-out_infinite]" />
+                                            </span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-200">
+                                                2. Engage
+                                            </span>
+                                        </div>
+                                        <p className="text-[12px] leading-relaxed text-slate-100">
+                                            The widget floats over the site so you can earn XP.
+                                        </p>
+                                    </div>
+                                    <div className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-transparent p-3 text-xs text-slate-200 shadow-[0_12px_30px_rgba(15,23,42,0.35)]">
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-emerald-200 shadow-lg transition-transform group-hover:-translate-y-0.5 group-hover:scale-105">
+                                                <ArrowRight size={14} className="animate-[wiggle_2.8s_ease-in-out_infinite]" />
+                                            </span>
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-200">
+                                                3. Open
+                                            </span>
+                                        </div>
+                                        <p className="text-[12px] leading-relaxed text-slate-100">
+                                            If a site blocks embeds, use a new tab instead.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setIframeBlocked(false);
+                                            setIsBrowsing(false);
+                                        }}
+                                        className="px-4 py-2 rounded-xl border border-white/10 text-xs font-black uppercase text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                                    >
+                                        Keep Browsing
+                                    </button>
+                                    {currentUrl && (
+                                        <a
+                                            href={currentUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="px-4 py-2 rounded-xl bg-indigo-500 text-xs font-black uppercase tracking-widest text-white hover:bg-indigo-400 transition-colors"
+                                        >
+                                            Open Site
+                                        </a>
+                                    )}
+                                    <span className="text-[10px] uppercase tracking-widest text-slate-500">
+                                        Tip: Use projects with an Online badge for best results.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 
                 {/* Widget Overlay */}
-                <Widget 
-                    isOpen={isWidgetOpen}
-                    setIsOpen={setIsWidgetOpen}
-                    state={widgetState}
-                    setState={setWidgetState}
-                    isPreview={true} // Use preview mode to avoid writing to local storage with wrong keys
-                />
+                {!iframeBlocked && !currentProjectOnline && (
+                    <Widget 
+                        isOpen={isWidgetOpen}
+                        setIsOpen={setIsWidgetOpen}
+                        state={widgetState}
+                        setState={setWidgetState}
+                        isPreview={true} // Use preview mode to avoid writing to local storage with wrong keys
+                    />
+                )}
             </div>
         </div>
     );
@@ -570,6 +718,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col overflow-y-auto custom-scroll h-screen">
+      <style>
+        {`
+          @keyframes wiggle {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(4px); }
+          }
+        `}
+      </style>
       
       {/* Content */}
       <div className="flex-1 relative">
