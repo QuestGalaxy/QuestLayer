@@ -715,7 +715,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           <div
             className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
             style={{
-              borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))
+              borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)'))),
+              maxWidth: 'min(360px, calc(100vw - 1rem))',
+              maxHeight: 'calc(100vh - 1.5rem)'
             }}
           >
             {/* Header */}
