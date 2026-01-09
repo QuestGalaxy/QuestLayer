@@ -637,10 +637,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const getPositionClasses = () => {
     const classes = {
-      'bottom-right': 'bottom-2 right-2 md:bottom-8 md:right-8',
-      'bottom-left': 'bottom-2 left-2 md:bottom-8 md:left-8',
-      'top-right': 'top-2 right-2 md:top-8 md:right-8',
-      'top-left': 'top-2 left-2 md:top-8 md:left-8'
+      'bottom-right': 'bottom-4 right-4 md:bottom-8 md:right-8',
+      'bottom-left': 'bottom-4 left-4 md:bottom-8 md:left-8',
+      'top-right': 'top-4 right-4 md:top-8 md:right-8',
+      'top-left': 'top-4 left-4 md:top-8 md:left-8'
     };
     return classes[state.position];
   };
