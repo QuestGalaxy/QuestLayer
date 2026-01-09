@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Code, Wallet, Target, Trophy, ChevronRight, Globe, Sparkles, LogIn } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import GlobalFooter from './GlobalFooter';
 
 interface LandingPageProps {
   onLaunch: () => void;
@@ -396,16 +397,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore, onBrowse
         </div>
       </div>
 
-      {/* Footer Branding */}
-      <div className="py-10 flex flex-col items-center gap-4 opacity-10">
-        <img
-          src="/logoLayer.webp"
-          alt="QuestLayer logo"
-          className="h-6 w-6 object-contain"
-        />
-        <h3 className="pixel-text text-2xl text-white tracking-[0.5em] uppercase">
-          QuestLayer
-        </h3>
+      <div className="mt-10 border-t border-white/1 bg-white/2 backdrop-blur-sm">
+        <GlobalFooter className="pt-8" />
       </div>
     </div>
   );

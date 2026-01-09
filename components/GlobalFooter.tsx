@@ -1,19 +1,43 @@
 import React from 'react';
 
-const GlobalFooter: React.FC = () => {
+interface GlobalFooterProps {
+  variant?: 'default' | 'bright';
+  className?: string;
+}
+
+const GlobalFooter: React.FC<GlobalFooterProps> = ({ variant = 'default', className }) => {
   const year = new Date().getFullYear();
+  const tone = variant === 'bright'
+    ? {
+        title: 'text-slate-200',
+        nav: 'text-slate-300',
+        navHover: 'hover:text-white',
+        icons: 'opacity-70',
+        powered: 'text-slate-300 hover:text-indigo-300',
+        poweredStrong: 'text-slate-200',
+        copyright: 'text-slate-400/80'
+      }
+    : {
+        title: 'text-slate-300',
+        nav: 'text-slate-500',
+        navHover: 'hover:text-slate-200',
+        icons: 'opacity-50',
+        powered: 'text-slate-500 hover:text-indigo-400',
+        poweredStrong: 'text-slate-400',
+        copyright: 'text-slate-600/50'
+      };
   return (
-    <footer className="w-full px-6 pb-10">
+    <footer className={`w-full px-6 pb-10 ${className ?? ''}`}>
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-2 text-center">
-        <span className="pixel-text text-[14px] uppercase tracking-[0.6em] text-slate-300">QuestLayer</span>
-        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[9px] font-semibold uppercase tracking-[0.35em] text-slate-500">
-          <a className="hover:text-slate-200 transition-colors" href="/">QuestLayer</a>
-          <a className="hover:text-slate-200 transition-colors" href="/questbrowse">QuestBrowse</a>
-          <a className="hover:text-slate-200 transition-colors" href="/explore">Explore</a>
-          <a className="hover:text-slate-200 transition-colors" href="/terms">Terms</a>
-          <a className="hover:text-slate-200 transition-colors" href="/privacy">Privacy</a>
+        <span className={`pixel-text text-[14px] uppercase tracking-[0.6em] ${tone.title}`}>QuestLayer</span>
+        <nav className={`flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[9px] font-semibold uppercase tracking-[0.35em] ${tone.nav}`}>
+          <a className={`${tone.navHover} transition-colors`} href="/">QuestLayer</a>
+          <a className={`${tone.navHover} transition-colors`} href="/questbrowse">QuestBrowse</a>
+          <a className={`${tone.navHover} transition-colors`} href="/explore">Explore</a>
+          <a className={`${tone.navHover} transition-colors`} href="/terms">Terms</a>
+          <a className={`${tone.navHover} transition-colors`} href="/privacy">Privacy</a>
         </nav>
-        <div className="flex items-center justify-center gap-4 opacity-50 grayscale">
+        <div className={`flex items-center justify-center gap-4 grayscale ${tone.icons}`}>
           <svg width="16" height="16" viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg" aria-label="Ethereum">
             <path d="M127.961 0l-2.795 9.5v275.668l2.795 2.79 127.962-75.638z" fill="#343434" />
             <path d="M127.962 0L0 212.32l127.962 75.639V154.158z" fill="#8C8C8C" />
@@ -48,11 +72,11 @@ const GlobalFooter: React.FC = () => {
             href="https://questgalaxy.com/" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-[9px] uppercase tracking-[0.3em] text-slate-500 hover:text-indigo-400 transition-colors"
+            className={`text-[9px] uppercase tracking-[0.3em] transition-colors ${tone.powered}`}
           >
-            powered by <span className="font-black text-slate-400">QuestGalaxy</span>
+            powered by <span className={`font-black ${tone.poweredStrong}`}>QuestGalaxy</span>
           </a>
-          <span className="text-[9px] uppercase tracking-[0.3em] text-slate-600/50">© {year} All rights reserved</span>
+          <span className={`text-[9px] uppercase tracking-[0.3em] ${tone.copyright}`}>© {year} All rights reserved</span>
         </div>
       </div>
     </footer>
