@@ -3,11 +3,11 @@ import { ThemeConfig, ThemeType, Task } from './types';
 
 export const THEMES: Record<ThemeType, ThemeConfig> = {
   sleek: {
-    card: 'bg-slate-900/80 backdrop-blur-xl rounded-t-[40px] md:rounded-3xl border-white/10',
+    card: 'bg-slate-900/80 backdrop-blur-xl rounded-t-2xl md:rounded-3xl border-white/10',
     trigger: 'rounded-2xl',
     header: 'bg-white/5 border-b border-white/5',
     button: 'rounded-2xl',
-    itemCard: 'bg-white/5 border-white/5 rounded-3xl',
+    itemCard: 'bg-white/5 border-white/5 rounded-2xl md:rounded-3xl',
     iconBox: 'rounded-xl',
     font: 'font-["Plus_Jakarta_Sans"]'
   },
@@ -30,11 +30,11 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   gaming: {
-      card: 'bg-indigo-950 rounded-t-3xl md:rounded-3xl border-2 border-[#fbbf24]',
+      card: 'bg-indigo-950 rounded-t-2xl md:rounded-3xl border-2 border-[#fbbf24]',
       trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic',
       header: 'bg-black/40 border-b-2 border-[#fbbf24]',
       button: 'rounded-lg border-b-4 border-amber-800 bg-amber-500 text-black active:border-b-0 active:translate-y-1',
-      itemCard: 'bg-indigo-900 rounded-xl border-indigo-400/20',
+      itemCard: 'bg-indigo-900 rounded-lg md:rounded-xl border-indigo-400/20',
       iconBox: 'rounded-lg',
       font: 'font-["Plus_Jakarta_Sans"]'
     },
@@ -48,11 +48,11 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   glass: {
-    card: 'bg-slate-950/60 backdrop-blur-3xl rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
+    card: 'bg-slate-950/60 backdrop-blur-3xl rounded-2xl md:rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
     trigger: 'rounded-full bg-slate-950/60 backdrop-blur-xl border border-white/30 shadow-xl',
     header: 'bg-white/5 border-b border-white/10 backdrop-blur-md',
     button: 'rounded-full bg-white/5 hover:bg-white/10 border border-white/20 backdrop-blur-md transition-all active:scale-95 shadow-lg',
-    itemCard: 'bg-white/5 border border-white/10 rounded-[32px] backdrop-blur-sm',
+    itemCard: 'bg-white/5 border border-white/10 rounded-2xl md:rounded-[32px] backdrop-blur-sm',
     iconBox: 'rounded-2xl bg-white/10 border border-white/20 shadow-inner',
     font: 'font-["Plus_Jakarta_Sans"]'
   },
@@ -66,11 +66,11 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Space_Mono"]'
   },
   aura: {
-    card: 'bg-[#fff7f3] rounded-[36px] border border-rose-200 shadow-[0_20px_50px_rgba(244,63,94,0.18)]',
+    card: 'bg-[#fff7f3] rounded-2xl md:rounded-[36px] border border-rose-200 shadow-[0_20px_50px_rgba(244,63,94,0.18)]',
     trigger: 'rounded-full border border-rose-200 bg-rose-100 text-rose-900',
     header: 'bg-rose-100 border-b border-rose-200',
     button: 'rounded-full bg-rose-200 text-rose-900 border border-rose-300 hover:bg-rose-300 transition-colors',
-    itemCard: 'bg-white border-rose-200 rounded-[28px]',
+    itemCard: 'bg-white border-rose-200 rounded-xl md:rounded-[28px]',
     iconBox: 'rounded-full bg-rose-100 border border-rose-200',
     font: 'font-["Inter"]'
   }

@@ -735,17 +735,17 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
         >
           {!effectiveConnected ? (
-            <span className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
+            <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">
               <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
               Connect
             </span>
           ) : (
             <span className="flex items-center gap-2 md:gap-3">
-              <div className="bg-white/10 px-1 py-0.5 rounded text-[8px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
+              <div className="bg-white/10 px-1 py-0.5 rounded text-[9px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
                 {shortAddress}
               </div>
               <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
-                <span className="text-[8px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
+                <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
                 <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
               </div>
             </span>
@@ -761,58 +761,58 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           >
             {/* Header */}
             <div 
-              className={`px-3 py-2.5 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}
+              className={`px-4 py-3 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}
               style={{ borderColor: state.activeTheme === 'gaming' ? '#fbbf24' : undefined }}
             >
               <div className="flex items-center gap-2 md:gap-3 truncate">
                 <div
                   style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
-                  className={`p-1.5 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
+                  className={`p-2 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
                 >
-                  <Zap className="w-[10px] h-[10px] md:w-[14px] md:h-[14px]" fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
+                  <Zap className="w-[12px] h-[12px] md:w-[14px] md:h-[14px]" fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
                 </div>
                 <span 
-                  className={`font-black text-xs md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
+                  className={`font-black text-sm md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
                   style={isTransparentTheme ? { color: state.accentColor } : {}}
                 >
                   {state.projectName}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-2">
+              <div className="flex items-center gap-2 md:gap-2 shrink-0 ml-2">
                 {effectiveConnected && (
-                  <button onClick={handleDisconnect} className="p-1 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
-                    <LogOut className="w-[10px] h-[10px] md:w-[12px] md:h-[12px]" />
+                  <button onClick={handleDisconnect} className="p-2 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+                  <LogOut className="w-[12px] h-[12px] md:w-[12px] md:h-[12px]" />
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className={`${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
+                  className={`p-2 md:p-1.5 rounded-lg ${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
                 >
-                  <X className="w-[14px] h-[14px] md:w-[16px] md:h-[16px]" />
+                  <X className="w-[16px] h-[16px] md:w-[16px] md:h-[16px]" />
                 </button>
               </div>
             </div>
 
         {/* Body */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-3 md:p-5 space-y-3 md:space-y-5 custom-scroll">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-4 md:space-y-5 custom-scroll">
           {!effectiveConnected ? (
             <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
               <div className="space-y-2">
                 <div 
-                  className="mx-auto w-10 h-10 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
+                  className="mx-auto w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
                   style={{ backgroundColor: `${state.accentColor}15`, color: state.accentColor }}
                 >
-                  <ShieldCheck className="w-[24px] h-[24px] md:w-[32px] md:h-[32px]" />
+                  <ShieldCheck className="w-[26px] h-[26px] md:w-[32px] md:h-[32px]" />
                 </div>
-                <h3 className={`text-[11px] md:text-lg font-black uppercase tracking-tighter ${isLightTheme ? 'text-black' : 'text-white'}`}>
+                <h3 className={`text-[13px] md:text-lg font-black uppercase tracking-tighter ${isLightTheme ? 'text-black' : 'text-white'}`}>
                   Connect to unlock <br/><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
                 </h3>
               </div>
-              <div className={`w-full space-y-1.5 text-left p-3 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
-                <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
+              <div className={`w-full space-y-2 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
+                <p className={`text-[11px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
                   <ChevronRight size={8} /> Protocol Info
                 </p>
-                <p className={`text-[11px] md:text-xs leading-relaxed ${isLightTheme ? 'text-slate-800' : 'text-slate-300 opacity-70'}`}>
+                <p className={`text-[13px] md:text-xs leading-relaxed ${isLightTheme ? 'text-slate-800' : 'text-slate-300 opacity-70'}`}>
                   Join the ecosystem board to track progress and earn rewards.
                 </p>
               </div>
@@ -820,7 +820,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 onClick={handleConnect} 
                 disabled={isConnecting}
                 style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})} 
-                className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[10px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isConnecting ? (
                   <><Loader2 size={10} className="animate-spin" /> Connecting...</>
@@ -843,13 +843,13 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                       {visualXP < state.userXP && <Sparkles size={6} className="absolute -top-1 -right-1 text-white animate-bounce" />}
                     </div>
                     <div>
-                      <p className={`text-[8px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank</p>
-                      <p className={`text-[9px] md:text-[11px] font-black uppercase tracking-widest ${isLightTheme ? 'text-indigo-700' : 'text-indigo-500'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>{getRankName()}</p>
+                      <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank</p>
+                      <p className={`text-[11px] md:text-[11px] font-black uppercase tracking-widest ${isLightTheme ? 'text-indigo-700' : 'text-indigo-500'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>{getRankName()}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className={`text-xs md:text-xl font-black tabular-nums ${isLightTheme ? 'text-black' : 'text-white'}`}>{currentLevelData.effectiveXP >= 1000 ? (currentLevelData.effectiveXP / 1000).toFixed(1) + 'k' : currentLevelData.effectiveXP}</p>
-                    <p className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank XP</p>
+                    <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank XP</p>
                   </div>
                 </div>
                 <div className={`h-1 md:h-2 w-full overflow-hidden border relative mb-1 ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
@@ -863,10 +863,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className={`text-[8px] md:text-[9px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
+                  <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
                     Quest XP: <span className={isLightTheme ? 'text-slate-600' : 'text-white/70'}>{visualXP}</span>
                   </p>
-                  <p className={`text-[8px] md:text-[9px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
+                  <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
                     {currentLevelData.xpNeeded} XP to Lvl {currentLevelData.lvl + 1}
                   </p>
                 </div>
@@ -875,10 +875,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
               {/* Streak Section */}
               <div className="space-y-1.5 md:space-y-3">
                 <div className="flex justify-between items-center px-1">
-                  <p className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
+                  <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                     Multipliers
                   </p>
-                  <p className={`text-[8px] md:text-[10px] font-black uppercase flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
+                  <p className={`text-[10px] md:text-[10px] font-black uppercase flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
                     <Flame size={8} /> {state.currentStreak}D STREAK
                   </p>
                 </div>
@@ -902,9 +902,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                           boxShadow: (isActive && state.activeTheme === 'gaming') ? `2px 2px 0px 0px #fbbf24` : undefined
                         } as React.CSSProperties}
                       >
-                        <span className={`text-[7px] md:text-[9px] font-black uppercase ${isActive ? (isLightTheme ? 'text-slate-900' : 'text-white') : (isLightTheme ? 'text-black' : 'text-white')}`}>D{day}</span>
+                        <span className={`text-[8px] md:text-[9px] font-black uppercase ${isActive ? (isLightTheme ? 'text-slate-900' : 'text-white') : (isLightTheme ? 'text-black' : 'text-white')}`}>D{day}</span>
                         <span 
-                          className={`text-[9px] md:text-[11px] font-mono font-bold transition-colors`}
+                          className={`text-[11px] md:text-[11px] font-mono font-bold transition-colors`}
                           style={{ color: isActive ? state.accentColor : (isLightTheme ? '#64748b' : 'rgba(255,255,255,0.4)') }}
                         >
                           {formatXP(100 * Math.pow(2, day - 1))}
@@ -931,12 +931,12 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                       backgroundColor: state.accentColor, 
                       color: 'white' 
                     } : {}))} 
-                    className={`w-full py-1.5 md:py-3 font-black text-[10px] md:text-[11px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
+                    className={`w-full py-1.5 md:py-3 font-black text-[11px] md:text-[11px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
                   >
                     Claim Daily Bonus
                   </button>
                 ) : (
-                  <div className={`w-full py-1.5 md:py-2.5 text-center text-[9px] md:text-[10px] font-black uppercase border flex items-center justify-center gap-1.5 ${isLightTheme ? 'border-slate-200 text-slate-400' : 'opacity-30 text-white border-white/5'} ${activeTheme.iconBox}`}>
+                  <div className={`w-full py-1.5 md:py-2.5 text-center text-[10px] md:text-[10px] font-black uppercase border flex items-center justify-center gap-1.5 ${isLightTheme ? 'border-slate-200 text-slate-400' : 'opacity-30 text-white border-white/5'} ${activeTheme.iconBox}`}>
                     <Trophy size={8} /> Bonus Stashed
                   </div>
                 )}
@@ -945,10 +945,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
               {/* Viral Boost Section */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center px-1">
-                  <p className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
+                  <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                     Viral Boost
                   </p>
-                  <p className={`text-[8px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                  <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-emerald-700' : 'text-emerald-400'}`}>
                     +100 XP EACH
                   </p>
                 </div>
@@ -1017,7 +1017,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
               {/* Missions Board */}
               <div className="space-y-2 md:space-y-3">
-                <p className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest px-1 ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
+                <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest px-1 ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                   Missions
                 </p>
                 <div className="space-y-2 md:space-y-3 pb-2">
@@ -1070,12 +1070,12 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                               />
                             </div>
                           ) : null}
-                          <h5 className={`text-[10px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
+                          <h5 className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
                             {task.title}
                           </h5>
                           {task.isSponsored && (
                             <span 
-                              className={`text-[6px] md:text-[7px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                              className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
                               style={{ 
                                 backgroundColor: `${state.accentColor}10`, 
                                 borderColor: `${state.accentColor}20`,
@@ -1087,7 +1087,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                           )}
                           {task.isDemo && (
                             <span 
-                              className={`text-[6px] md:text-[7px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                              className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
                               style={{ 
                                 backgroundColor: `${state.accentColor}10`, 
                                 borderColor: `${state.accentColor}20`,
@@ -1099,13 +1099,13 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                           )}
                         </div>
                         <span 
-                          className={`text-[8px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
+                          className={`text-[10px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
                           style={{ background: `${state.accentColor}10`, color: state.accentColor }}
                         >
                           +{task.xp}
                         </span>
                       </div>
-                      <p className={`text-[9px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
+                      <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
                         {task.desc}
                       </p>
                       <button 
@@ -1131,7 +1131,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                           borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
                           cursor: isCompleted ? 'not-allowed' : 'pointer'
                         }))} 
-                        className={`w-full h-7 md:h-9 border-2 font-black text-[9px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
+                        className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
                       >
                         {isCompleted ? (
                            <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
@@ -1165,7 +1165,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
             href="https://questlayer.questgalaxy.com/"
             target="_blank"
             rel="noreferrer"
-            className={`text-[7px] md:text-[9px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'} hover:opacity-80 transition-opacity`}
+            className={`text-[9px] md:text-[9px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'} hover:opacity-80 transition-opacity`}
           >
             QuestLayer Engine v2.5
           </a>
