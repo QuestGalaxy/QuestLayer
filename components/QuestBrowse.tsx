@@ -411,14 +411,20 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     return (
         <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col">
             {/* Browser Header */}
-            <div className="h-14 bg-slate-900 border-b border-white/10 flex items-center px-4 gap-4 shrink-0 z-50">
+            <div className="sticky top-0 z-50 h-16 bg-gradient-to-r from-slate-950/95 via-slate-900/90 to-slate-950/95 border-b border-white/10 flex items-center px-4 gap-4 shrink-0 backdrop-blur-xl shadow-[0_12px_30px_rgba(0,0,0,0.4)] relative">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-purple-400/40 to-transparent" />
                 <button 
                     onClick={() => setIsBrowsing(false)}
-                    className="p-2 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                    className="p-2.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors border border-white/10 bg-slate-900/60 shadow-lg"
                 >
                     <X size={20} />
                 </button>
                 <div className="flex-1 max-w-3xl mx-auto relative flex items-center gap-4">
+                    <div className="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400/80 shadow-[0_0_12px_rgba(52,211,153,0.6)]" />
+                        Quest Browse
+                    </div>
                     <div className="flex-1 relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                             <Globe size={14} />
@@ -427,14 +433,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
                             value={currentUrl}
                             onChange={(e) => setCurrentUrl(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(currentUrl)}
-                            className="w-full bg-slate-950 border border-white/10 rounded-full py-1.5 pl-9 pr-24 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50 font-mono"
+                            className="w-full bg-slate-950/70 border border-white/10 rounded-full py-2 pl-9 pr-28 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-400/60 focus:shadow-[0_0_0_1px_rgba(99,102,241,0.35)] font-mono"
                         />
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 pr-1">
-                            <div className="w-px h-4 bg-white/10 mr-1" />
+                            <div className="w-px h-5 bg-white/10 mr-1" />
                             <button 
                                 onClick={handlePrevProject}
                                 disabled={currentProjectIndex === -1 && projects.length === 0}
-                                className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Previous Project"
                             >
                                 <ChevronLeft size={14} />
@@ -442,7 +448,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
                             <button 
                                 onClick={handleNextProject}
                                 disabled={currentProjectIndex === -1 && projects.length === 0}
-                                className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Next Project"
                             >
                                 <ChevronRight size={14} />
