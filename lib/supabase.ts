@@ -152,40 +152,27 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
       projectId = newProject.id;
     }
 
-    // 2. Sync Tasks
-    for (const task of state.tasks) {
-      // Check if task exists by title AND project_id
-      const { data: existingTasks } = await supabase
-        .from('tasks')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('title', task.title)
-        .limit(1);
+    // 2. Sync Tasks (replace full list to handle deletes/renames)
+    const { error: deleteError } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('project_id', projectId);
+    if (deleteError) throw deleteError;
 
-      if (existingTasks && existingTasks.length > 0) {
-        // Update existing task
-        await supabase
-          .from('tasks')
-          .update({
-            description: task.desc,
-            link: task.link,
-            icon_url: task.icon,
-            xp_reward: task.xp
-          })
-          .eq('id', existingTasks[0].id);
-      } else {
-        // Insert new task
-        await supabase
-          .from('tasks')
-          .insert({
+    if (state.tasks.length > 0) {
+      const { error: insertError } = await supabase
+        .from('tasks')
+        .insert(
+          state.tasks.map(task => ({
             project_id: projectId,
             title: task.title,
             description: task.desc,
             link: task.link,
             icon_url: task.icon,
             xp_reward: task.xp
-          });
-      }
+          }))
+        );
+      if (insertError) throw insertError;
     }
 
     return { projectId };

@@ -25,7 +25,10 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, state }) => {
     // We only export essential config that differs from defaults or needs specific ID
   };
 
-  const scriptCode = `<script src="https://questlayer.questgalaxy.com/widget-embed.js" data-config='${JSON.stringify(config)}'></script>`;
+  const embedOrigin = import.meta.env.DEV && typeof window !== 'undefined'
+    ? window.location.origin
+    : 'https://questlayer.questgalaxy.com';
+  const scriptCode = `<script src="${embedOrigin}/widget-embed.js" data-config='${JSON.stringify(config)}'></script>`;
 
   const reactCode = `import { initQuestLayer } from 'questlayer';
 

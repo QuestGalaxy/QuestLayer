@@ -38,6 +38,19 @@
     return /localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0/.test(origin);
   }
 
+  function ensureViteReactPreamble() {
+    if (window.__vite_plugin_react_preamble_installed__) {
+      return;
+    }
+    window.$RefreshReg$ = function () {};
+    window.$RefreshSig$ = function () {
+      return function (type) {
+        return type;
+      };
+    };
+    window.__vite_plugin_react_preamble_installed__ = true;
+  }
+
   function loadViteReactPreamble(origin) {
     return import(origin + "/@react-refresh").then(function (mod) {
       var RefreshRuntime = mod.default || mod;
@@ -58,35 +71,42 @@
   function initWidget() {
     var cacheBuster = "v=" + Date.now().toString(36) + Math.random().toString(36).slice(2);
     var runtimeUrl = resolveFromScript("widget-runtime.js") + "?" + cacheBuster;
+    var origin = script && script.src ? new URL(script.src).origin : window.location.origin;
+
+    if (isLikelyViteDev(origin)) {
+      ensureViteReactPreamble();
+      Promise.resolve()
+        .then(function () {
+          return loadViteReactPreamble(origin);
+        })
+        .then(function () {
+          return import(origin + "/@vite/client");
+        })
+        .then(function () {
+          return import(runtimeUrl);
+        })
+        .then(runInit)
+        .catch(function (err) {
+          var fallbackUrl = resolveFromScript("widget-runtime.tsx") + "?" + cacheBuster;
+          import(fallbackUrl)
+            .then(runInit)
+            .catch(function (fallbackErr) {
+              console.error("[QuestLayer] Failed to load widget runtime", err);
+              console.error("[QuestLayer] Failed to load widget runtime fallback", fallbackErr);
+            });
+        });
+      return;
+    }
+
     import(runtimeUrl)
       .then(runInit)
       .catch(function (err) {
-        var origin = script && script.src ? new URL(script.src).origin : window.location.origin;
-        if (!isLikelyViteDev(origin)) {
-          var distUrl = resolveFromScript("dist/widget-runtime.js") + "?" + cacheBuster;
-          import(distUrl)
-            .then(runInit)
-            .catch(function (distErr) {
-              console.error("[QuestLayer] Failed to load widget runtime", err);
-              console.error("[QuestLayer] Failed to load dist widget runtime", distErr);
-            });
-          return;
-        }
-        Promise.resolve()
-          .then(function () {
-            return loadViteReactPreamble(origin);
-          })
-          .then(function () {
-            return import(origin + "/@vite/client");
-          })
-          .then(function () {
-            var fallbackUrl = resolveFromScript("widget-runtime.tsx") + "?" + cacheBuster;
-            return import(fallbackUrl);
-          })
+        var distUrl = resolveFromScript("dist/widget-runtime.js") + "?" + cacheBuster;
+        import(distUrl)
           .then(runInit)
-          .catch(function (fallbackErr) {
+          .catch(function (distErr) {
             console.error("[QuestLayer] Failed to load widget runtime", err);
-            console.error("[QuestLayer] Failed to load widget runtime fallback", fallbackErr);
+            console.error("[QuestLayer] Failed to load dist widget runtime", distErr);
           });
       });
   }

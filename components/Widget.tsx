@@ -52,6 +52,37 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const isTransparentTheme = state.activeTheme === 'glass';
 
   const positionClasses = isPreview ? 'absolute' : 'fixed';
+  const [widgetScale, setWidgetScale] = useState(1);
+
+  const getWidgetScale = () => {
+    if (typeof window === 'undefined') return 1;
+    const screenWidth = window.screen?.width || 0;
+    const innerWidth = window.innerWidth || 0;
+    if (!screenWidth || !innerWidth) return 1;
+    const ratio = innerWidth / screenWidth;
+    if (ratio > 1.05) {
+      return Math.min(ratio, 3);
+    }
+    return 1;
+  };
+
+  useEffect(() => {
+    const updateScale = () => {
+      const nextScale = getWidgetScale();
+      setWidgetScale(prev => (Math.abs(prev - nextScale) < 0.01 ? prev : nextScale));
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('orientationchange', updateScale);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener('resize', updateScale);
+    return () => {
+      window.removeEventListener('resize', updateScale);
+      window.removeEventListener('orientationchange', updateScale);
+      viewport?.removeEventListener('resize', updateScale);
+    };
+  }, []);
 
   // --- SUPABASE SYNC ---
   useEffect(() => {
@@ -609,6 +640,12 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const isBottom = state.position.includes('bottom');
   const isRight = state.position.includes('right');
+  const wrapperStyle: React.CSSProperties = {
+    transform: widgetScale > 1 ? `scale(${widgetScale})` : undefined,
+    transformOrigin: isBottom
+      ? (isRight ? 'bottom right' : 'bottom left')
+      : (isRight ? 'top right' : 'top left')
+  };
   const wrapperClasses = [
     positionClasses,
     'z-[2147483000]',
@@ -677,7 +714,10 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
       )}
 
-      <div className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}>
+      <div
+        className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}
+        style={wrapperStyle}
+      >
         <button
           onClick={() => {
             if (!isOpen) initAudio();
