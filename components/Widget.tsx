@@ -703,6 +703,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           borderColor: '#fecdd3',
           boxShadow: '0 0 0 2px rgba(244, 63, 94, 0.08)'
         };
+      case 'avatar':
+        return {
+          backgroundColor: '#0a2a43',
+          borderColor: '#67e8f9',
+          boxShadow: '0 0 18px rgba(34, 211, 238, 0.45)'
+        };
+      case 'ironman':
+        return {
+          backgroundColor: '#7f0d12',
+          borderColor: '#f59e0b',
+          boxShadow: '0 0 18px rgba(248, 113, 113, 0.4)'
+        };
       case 'minimal':
       case 'brutal':
         return {
@@ -756,7 +768,15 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           <div
             className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
             style={{
-              borderColor: state.activeTheme === 'cyber' ? state.accentColor : (state.activeTheme === 'gaming' ? '#fbbf24' : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))
+              borderColor: state.activeTheme === 'cyber'
+                ? state.accentColor
+                : (state.activeTheme === 'gaming'
+                  ? '#fbbf24'
+                  : (state.activeTheme === 'avatar'
+                    ? '#67e8f9'
+                    : (state.activeTheme === 'ironman'
+                      ? '#f59e0b'
+                      : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))))
             }}
           >
             {/* Header */}

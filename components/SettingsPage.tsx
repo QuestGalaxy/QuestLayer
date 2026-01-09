@@ -73,7 +73,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Theme</label>
                   <div className="flex flex-wrap gap-2">
-                    {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[]).map(
+                    {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura', 'avatar', 'ironman'] as ThemeType[]).map(
                       (theme) => (
                         <button
                           key={theme}
