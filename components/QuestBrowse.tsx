@@ -104,6 +104,17 @@ const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClic
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
               </span>
               Online
+              {project.domain && (
+                <a
+                  href={project.domain.startsWith('http') ? project.domain : `https://${project.domain}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-1 inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  Visit
+                </a>
+              )}
             </div>
           </div>
         )}
