@@ -56,12 +56,19 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const getWidgetScale = () => {
     if (typeof window === 'undefined') return 1;
-    const screenWidth = window.screen?.width || 0;
-    const innerWidth = window.innerWidth || 0;
-    if (!screenWidth || !innerWidth) return 1;
-    const ratio = innerWidth / screenWidth;
-    if (ratio > 1.05) {
-      return Math.min(ratio, 3);
+    const layoutWidth = window.innerWidth || 0;
+    const visualWidth = window.visualViewport?.width || layoutWidth;
+    if (!layoutWidth || !visualWidth) return 1;
+    const viewportRatio = layoutWidth / visualWidth;
+    const rootFontSizeRaw = window.getComputedStyle(document.documentElement).fontSize || '16px';
+    const rootFontSize = Number.parseFloat(rootFontSizeRaw) || 16;
+    const fontScale = rootFontSize > 0 ? 16 / rootFontSize : 1;
+    const combinedScale = viewportRatio * fontScale;
+    if (combinedScale > 1.05) {
+      return Math.min(combinedScale, 3);
+    }
+    if (combinedScale < 0.95) {
+      return Math.max(combinedScale, 0.8);
     }
     return 1;
   };
@@ -640,8 +647,9 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const isBottom = state.position.includes('bottom');
   const isRight = state.position.includes('right');
+  const effectiveScale = isOpen ? Math.min(widgetScale, 1.1) : widgetScale;
   const wrapperStyle: React.CSSProperties = {
-    transform: widgetScale > 1 ? `scale(${widgetScale})` : undefined,
+    transform: effectiveScale > 1 ? `scale(${effectiveScale})` : undefined,
     transformOrigin: isBottom
       ? (isRight ? 'bottom right' : 'bottom left')
       : (isRight ? 'top right' : 'top left')
