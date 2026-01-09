@@ -5,7 +5,7 @@ import { THEMES } from '../constants.ts';
 import { 
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2, 
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown, 
-  MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart
+  MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart, User
 } from 'lucide-react';
 import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
@@ -656,6 +656,12 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     setIsOpen(false);
   };
 
+  const questLayerBase = 'https://questlayer.questgalaxy.com';
+
+  const handleQuestLayerNav = (path: string) => {
+    window.open(`${questLayerBase}${path}`, '_blank', 'noopener,noreferrer');
+  };
+
   const getPositionClasses = () => {
     const classes = {
       'bottom-right': 'bottom-4 right-4 md:bottom-8 md:right-8',
@@ -876,22 +882,40 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
               <div className={`p-2.5 md:p-4 border border-opacity-20 shadow-sm ${activeTheme.itemCard}`}>
                 <div className="flex justify-between items-start mb-2 md:mb-4">
                   <div className="flex items-center gap-2 md:gap-3">
-                    <div 
-                      className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''}`}
+                    <button
+                      onClick={() => handleQuestLayerNav('/questbrowse')}
+                      title="Open profile"
+                      className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-transform hover:scale-105`}
                       style={{ backgroundColor: isLightTheme ? '#000' : state.accentColor }}
                     >
-                      {currentLevelData.lvl}
+                      <span className="group-hover/level:opacity-0 transition-opacity">
+                        {currentLevelData.lvl}
+                      </span>
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover/level:opacity-100 group-hover/level:scale-100 transition-all">
+                        <span className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/20 flex items-center justify-center">
+                          <User className="w-3 h-3 md:w-4 md:h-4" />
+                        </span>
+                      </span>
                       {visualXP < state.userXP && <Sparkles size={6} className="absolute -top-1 -right-1 text-white animate-bounce" />}
-                    </div>
+                    </button>
                     <div>
                       <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank</p>
                       <p className={`text-[11px] md:text-[11px] font-black uppercase tracking-widest ${isLightTheme ? 'text-indigo-700' : 'text-indigo-500'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>{getRankName()}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <button
+                    onClick={() => handleQuestLayerNav('/leaderboard')}
+                    title="Open leaderboard"
+                    className="text-right group/rankxp"
+                  >
                     <p className={`text-xs md:text-xl font-black tabular-nums ${isLightTheme ? 'text-black' : 'text-white'}`}>{currentLevelData.effectiveXP >= 1000 ? (currentLevelData.effectiveXP / 1000).toFixed(1) + 'k' : currentLevelData.effectiveXP}</p>
-                    <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank XP</p>
-                  </div>
+                    <p className={`relative text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>
+                      <span className="group-hover/rankxp:opacity-0 transition-opacity">Rank XP</span>
+                      <span className="absolute right-0 opacity-0 group-hover/rankxp:opacity-100 transition-opacity">
+                        Leaderboard
+                      </span>
+                    </p>
+                  </button>
                 </div>
                 <div className={`h-1 md:h-2 w-full overflow-hidden border relative mb-1 ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
                   <div 
@@ -910,6 +934,36 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
                     {currentLevelData.xpNeeded} XP to Lvl {currentLevelData.lvl + 1}
                   </p>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => handleQuestLayerNav('/questbrowse')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                      isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                    }`}
+                    style={{
+                      borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
+                      backgroundColor: `${state.accentColor}12`,
+                      color: isTransparentTheme ? state.accentColor : undefined
+                    }}
+                  >
+                    <User className="w-[12px] h-[12px]" />
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => handleQuestLayerNav('/leaderboard')}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                      isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                    }`}
+                    style={{
+                      borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
+                      backgroundColor: `${state.accentColor}12`,
+                      color: isTransparentTheme ? state.accentColor : undefined
+                    }}
+                  >
+                    <Trophy className="w-[12px] h-[12px]" />
+                    Leaderboard
+                  </button>
                 </div>
               </div>
 
