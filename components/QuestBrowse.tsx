@@ -26,7 +26,7 @@ const DEFAULT_WIDGET_STATE: AppState = {
   dailyClaimed: false
 };
 
-const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onImageError: (id: string) => void }> = ({ project, stats, onClick, onImageError }) => {
+const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClick: () => void; onImageError: (id: string) => void }> = ({ project, stats, isOnline, onClick, onImageError }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   
   useEffect(() => {
@@ -71,15 +71,15 @@ const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onIm
       <div className="relative h-48 w-full bg-slate-950/50 border-b border-white/5">
         <div className="absolute inset-0 overflow-hidden">
             {ogImage ? (
-              <img 
-                  src={ogImage} 
-                  alt={project.name} 
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110"
-                  onError={() => {
-                    setOgImage(null);
-                    onImageError(project.id);
-                  }}
-              />
+            <img 
+                src={ogImage} 
+                alt={project.name} 
+                className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110"
+                onError={() => {
+                  setOgImage(null);
+                  onImageError(project.id);
+                }}
+            />
             ) : (
               <div
                 className="absolute inset-0 flex items-center justify-center"
@@ -95,6 +95,18 @@ const BrowseCard: React.FC<{ project: any; stats: any; onClick: () => void; onIm
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
         </div>
+
+        {isOnline && (
+          <div className="absolute top-4 right-4">
+            <div className="px-2 py-1 rounded-lg bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-[10px] font-black text-emerald-300 uppercase shadow-sm flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+              </span>
+              Online
+            </div>
+          </div>
+        )}
 
         <div 
           className="absolute -bottom-6 left-6 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl z-10 border-4 border-slate-900 transition-transform group-hover:scale-110 duration-300"
@@ -386,12 +398,28 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     }
   };
 
-  const filteredProjects = projects.filter(p => 
-    p.domain && (
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      p.domain.toLowerCase().includes(searchTerm.toLowerCase())
+  const isProjectOnline = (project: any) => {
+    if (!project.last_ping_at) return false;
+    const lastPing = new Date(project.last_ping_at).getTime();
+    return lastPing > Date.now() - 60 * 60 * 1000;
+  };
+
+  const filteredProjects = projects
+    .filter(p => 
+      p.domain && (
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        p.domain.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     )
-  );
+    .sort((a, b) => {
+      const aOnline = isProjectOnline(a);
+      const bOnline = isProjectOnline(b);
+      if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      const aPing = a.last_ping_at ? new Date(a.last_ping_at).getTime() : 0;
+      const bPing = b.last_ping_at ? new Date(b.last_ping_at).getTime() : 0;
+      if (aPing !== bPing) return bPing - aPing;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
   const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
   const paginatedProjects = filteredProjects.slice(
@@ -654,7 +682,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
                   <BrowseCard 
                     key={project.id} 
                     project={project} 
-                    stats={project.stats} 
+                    stats={project.stats}
+                    isOnline={isProjectOnline(project)}
                     onClick={() => handleProjectClick(project)}
                     onImageError={handleImageError} 
                   />
