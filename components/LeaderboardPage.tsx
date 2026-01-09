@@ -8,6 +8,7 @@ import GlobalFooter from './GlobalFooter';
 interface LeaderboardPageProps {
   onBack: () => void;
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
+  onWidgetBuilder?: () => void;
 }
 
 type LeaderboardEntry = {
@@ -186,7 +187,7 @@ const ProjectCard: React.FC<{
   );
 };
 
-const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue }) => {
+const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, onWidgetBuilder }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -353,6 +354,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
           onDisconnect={() => disconnect()}
           onHome={onBack}
           onLeaderboard={() => {}}
+          onWidgetBuilder={onWidgetBuilder}
         />
       </div>
       <div className="relative overflow-hidden">

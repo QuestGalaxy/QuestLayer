@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ExternalLink, Home, LogOut, ShoppingBag, Star, Trophy, User } from 'lucide-react';
+import { ChevronDown, ExternalLink, Home, Layout, LogOut, ShoppingBag, Star, Trophy, User } from 'lucide-react';
 import ConnectCta from './ConnectCta';
 
 interface ProfileMenuButtonProps {
@@ -12,6 +12,7 @@ interface ProfileMenuButtonProps {
   onDisconnect: () => void;
   onHome?: () => void;
   onLeaderboard?: () => void;
+  onWidgetBuilder?: () => void;
 }
 
 const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
@@ -23,7 +24,8 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
   onConnect,
   onDisconnect,
   onHome,
-  onLeaderboard
+  onLeaderboard,
+  onWidgetBuilder
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -137,6 +139,20 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
                   <Trophy size={18} />
                 </div>
                 <span className="font-bold text-sm">Leaderboard</span>
+              </button>
+            )}
+            {onWidgetBuilder && (
+              <button
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  onWidgetBuilder();
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+              >
+                <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400 group-hover:bg-sky-500/20 transition-colors">
+                  <Layout size={18} />
+                </div>
+                <span className="font-bold text-sm">Widget Builder</span>
               </button>
             )}
             <div className="relative group">

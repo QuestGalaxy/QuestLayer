@@ -11,6 +11,7 @@ import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react'
 interface QuestBrowseProps {
   onBack: () => void;
   onLeaderboard: () => void;
+  onWidgetBuilder?: () => void;
   initialBrowseRequest?: { projectId?: string; url?: string } | null;
   onBrowseHandled?: () => void;
 }
@@ -183,7 +184,7 @@ const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClic
   );
 };
 
-const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initialBrowseRequest, onBrowseHandled }) => {
+const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidgetBuilder, initialBrowseRequest, onBrowseHandled }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -802,6 +803,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
                   setIsIframeLoading(false);
                 }}
                 onLeaderboard={onLeaderboard}
+                onWidgetBuilder={onWidgetBuilder}
             />
         </div>
 

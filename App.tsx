@@ -239,6 +239,7 @@ const App: React.FC = () => {
       <QuestBrowse
         onBack={() => setCurrentPage('landing')}
         onLeaderboard={() => setCurrentPage('leaderboard')}
+        onWidgetBuilder={() => setCurrentPage('dashboard')}
         initialBrowseRequest={pendingBrowseRequest}
         onBrowseHandled={() => setPendingBrowseRequest(null)}
       />
@@ -253,6 +254,7 @@ const App: React.FC = () => {
           setPendingBrowseRequest({ projectId, url: domain || undefined });
           setCurrentPage('questbrowse');
         }}
+        onWidgetBuilder={() => setCurrentPage('dashboard')}
       />
     );
   }
