@@ -358,7 +358,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     try {
       const { project, tasks } = await fetchProjectDetails(projectId);
       if (!project) return;
-      const projectOnline = isProjectOnline(project);
       const newState: AppState = {
         projectId: project.id,
         projectName: project.name,
@@ -386,7 +385,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
         setCurrentUrl(url);
       }
       setIsBrowsing(true);
-      setIsWidgetOpen(!projectOnline);
+      setIsWidgetOpen(true);
       iframeLoadTimeoutRef.current = setTimeout(() => {
         setIframeBlocked(true);
         setIsIframeLoading(false);
