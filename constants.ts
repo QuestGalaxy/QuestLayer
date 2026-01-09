@@ -73,6 +73,24 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     itemCard: 'bg-white border-rose-200 rounded-xl md:rounded-[28px]',
     iconBox: 'rounded-full bg-rose-100 border border-rose-200',
     font: 'font-["Inter"]'
+  },
+  avatar: {
+    card: 'bg-[#061b2d] rounded-2xl md:rounded-[34px] border border-cyan-200/30 shadow-[0_0_45px_rgba(34,211,238,0.18)]',
+    trigger: 'rounded-full border border-cyan-200/60 bg-[#0a2a43] text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.45)]',
+    header: 'bg-[#0f2f4d] border-b border-cyan-200/20',
+    button: 'rounded-full bg-cyan-400/15 text-cyan-100 border border-cyan-300/40 hover:bg-cyan-400/25 shadow-[0_0_18px_rgba(34,211,238,0.3)]',
+    itemCard: 'bg-[#0b2236] border border-cyan-200/20 rounded-2xl md:rounded-[28px]',
+    iconBox: 'rounded-full bg-cyan-400/10 border border-cyan-300/30',
+    font: 'font-["Plus_Jakarta_Sans"]'
+  },
+  ironman: {
+    card: 'bg-[#200709] rounded-2xl md:rounded-[32px] border-2 border-amber-400/60 shadow-[0_0_28px_rgba(251,191,36,0.35)]',
+    trigger: 'rounded-xl border-2 border-amber-400 bg-[#7f0d12] text-amber-100 shadow-[0_0_20px_rgba(248,113,113,0.4)]',
+    header: 'bg-[#3a0b0f] border-b border-amber-400/40',
+    button: 'rounded-xl bg-amber-400 text-[#26070a] border border-amber-300 hover:bg-amber-300 shadow-[0_10px_20px_rgba(251,191,36,0.25)]',
+    itemCard: 'bg-[#2a0b0f] border border-amber-400/30 rounded-xl md:rounded-2xl',
+    iconBox: 'rounded-xl bg-[#7f0d12] border border-amber-400/40',
+    font: 'font-["Plus_Jakarta_Sans"]'
   }
 };
 

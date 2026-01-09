@@ -1,7 +1,7 @@
 
 export type Position = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
-export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'glass' | 'terminal' | 'aura';
+export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'glass' | 'terminal' | 'aura' | 'avatar' | 'ironman';
 
 export interface Task {
   id: string | number;

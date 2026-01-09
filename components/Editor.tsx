@@ -332,6 +332,16 @@ const Editor: React.FC<EditorProps> = ({
       base: 'border',
       active: 'border-rose-300 bg-rose-500/15 text-rose-100 shadow-[0_0_20px_rgba(244,63,94,0.25)]',
       inactive: 'border-rose-500/30 bg-rose-500/5 text-rose-300/70 hover:bg-rose-500/10 hover:text-rose-100'
+    },
+    avatar: {
+      base: 'border',
+      active: 'border-cyan-200 bg-cyan-400/20 text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.4)]',
+      inactive: 'border-cyan-400/30 bg-cyan-500/5 text-cyan-200/70 hover:bg-cyan-400/10 hover:text-cyan-100'
+    },
+    ironman: {
+      base: 'border',
+      active: 'border-amber-300 bg-amber-400/20 text-amber-100 shadow-[0_0_22px_rgba(251,191,36,0.4)]',
+      inactive: 'border-amber-500/30 bg-amber-500/5 text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-100'
     }
   };
 
@@ -430,7 +440,7 @@ const Editor: React.FC<EditorProps> = ({
               </div>
               <div className="relative">
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                  {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura'] as ThemeType[])
+                  {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura', 'avatar', 'ironman'] as ThemeType[])
                     .map((t) => (
                       <button
                         key={t}
