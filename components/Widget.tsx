@@ -36,6 +36,17 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
 
+  const getUtcDayRange = (date = new Date()) => {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    const start = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(year, month, day + 1, 0, 0, 0, 0));
+    return { start, end, key: start.toISOString().slice(0, 10) };
+  };
+
+  const [viralDayKey, setViralDayKey] = useState(() => getUtcDayRange().key);
+
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -99,6 +110,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
       setDbProjectId(null);
       setDbUserId(null);
       setSharedPlatforms([]);
+      setViralDayKey(getUtcDayRange().key);
     }
     projectScopeRef.current = projectScope;
   }, [projectScope]);
@@ -243,11 +255,15 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         }
 
         // 6. Fetch Viral Boosts
+        const { start, end, key } = getUtcDayRange();
+        setViralDayKey(key);
         const { data: viralBoosts } = await supabase
           .from('viral_boost_completions')
           .select('platform')
           .eq('user_id', userId)
-          .eq('project_id', projectId);
+          .eq('project_id', projectId)
+          .gte('created_at', start.toISOString())
+          .lt('created_at', end.toISOString());
         
         if (viralBoosts) {
           setSharedPlatforms(viralBoosts.map(v => v.platform));
@@ -545,6 +561,11 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
 
   const handleShare = (platform: string) => {
     initAudio();
+    const { key } = getUtcDayRange();
+    if (key !== viralDayKey) {
+      setSharedPlatforms([]);
+      setViralDayKey(key);
+    }
     if (sharedPlatforms.includes(platform) || verifyingPlatforms.includes(platform)) return;
     const shareUrl = window.location.origin;
     
@@ -968,8 +989,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                     Viral Boost
                   </p>
-                  <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-emerald-700' : 'text-emerald-400'}`}>
-                    +100 XP EACH
+                <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                    +100 XP EACH / DAY
                   </p>
                 </div>
                 <div 

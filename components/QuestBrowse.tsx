@@ -4,8 +4,8 @@ import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, 
 import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
 import GlobalFooter from './GlobalFooter';
-import { INITIAL_TASKS } from '../constants';
-import { AppState, Position, ThemeType } from '../types';
+import { INITIAL_TASKS, SPONSORED_TASKS, THEMES } from '../constants';
+import { AppState, Position, ThemeType, Task } from '../types';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 
 interface QuestBrowseProps {
@@ -24,6 +24,44 @@ const DEFAULT_WIDGET_STATE: AppState = {
   userXP: 0,
   currentStreak: 1,
   dailyClaimed: false
+};
+
+const THEME_KEYS = Object.keys(THEMES) as ThemeType[];
+const FALLBACK_ACCENTS = [
+  '#6366f1',
+  '#22c55e',
+  '#0ea5e9',
+  '#f97316',
+  '#f43f5e',
+  '#14b8a6',
+  '#a855f7',
+  '#f59e0b'
+];
+
+const hashString = (value: string) => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+const createSeededRandom = (seed: number) => {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+};
+
+const pickRandomTasks = (tasks: Task[], count: number, rng: () => number) => {
+  const pool = [...tasks];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, Math.min(count, pool.length));
 };
 
 const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClick: () => void; onImageError: (id: string) => void }> = ({ project, stats, isOnline, onClick, onImageError }) => {
@@ -260,6 +298,23 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     }
   };
 
+  const buildFallbackState = (url: string, normalizedDomain: string) => {
+    const seedBase = `${normalizedDomain || url}|${address || 'anon'}`;
+    const rng = createSeededRandom(hashString(seedBase));
+    const nextTheme = THEME_KEYS[Math.floor(rng() * THEME_KEYS.length)];
+    const nextAccent = FALLBACK_ACCENTS[Math.floor(rng() * FALLBACK_ACCENTS.length)];
+    const fallbackTasks = pickRandomTasks(SPONSORED_TASKS, 4, rng);
+
+    return {
+      ...DEFAULT_WIDGET_STATE,
+      projectName: normalizedDomain || 'Quest Browser',
+      projectDomain: url,
+      accentColor: nextAccent,
+      activeTheme: nextTheme,
+      tasks: fallbackTasks
+    };
+  };
+
   const handleBrowseUrl = (url: string) => {
     if (!url) return;
     const normalized = normalizeDomain(url);
@@ -283,11 +338,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     setIframeBlocked(false);
     setIsIframeLoading(true);
     setCurrentUrl(validUrl);
-    setWidgetState({
-      ...DEFAULT_WIDGET_STATE,
-      projectName: 'Quest Browser',
-      projectDomain: validUrl
-    });
+    setWidgetState(buildFallbackState(validUrl, normalized));
     setIsBrowsing(true);
     setIsWidgetOpen(true);
     iframeLoadTimeoutRef.current = setTimeout(() => {

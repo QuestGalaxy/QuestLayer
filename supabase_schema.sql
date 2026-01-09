@@ -293,9 +293,17 @@ create table if not exists viral_boost_completions (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   user_id uuid references end_users(id) on delete cascade not null,
   project_id uuid references projects(id) on delete cascade not null,
-  platform text not null, -- 'x', 'tg', 'wa', 'fb', 'li'
-  unique(user_id, project_id, platform)
+  platform text not null -- 'x', 'tg', 'wa', 'fb', 'li'
 );
+
+-- One viral boost per platform per day (UTC) per user/project
+create unique index if not exists viral_boost_completions_daily_unique
+  on viral_boost_completions (
+    user_id,
+    project_id,
+    platform,
+    ((created_at at time zone 'utc')::date)
+  );
 
 -- Enable RLS for Viral Boosts
 alter table viral_boost_completions enable row level security;

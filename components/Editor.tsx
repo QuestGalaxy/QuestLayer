@@ -74,48 +74,10 @@ const TASK_TEMPLATES = [
   }
 ];
 
-const SPONSORED_TASKS: Task[] = [
-  {
-    id: 'sp-twitter-follow',
-    title: 'Follow QuestGalaxy',
-    desc: 'Follow @QuestGalaxy on X for ecosystem updates.',
-    link: 'https://x.com/QuestGalaxy',
-    icon: 'icon:twitter',
-    xp: 100,
-    isSponsored: true
-  },
-  {
-    id: 'sp-discord-join',
-    title: 'Join QuestGalaxy',
-    desc: 'Join the QuestGalaxy Discord community.',
-    link: 'https://discord.gg/questgalaxy',
-    icon: 'icon:discord',
-    xp: 100,
-    isSponsored: true
-  },
-  {
-    id: 'sp-visit-web',
-    title: 'Explore QuestGalaxy',
-    desc: 'Visit the official QuestGalaxy website.',
-    link: 'https://questgalaxy.com',
-    icon: 'icon:globe',
-    xp: 100,
-    isSponsored: true
-  },
-  {
-    id: 'sp-share-x',
-    title: 'Share QuestLayer',
-    desc: 'Spread the word about QuestLayer on X.',
-    link: 'https://x.com/intent/tweet?text=I%20just%20built%20a%20quest%20on%20QuestLayer!',
-    icon: 'icon:repost',
-    xp: 100,
-    isSponsored: true
-  }
-];
 const XP_PRESETS = [10, 25, 50, 100, 250, 500];
 import EmbedModal from './EmbedModal.tsx';
 import GlobalFooter from './GlobalFooter';
-import { DEMO_TASKS } from '../constants';
+import { DEMO_TASKS, SPONSORED_TASKS } from '../constants';
 
 interface EditorProps {
   state: AppState;
