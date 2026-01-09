@@ -244,19 +244,42 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, initia
     load();
   }, []);
 
+  const normalizeDomain = (value: string) => {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) return '';
+    try {
+      const withScheme = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+        ? trimmed
+        : `https://${trimmed}`;
+      return new URL(withScheme).hostname.replace(/^www\./, '');
+    } catch {
+      return trimmed.split('/')[0].replace(/^www\./, '');
+    }
+  };
+
   const handleBrowseUrl = (url: string) => {
     if (!url) return;
+    const normalized = normalizeDomain(url);
+    if (normalized) {
+      const matchedIndex = projects.findIndex(project => normalizeDomain(project.domain || '') === normalized);
+      if (matchedIndex !== -1) {
+        setCurrentProjectIndex(matchedIndex);
+        void handleBrowseProjectById(projects[matchedIndex].id, projects[matchedIndex].domain);
+        return;
+      }
+    }
+
     let validUrl = url.trim();
     if (!validUrl.startsWith('http://') && !validUrl.startsWith('https://')) {
       validUrl = `https://${validUrl}`;
     }
-    
+
     setIsIframeLoading(true);
     setCurrentUrl(validUrl);
     setWidgetState({
-        ...DEFAULT_WIDGET_STATE,
-        projectName: 'Quest Browser',
-        projectDomain: validUrl
+      ...DEFAULT_WIDGET_STATE,
+      projectName: 'Quest Browser',
+      projectDomain: validUrl
     });
     setIsBrowsing(true);
     setIsWidgetOpen(true);
