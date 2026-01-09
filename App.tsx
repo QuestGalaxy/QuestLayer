@@ -219,9 +219,6 @@ const App: React.FC = () => {
         onLaunch={() => {
           setCurrentPage('dashboard');
         }}
-        onExplore={() => {
-          setCurrentPage('explore');
-        }}
         onBrowse={() => {
           setCurrentPage('questbrowse');
         }}
@@ -330,9 +327,6 @@ const App: React.FC = () => {
         }}
         onDisconnect={() => {
           setCurrentPage('landing');
-        }}
-        onExplore={() => {
-          setCurrentPage('explore');
         }}
         onBrowse={() => {
           setCurrentPage('questbrowse');

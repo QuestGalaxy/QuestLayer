@@ -1,16 +1,15 @@
 
 import React, { useState } from 'react';
-import { Code, Wallet, Target, Trophy, ChevronRight, Globe, Sparkles, LogIn } from 'lucide-react';
+import { Code, Wallet, Target, Trophy, ChevronRight, Sparkles, LogIn } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
 
 interface LandingPageProps {
   onLaunch: () => void;
-  onExplore: () => void;
   onBrowse: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore, onBrowse }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
@@ -151,14 +150,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore, onBrowse
               </button>
               
               <div className="flex gap-4 w-full sm:w-auto">
-                <button 
-                  onClick={onExplore}
-                  className="flex-1 sm:flex-none px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <Globe size={14} className="group-hover:text-indigo-400 transition-colors" />
-                  Explore
-                </button>
-
                 <button 
                   onClick={onBrowse}
                   className="flex-1 sm:flex-none px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
@@ -350,13 +341,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onExplore, onBrowse
                   {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building Now' : 'Connect Wallet to Build')} <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </span>
               </button>
-              
+
               <button 
-                onClick={onExplore}
-                className="w-full md:w-auto px-12 py-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-sm tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3"
+                onClick={onBrowse}
+                className="w-full md:w-auto px-10 py-5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3"
               >
-                <Globe size={18} /> Explore Ecosystem
+                <LogIn size={16} /> Browse
               </button>
+              
            </div>
 
            {/* Chain Marquee */}
