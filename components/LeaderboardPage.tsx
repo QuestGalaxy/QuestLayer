@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users } from 'lucide-react';
-import { fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
+import { fetchAllProjects, fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
 import GlobalFooter from './GlobalFooter';
@@ -108,16 +108,18 @@ const ProjectCard: React.FC<{
             <span className="text-[11px] font-black text-white">{formatNumber(data.stats?.tasks_completed)}</span> Completed
           </span>
         </div>
-        <div className="absolute right-6 top-5 flex flex-col items-end gap-2">
-          <div className="rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-200">
-            Your XP {formatNumber(data.userXp)}
-          </div>
-          {data.userRank && (
-            <div className="rounded-full bg-indigo-500/20 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-300">
-              Rank #{data.userRank}
+        {userWallet && (
+          <div className="absolute right-6 top-5 flex flex-col items-end gap-2">
+            <div className="rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-200">
+              Your XP {formatNumber(data.userXp)}
             </div>
-          )}
-        </div>
+            {data.userRank && (
+              <div className="rounded-full bg-indigo-500/20 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-300">
+                Rank #{data.userRank}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="p-6 space-y-5">
@@ -206,58 +208,73 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
   }, [address]);
 
   useEffect(() => {
-    if (!address) {
-      setProjects([]);
-      setLoading(false);
-      return;
-    }
-
     let isMounted = true;
 
     const load = async () => {
       setLoading(true);
       try {
-        const { data: userLinks, error: userError } = await supabase
-          .from('end_users')
-          .select('id, project_id')
-          .eq('wallet_address', address);
-
-        if (userError) throw userError;
-        if (!userLinks || userLinks.length === 0) {
+        const allProjects = await fetchAllProjects();
+        if (!allProjects || allProjects.length === 0) {
           if (isMounted) setProjects([]);
           return;
         }
 
-        const userIds = userLinks.map(link => link.id);
-        const { data: progressRows } = await supabase
-          .from('user_progress')
-          .select('user_id, xp')
-          .in('user_id', userIds);
+        const projectsWithStats = await Promise.all(
+          allProjects.map(async (project: any) => {
+            try {
+              const stats = await fetchProjectStats(project.id);
+              return { ...project, stats };
+            } catch (e) {
+              return { ...project, stats: { total_visits: 0, connected_wallets: 0, tasks_completed: 0 } };
+            }
+          })
+        );
 
-        const progressByUser = new Map<string, number>();
-        progressRows?.forEach(row => progressByUser.set(row.user_id, row.xp || 0));
+        const sortedProjects = projectsWithStats.sort((a, b) => {
+          const visitsA = a.stats?.total_visits || 0;
+          const visitsB = b.stats?.total_visits || 0;
+          return visitsB - visitsA;
+        });
 
-        const activeLinks = userLinks.filter(link => (progressByUser.get(link.id) || 0) > 0);
-        const projectIds = Array.from(new Set(activeLinks.map(link => link.project_id)));
+        const seenDomains = new Set<string>();
+        const uniqueProjects = sortedProjects.filter(project => {
+          if (!project.domain) return false;
+          const domain = project.domain.toLowerCase();
+          if (seenDomains.has(domain)) return false;
+          seenDomains.add(domain);
+          return true;
+        });
 
-        if (projectIds.length === 0) {
-          if (isMounted) setProjects([]);
-          return;
+        const projectIds = uniqueProjects.map(project => project.id);
+        const userXpByProject = new Map<string, number>();
+
+        if (address && projectIds.length > 0) {
+          const { data: userLinks, error: userError } = await supabase
+            .from('end_users')
+            .select('id, project_id')
+            .eq('wallet_address', address)
+            .in('project_id', projectIds);
+
+          if (!userError && userLinks && userLinks.length > 0) {
+            const userIds = userLinks.map(link => link.id);
+            const { data: progressRows } = await supabase
+              .from('user_progress')
+              .select('user_id, xp')
+              .in('user_id', userIds);
+
+            const progressByUser = new Map<string, number>();
+            progressRows?.forEach(row => progressByUser.set(row.user_id, row.xp || 0));
+
+            userLinks.forEach(link => {
+              userXpByProject.set(link.project_id, progressByUser.get(link.id) || 0);
+            });
+          }
         }
-
-        const { data: projectsData, error: projectsError } = await supabase
-          .from('projects')
-          .select('*')
-          .in('id', projectIds);
-
-        if (projectsError) throw projectsError;
 
         const fullData = await Promise.all(
-          (projectsData || []).map(async project => {
-            const userLink = activeLinks.find(link => link.project_id === project.id);
-            const userXp = userLink ? progressByUser.get(userLink.id) || 0 : 0;
-
-            const stats = await fetchProjectStats(project.id).catch(() => null);
+          uniqueProjects.map(async project => {
+            const stats = project.stats;
+            const userXp = address ? userXpByProject.get(project.id) || 0 : 0;
 
             const { data: leaderboardRows } = await supabase
               .from('user_progress')
@@ -272,7 +289,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
             }));
 
             let userRank: number | null = null;
-            if (userXp > 0) {
+            if (address && userXp > 0) {
               const { count } = await supabase
                 .from('user_progress')
                 .select('id, end_users!inner(project_id)', { count: 'exact', head: true })
@@ -291,7 +308,12 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
           })
         );
 
-        fullData.sort((a, b) => b.userXp - a.userXp);
+        fullData.sort((a, b) => {
+          const visitsA = a.stats?.total_visits || 0;
+          const visitsB = b.stats?.total_visits || 0;
+          return visitsB - visitsA;
+        });
+
         if (isMounted) setProjects(fullData);
       } catch (error) {
         if (isMounted) setProjects([]);
@@ -350,20 +372,22 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
                 <Trophy size={14} /> Leaderboard
               </div>
               <h1 className="mt-3 text-4xl md:text-6xl font-black uppercase tracking-tight">
-                Your QuestLayer
+                QuestLayer
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">
-                  XP Legacy
+                  Global Leaderboard
                 </span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm text-slate-300">
-                See every project you have earned XP in, compare your placement, and watch the top explorers rise.
+                Explore the most active quests worldwide. Connect your wallet to highlight your XP and rank.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
-                <div className="text-2xl font-black text-white">{formatNumber(totalXp)}</div>
-              </div>
+              {isConnected && (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
+                  <div className="text-2xl font-black text-white">{formatNumber(totalXp)}</div>
+                </div>
+              )}
               <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Projects</div>
                 <div className="text-2xl font-black text-white">{projects.length}</div>
@@ -379,9 +403,9 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-200">
               <Users size={20} />
             </div>
-            <h3 className="mt-4 text-xl font-black">Connect to view your leaderboard</h3>
+            <h3 className="mt-4 text-xl font-black">Connect to highlight your rank</h3>
             <p className="mt-2 text-sm text-slate-400">
-              Sign in with your wallet to load project rankings and XP placement.
+              Global leaderboards are public. Connect your wallet to show your XP placement.
             </p>
             <button
               onClick={() => open()}
@@ -392,19 +416,19 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue })
           </div>
         )}
 
-        {isConnected && loading && (
+        {loading && (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="animate-spin text-indigo-400" size={40} />
           </div>
         )}
 
-        {isConnected && !loading && projects.length === 0 && (
+        {!loading && projects.length === 0 && (
           <div className="mt-8 rounded-[28px] border border-white/10 bg-white/5 p-8 text-center text-slate-300">
-            You have not earned XP in any project yet.
+            No leaderboard activity yet.
           </div>
         )}
 
-        {isConnected && !loading && projects.length > 0 && (
+        {!loading && projects.length > 0 && (
           <>
             <div className="mt-10 grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
               {paginatedProjects.map(project => (
