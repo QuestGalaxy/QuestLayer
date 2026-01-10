@@ -7,19 +7,20 @@ import GlobalFooter from './GlobalFooter';
 interface LandingPageProps {
   onLaunch: () => void;
   onBrowse: () => void;
+  allowAutoLaunch?: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAutoLaunch = true }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
 
   React.useEffect(() => {
-    if (isConnected) {
+    if (isConnected && allowAutoLaunch) {
       onLaunch();
     }
-  }, [isConnected]);
+  }, [isConnected, allowAutoLaunch, onLaunch]);
 
   const handleStartBuilding = () => {
     if (isConnected) {

@@ -7,7 +7,7 @@ import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
 import { Layout, Monitor, Smartphone, Globe, Shield, Menu } from 'lucide-react';
 import { syncProjectToSupabase } from './lib/supabase';
-import { useDisconnect, useAppKitAccount } from '@reown/appkit/react';
+import { useAppKit, useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
 import Dashboard from './components/Dashboard.tsx';
 import ExplorePage from './components/ExplorePage.tsx';
@@ -162,7 +162,9 @@ const App: React.FC = () => {
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
 
-  const { address } = useAppKitAccount();
+  const { open } = useAppKit();
+  const { address, isConnected, status } = useAppKitAccount();
+  const isConnecting = status === 'connecting' || status === 'reconnecting';
 
   const buildPublishSnapshot = (snapshotState: AppState) => {
     const tasks = snapshotState.tasks.map(task => ({
@@ -215,16 +217,27 @@ const App: React.FC = () => {
   };
 
   const { disconnect } = useDisconnect();
+  const [allowAutoLaunch, setAllowAutoLaunch] = useState(true);
+
+  useEffect(() => {
+    if (currentPage !== 'dashboard' && currentPage !== 'builder') return;
+    if (isConnected || isConnecting) return;
+    open();
+    setAllowAutoLaunch(true);
+    setCurrentPage('landing');
+  }, [currentPage, isConnected, isConnecting, open]);
 
   if (currentPage === 'landing') {
     return (
       <LandingPage
         onLaunch={() => {
+          setAllowAutoLaunch(true);
           setCurrentPage('dashboard');
         }}
         onBrowse={() => {
           setCurrentPage('questbrowse');
         }}
+        allowAutoLaunch={allowAutoLaunch}
       />
     );
   }
@@ -331,6 +344,7 @@ const App: React.FC = () => {
           setCurrentPage('builder');
         }}
         onDisconnect={() => {
+          setAllowAutoLaunch(false);
           setCurrentPage('landing');
         }}
         onBrowse={() => {
