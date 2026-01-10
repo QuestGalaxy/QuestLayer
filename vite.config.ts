@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           input: {
             main: path.resolve(__dirname, 'index.html'),
+            browse: path.resolve(__dirname, 'browse.html'),
+            leaderboard: path.resolve(__dirname, 'leaderboard.html'),
+            builder: path.resolve(__dirname, 'builder.html'),
+            dashboard: path.resolve(__dirname, 'dashboard.html'),
             widget: path.resolve(__dirname, 'widget-runtime.js')
           },
           output: {
