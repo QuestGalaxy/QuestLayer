@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
-import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout } from 'lucide-react';
+import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles } from 'lucide-react';
 import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
 import GlobalFooter from './GlobalFooter';
@@ -26,6 +26,29 @@ const DEFAULT_WIDGET_STATE: AppState = {
   currentStreak: 1,
   dailyClaimed: false
 };
+
+const SLIDING_LINKS = [
+  { name: 'Uniswap', domain: 'uniswap.org' },
+  { name: 'PancakeSwap', domain: 'pancakeswap.finance' },
+  { name: 'Trader Joe', domain: 'traderjoexyz.com' },
+  { name: 'Raydium', domain: 'raydium.io' },
+  { name: 'CoinGecko', domain: 'coingecko.com' },
+  { name: 'CoinMarketCap', domain: 'coinmarketcap.com' },
+  { name: 'DeFiLlama', domain: 'defillama.com' },
+  { name: 'Dune', domain: 'dune.com' },
+  { name: 'Token Terminal', domain: 'tokenterminal.com' },
+  { name: 'MetaMask', domain: 'metamask.io' },
+  { name: 'CoinCollect', domain: 'coincollect.app' },
+  { name: 'Ethereum', domain: 'ethereum.org' },
+  { name: 'Solana', domain: 'solana.com' },
+  { name: 'BNB Chain', domain: 'bnbchain.org' },
+  { name: 'Avalanche', domain: 'avax.network' },
+  { name: 'Polygon', domain: 'polygon.technology' },
+  { name: 'Arbitrum', domain: 'arbitrum.io' },
+  { name: 'Optimism', domain: 'optimism.io' },
+  { name: 'Polkadot', domain: 'polkadot.network' },
+  { name: 'Cosmos', domain: 'cosmos.network' }
+];
 
 const THEME_KEYS = Object.keys(THEMES) as ThemeType[];
 const FALLBACK_ACCENTS = [
@@ -209,6 +232,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [urlInput, setUrlInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
+  const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
+  const isDev = import.meta.env.DEV;
   
   const handleNextProject = () => {
     if (projects.length === 0) return;
@@ -285,6 +310,56 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     };
     load();
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFeaturedImages = async () => {
+      const candidates = SLIDING_LINKS
+        .filter((link) => link.domain && !featuredImages[link.domain]);
+      if (candidates.length === 0) return;
+
+      const results = await Promise.all(
+        candidates.map(async (link) => {
+          try {
+            const target = link.domain.startsWith('http')
+              ? link.domain
+              : `https://${link.domain}`;
+            const url = `/api/og?url=${encodeURIComponent(target)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data?.image) return { id: link.domain, image: data.image };
+            if (isDev) {
+              return { id: link.domain, image: `https://www.google.com/s2/favicons?domain=${link.domain}&sz=256` };
+            }
+            return null;
+          } catch {
+            if (isDev && link.domain) {
+              return { id: link.domain, image: `https://www.google.com/s2/favicons?domain=${link.domain}&sz=256` };
+            }
+            return null;
+          }
+        })
+      );
+
+      if (!isMounted) return;
+      const updates = results.reduce<Record<string, string>>((acc, item) => {
+        if (item?.image) acc[item.id] = item.image;
+        return acc;
+      }, {});
+
+      if (Object.keys(updates).length > 0) {
+        setFeaturedImages((prev) => ({ ...prev, ...updates }));
+      }
+    };
+
+    if (SLIDING_LINKS.length > 0) {
+      void fetchFeaturedImages();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [featuredImages, isDev]);
 
   const normalizeDomain = (value: string) => {
     const trimmed = value.trim().toLowerCase();
@@ -466,9 +541,9 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     }
   };
 
-  const handleBadgeClick = (badge: any) => {
+  const handleBadgeClick = (badge: { domain: string }) => {
       if (!isDragging) {
-          handleBrowseUrl(`${badge.name.toLowerCase()}.com`);
+          handleBrowseUrl(badge.domain);
       }
   };
   
@@ -773,6 +848,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             0%, 100% { transform: translateX(0); }
             50% { transform: translateX(4px); }
           }
+          @keyframes ql-marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
           @keyframes ql-flicker {
             0%, 100% { opacity: 1; }
             10% { opacity: 0.85; }
@@ -892,35 +971,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         onMouseUp={handleMouseUp}
                         onMouseMove={handleMouseMove}
                     >
-                        {[
-                            { name: 'Uniswap', icon: '🦄' },
-                            { name: 'Aave', icon: '👻' },
-                            { name: 'Curve', icon: '🌈' },
-                            { name: 'Compound', icon: '📊' },
-                            { name: 'SushiSwap', icon: '🍣' },
-                            { name: 'Synthetix', icon: '⚔️' },
-                            { name: 'Balancer', icon: '⚖️' },
-                            { name: 'MakerDAO', icon: '🏦' },
-                            { name: '1inch', icon: '🐴' },
-                            { name: 'Yearn', icon: '🌾' },
-                             { name: 'Uniswap', icon: '🦄' },
-                            { name: 'Aave', icon: '👻' },
-                            { name: 'Curve', icon: '🌈' },
-                            { name: 'Compound', icon: '📊' },
-                            { name: 'SushiSwap', icon: '🍣' },
-                            { name: 'Synthetix', icon: '⚔️' },
-                            { name: 'Balancer', icon: '⚖️' },
-                            { name: 'MakerDAO', icon: '🏦' },
-                            { name: '1inch', icon: '🐴' },
-                            { name: 'Yearn', icon: '🌾' }
-                        ].map((badge, i) => (
+                        {SLIDING_LINKS.concat(SLIDING_LINKS).map((badge, i) => (
                             <div 
                                 key={i} 
                                 onClick={() => handleBadgeClick(badge)}
                                 className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm min-w-[120px] justify-center shrink-0 select-none"
                             >
                                 <img 
-                                    src={`https://www.google.com/s2/favicons?domain=${badge.name.toLowerCase()}.com&sz=32`}
+                                    src={`https://www.google.com/s2/favicons?domain=${badge.domain}&sz=32`}
                                     alt={badge.name}
                                     className="w-4 h-4 rounded-full pointer-events-none"
                                     onError={(e) => {
@@ -928,7 +986,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                                         (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                                     }}
                                 />
-                                <span className="hidden">{badge.icon}</span>
+                                <span className="hidden">{badge.name.slice(0, 2).toUpperCase()}</span>
                                 {badge.name}
                             </div>
                         ))}
@@ -958,6 +1016,47 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                   />
                 ))}
               </div>
+
+              {/* Sliding Featured Cards */}
+              {SLIDING_LINKS.some((link) => featuredImages[link.domain]) && (
+                <div className="mt-12">
+                  <div className="relative overflow-hidden">
+                    <div className="flex gap-4 w-max animate-[ql-marquee_40s_linear_infinite]">
+                      {SLIDING_LINKS
+                        .filter((link) => featuredImages[link.domain])
+                        .slice(0, 12)
+                        .concat(
+                          SLIDING_LINKS
+                            .filter((link) => featuredImages[link.domain])
+                            .slice(0, 12)
+                        )
+                        .map((link, index) => (
+                          <button
+                            key={`${link.domain}-${index}`}
+                            onClick={() => handleBrowseUrl(link.domain)}
+                            className="relative w-64 h-36 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.2)] transition-all"
+                          >
+                            <img
+                              src={featuredImages[link.domain]}
+                              alt={link.name}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                            <div className="absolute bottom-3 left-4 right-4 text-left">
+                              <div className="text-xs font-black uppercase tracking-widest text-white">
+                                {link.name}
+                              </div>
+                              <div className="text-[10px] text-slate-300 truncate">
+                                {link.domain}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
