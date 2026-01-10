@@ -50,85 +50,62 @@ const App: React.FC = () => {
 
   // Update URL when page changes
   useEffect(() => {
+    const setMetaTag = (selector: string, attributes: Record<string, string>) => {
+      let tag = document.querySelector<HTMLMetaElement>(selector);
+      if (!tag) {
+        tag = document.createElement('meta');
+        Object.entries(attributes).forEach(([key, value]) => tag!.setAttribute(key, value));
+        document.head.appendChild(tag);
+      }
+      if (attributes.content) {
+        tag.setAttribute('content', attributes.content);
+      }
+    };
+
+    const applySeo = (payload: { title: string; description: string; path: string; image: string }) => {
+      const baseUrl = window.location.origin;
+      const pageUrl = `${baseUrl}${payload.path}`;
+      const imageUrl = payload.image.startsWith('http') ? payload.image : `${baseUrl}${payload.image}`;
+
+      document.title = payload.title;
+      setMetaTag('meta[name="title"]', { name: 'title', content: payload.title });
+      setMetaTag('meta[name="description"]', { name: 'description', content: payload.description });
+
+      setMetaTag('meta[property="og:title"]', { property: 'og:title', content: payload.title });
+      setMetaTag('meta[property="og:description"]', { property: 'og:description', content: payload.description });
+      setMetaTag('meta[property="og:url"]', { property: 'og:url', content: pageUrl });
+      setMetaTag('meta[property="og:type"]', { property: 'og:type', content: 'website' });
+      setMetaTag('meta[property="og:image"]', { property: 'og:image', content: imageUrl });
+
+      setMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' });
+      setMetaTag('meta[name="twitter:title"]', { name: 'twitter:title', content: payload.title });
+      setMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: payload.description });
+      setMetaTag('meta[name="twitter:url"]', { name: 'twitter:url', content: pageUrl });
+      setMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: imageUrl });
+    };
+
     if (currentPage === 'questbrowse') {
-        window.history.pushState(null, '', '/questbrowse');
-        document.title = 'QuestBrowse - Browse Web3 & Earn XP';
-        // Add meta tags dynamically
-        let metaTitle = document.querySelector('meta[name="title"]');
-        if (!metaTitle) {
-            metaTitle = document.createElement('meta');
-            metaTitle.setAttribute('name', 'title');
-            document.head.appendChild(metaTitle);
-        }
-        metaTitle.setAttribute('content', 'QuestBrowse - Browse Web3 & Earn XP');
-
-        let metaDesc = document.querySelector('meta[name="description"]');
-        if (!metaDesc) {
-            metaDesc = document.createElement('meta');
-            metaDesc.setAttribute('name', 'description');
-            document.head.appendChild(metaDesc);
-        }
-        metaDesc.setAttribute('content', 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.');
-        
-        // Open Graph
-        let ogTitle = document.querySelector('meta[property="og:title"]');
-        if (!ogTitle) {
-            ogTitle = document.createElement('meta');
-            ogTitle.setAttribute('property', 'og:title');
-            document.head.appendChild(ogTitle);
-        }
-        ogTitle.setAttribute('content', 'QuestBrowse - Browse Web3 & Earn XP');
-        
-        let ogDesc = document.querySelector('meta[property="og:description"]');
-        if (!ogDesc) {
-            ogDesc = document.createElement('meta');
-            ogDesc.setAttribute('property', 'og:description');
-            document.head.appendChild(ogDesc);
-        }
-        ogDesc.setAttribute('content', 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.');
-
-        let ogUrl = document.querySelector('meta[property="og:url"]');
-        if (!ogUrl) {
-            ogUrl = document.createElement('meta');
-            ogUrl.setAttribute('property', 'og:url');
-            document.head.appendChild(ogUrl);
-        }
-        ogUrl.setAttribute('content', window.location.href);
-
-        // Twitter
-        let twTitle = document.querySelector('meta[name="twitter:title"]') || document.querySelector('meta[property="twitter:title"]');
-        if (!twTitle) {
-            twTitle = document.createElement('meta');
-            twTitle.setAttribute('name', 'twitter:title');
-            document.head.appendChild(twTitle);
-        }
-        twTitle.setAttribute('content', 'QuestBrowse - Browse Web3 & Earn XP');
-
-        let twDesc = document.querySelector('meta[name="twitter:description"]') || document.querySelector('meta[property="twitter:description"]');
-        if (!twDesc) {
-            twDesc = document.createElement('meta');
-            twDesc.setAttribute('name', 'twitter:description');
-            document.head.appendChild(twDesc);
-        }
-        twDesc.setAttribute('content', 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.');
-
-        let twUrl = document.querySelector('meta[name="twitter:url"]') || document.querySelector('meta[property="twitter:url"]');
-        if (!twUrl) {
-            twUrl = document.createElement('meta');
-            twUrl.setAttribute('name', 'twitter:url');
-            document.head.appendChild(twUrl);
-        }
-        twUrl.setAttribute('content', window.location.href);
-
+      window.history.pushState(null, '', '/questbrowse');
+      applySeo({
+        title: 'QuestBrowse - Browse Web3 & Earn XP',
+        description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.',
+        path: '/questbrowse',
+        image: '/qlayer.jpeg'
+      });
     } else if (currentPage === 'explore') {
-        window.history.pushState(null, '', '/explore');
-        document.title = 'QuestLayer Explore';
+      window.history.pushState(null, '', '/explore');
+      document.title = 'QuestLayer Explore';
     } else if (currentPage === 'leaderboard') {
-        window.history.pushState(null, '', '/leaderboard');
-        document.title = 'QuestLayer Leaderboard - Your XP Legacy';
+      window.history.pushState(null, '', '/leaderboard');
+      document.title = 'QuestLayer Leaderboard - Your XP Legacy';
     } else if (currentPage === 'landing') {
-        window.history.pushState(null, '', '/');
-        document.title = 'QuestLayer - Turn Any Website Into a Quest';
+      window.history.pushState(null, '', '/');
+      applySeo({
+        title: 'QuestLayer - Turn Any Website Into a Quest',
+        description: 'Launch quests, grow communities, and reward users with on-chain XP across any website.',
+        path: '/',
+        image: '/qlayer.jpeg'
+      });
     }
   }, [currentPage]);
 
