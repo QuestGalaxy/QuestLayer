@@ -753,7 +753,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                 )}
                 
                 {/* Widget Overlay */}
-                {!iframeBlocked && !currentProjectOnline && (
+                {!iframeBlocked && (
                     <Widget 
                         isOpen={isWidgetOpen}
                         setIsOpen={setIsWidgetOpen}

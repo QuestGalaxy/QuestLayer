@@ -855,13 +855,27 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                   Connect to unlock <br/><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
                 </h3>
               </div>
-              <div className={`w-full space-y-2 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
+              <div className={`w-full space-y-3 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
                 <p className={`text-[11px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
-                  <ChevronRight size={8} /> Protocol Info
+                  <ChevronRight size={8} /> Protocol Intel
                 </p>
                 <p className={`text-[13px] md:text-xs leading-relaxed ${isLightTheme ? 'text-slate-800' : 'text-slate-300 opacity-70'}`}>
-                  Join the ecosystem board to track progress and earn rewards.
+                  Connect to personalize your rank, unlock streaks, and earn XP inside {state.projectName}.
                 </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
+                    <Zap size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '0ms' }} />
+                    <span className="leading-none">XP Quests</span>
+                  </div>
+                  <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
+                    <Flame size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '200ms' }} />
+                    <span className="leading-none">Daily Streaks</span>
+                  </div>
+                  <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
+                    <Trophy size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '400ms' }} />
+                    <span className="leading-none">Leaderboard</span>
+                  </div>
+                </div>
               </div>
               <button 
                 onClick={handleConnect} 
