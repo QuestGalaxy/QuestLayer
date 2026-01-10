@@ -32,7 +32,7 @@ const GlobalFooter: React.FC<GlobalFooterProps> = ({ variant = 'default', classN
         <span className={`pixel-text text-[14px] uppercase tracking-[0.6em] ${tone.title}`}>QuestLayer</span>
         <nav className={`flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[9px] font-semibold uppercase tracking-[0.35em] ${tone.nav}`}>
           <a className={`${tone.navHover} transition-colors`} href="/">QuestLayer</a>
-          <a className={`${tone.navHover} transition-colors`} href="/questbrowse">QuestBrowse</a>
+          <a className={`${tone.navHover} transition-colors`} href="/browse">QuestBrowse</a>
           <a className={`${tone.navHover} transition-colors`} href="/explore">Explore</a>
           <a className={`${tone.navHover} transition-colors`} href="/terms">Terms</a>
           <a className={`${tone.navHover} transition-colors`} href="/privacy">Privacy</a>

@@ -18,7 +18,7 @@ import { fetchProjectDetails, deleteProject } from './lib/supabase';
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard'>(() => {
     // Check URL path on initial load
-    if (window.location.pathname === '/questbrowse') {
+    if (window.location.pathname === '/browse') {
       return 'questbrowse';
     }
     if (window.location.pathname === '/explore') {
@@ -27,18 +27,28 @@ const App: React.FC = () => {
     if (window.location.pathname === '/leaderboard') {
       return 'leaderboard';
     }
+    if (window.location.pathname === '/builder') {
+      return 'builder';
+    }
+    if (window.location.pathname === '/dashboard') {
+      return 'dashboard';
+    }
     return 'landing';
   });
 
   // Handle URL updates and back button
   useEffect(() => {
     const handlePopState = () => {
-        if (window.location.pathname === '/questbrowse') {
+        if (window.location.pathname === '/browse') {
             setCurrentPage('questbrowse');
         } else if (window.location.pathname === '/leaderboard') {
             setCurrentPage('leaderboard');
         } else if (window.location.pathname === '/explore') {
             setCurrentPage('explore');
+        } else if (window.location.pathname === '/builder') {
+            setCurrentPage('builder');
+        } else if (window.location.pathname === '/dashboard') {
+            setCurrentPage('dashboard');
         } else if (window.location.pathname === '/') {
             setCurrentPage('landing');
         }
@@ -85,11 +95,27 @@ const App: React.FC = () => {
     };
 
     if (currentPage === 'questbrowse') {
-      window.history.pushState(null, '', '/questbrowse');
+      window.history.pushState(null, '', '/browse');
       applySeo({
         title: 'QuestBrowse - Browse Web3 & Earn XP',
         description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.',
-        path: '/questbrowse',
+        path: '/browse',
+        image: '/qlayer.jpeg'
+      });
+    } else if (currentPage === 'builder') {
+      window.history.pushState(null, '', '/builder');
+      applySeo({
+        title: 'QuestLayer Builder - Create Your Widget',
+        description: 'Build and customize your QuestLayer widget, missions, and themes in minutes.',
+        path: '/builder',
+        image: '/qlayer.jpeg'
+      });
+    } else if (currentPage === 'dashboard') {
+      window.history.pushState(null, '', '/dashboard');
+      applySeo({
+        title: 'QuestLayer Dashboard - Manage Your Projects',
+        description: 'Manage projects, track performance, and publish quests from your QuestLayer dashboard.',
+        path: '/dashboard',
         image: '/qlayer.jpeg'
       });
     } else if (currentPage === 'explore') {

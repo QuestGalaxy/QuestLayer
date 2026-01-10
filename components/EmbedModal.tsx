@@ -27,7 +27,7 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, state }) => {
 
   const embedOrigin = import.meta.env.DEV && typeof window !== 'undefined'
     ? window.location.origin
-    : 'https://questlayer.questgalaxy.com';
+    : 'https://questlayer.app';
   const scriptCode = `<script src="${embedOrigin}/widget-embed.js" data-config='${JSON.stringify(config)}'></script>`;
 
   const reactCode = `import { initQuestLayer } from 'questlayer';

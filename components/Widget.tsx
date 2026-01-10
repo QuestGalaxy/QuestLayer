@@ -656,7 +656,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     setIsOpen(false);
   };
 
-  const questLayerBase = 'https://questlayer.questgalaxy.com';
+  const questLayerBase = 'https://questlayer.app';
 
   const handleQuestLayerNav = (path: string) => {
     window.open(`${questLayerBase}${path}`, '_blank', 'noopener,noreferrer');
@@ -897,7 +897,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 <div className="flex justify-between items-start mb-2 md:mb-4">
                   <div className="flex items-center gap-2 md:gap-3">
                     <button
-                      onClick={() => handleQuestLayerNav('/questbrowse')}
+                    onClick={() => handleQuestLayerNav('/browse')}
                       title="Open profile"
                       className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-transform hover:scale-105`}
                       style={{ backgroundColor: isLightTheme ? '#000' : state.accentColor }}
@@ -951,7 +951,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button
-                    onClick={() => handleQuestLayerNav('/questbrowse')}
+                    onClick={() => handleQuestLayerNav('/browse')}
                     className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                       isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
                     }`}
@@ -1271,7 +1271,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         >
           <Zap className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current w-[8px] h-[8px] md:w-[10px] md:h-[10px]`} style={!isLightTheme ? { color: state.accentColor } : {}} />
           <a
-            href="https://questlayer.questgalaxy.com/"
+            href="https://questlayer.app/"
             target="_blank"
             rel="noreferrer"
             className={`text-[9px] md:text-[9px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'} hover:opacity-80 transition-opacity`}
