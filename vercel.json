@@ -1,1 +1,13 @@
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+{
+  "rewrites": [
+    { "source": "/browse", "destination": "/browse.html" },
+    { "source": "/browse/", "destination": "/browse.html" },
+    { "source": "/leaderboard", "destination": "/leaderboard.html" },
+    { "source": "/leaderboard/", "destination": "/leaderboard.html" },
+    { "source": "/builder", "destination": "/builder.html" },
+    { "source": "/builder/", "destination": "/builder.html" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/dashboard/", "destination": "/dashboard.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

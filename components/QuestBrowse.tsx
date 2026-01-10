@@ -316,7 +316,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     };
   };
 
-  const handleBrowseUrl = (url: string) => {
+  const handleBrowseUrl = (url: string, updateUrl = true) => {
     if (!url) return;
     const normalized = normalizeDomain(url);
     if (normalized) {
@@ -342,6 +342,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     setWidgetState(buildFallbackState(validUrl, normalized));
     setIsBrowsing(true);
     setIsWidgetOpen(true);
+    if (updateUrl && typeof window !== 'undefined') {
+      const query = normalized || validUrl.replace(/^https?:\/\//, '');
+      window.history.pushState(null, '', `/browse?url=${encodeURIComponent(query)}`);
+    }
     iframeLoadTimeoutRef.current = setTimeout(() => {
       setIframeBlocked(true);
       setIsIframeLoading(false);
@@ -349,7 +353,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     }, 6000);
   };
 
-  const handleBrowseProjectById = async (projectId: string, domain?: string) => {
+  const handleBrowseProjectById = async (projectId: string, domain?: string, updateUrl = true) => {
     setIsIframeLoading(true);
     if (iframeLoadTimeoutRef.current) {
       clearTimeout(iframeLoadTimeoutRef.current);
@@ -383,6 +387,11 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       if (resolvedDomain) {
         const url = resolvedDomain.startsWith('http') ? resolvedDomain : `https://${resolvedDomain}`;
         setCurrentUrl(url);
+        if (updateUrl && typeof window !== 'undefined') {
+          const normalized = normalizeDomain(url);
+          const query = normalized || url.replace(/^https?:\/\//, '');
+          window.history.pushState(null, '', `/browse?url=${encodeURIComponent(query)}`);
+        }
       }
       setIsBrowsing(true);
       setIsWidgetOpen(true);
@@ -393,7 +402,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       }, 6000);
     } catch (error) {
       if (domain) {
-        handleBrowseUrl(domain);
+        handleBrowseUrl(domain, updateUrl);
       }
     }
   };
@@ -473,31 +482,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
     // ... (rest of function)
     try {
-        const { tasks } = await fetchProjectDetails(project.id);
-        const newState: AppState = {
-            projectId: project.id,
-            projectName: project.name,
-            projectDomain: project.domain,
-            accentColor: project.accent_color,
-            position: project.position as Position,
-            activeTheme: project.theme as ThemeType,
-            tasks: tasks.map((t: any) => ({
-                id: t.id,
-                title: t.title,
-                desc: t.description,
-                link: t.link,
-                icon: t.icon_url,
-                xp: t.xp_reward
-            })),
-            userXP: 0,
-            currentStreak: 1,
-            dailyClaimed: false
-        };
-        
-        setWidgetState(newState);
-        setCurrentUrl(project.domain.startsWith('http') ? project.domain : `https://${project.domain}`);
-        setIsBrowsing(true);
-        setIsWidgetOpen(true);
+        void handleBrowseProjectById(project.id, project.domain, true);
     } catch (e) {
         console.error("Failed to load project details", e);
         // Fallback to basic info if tasks fail
@@ -546,12 +531,27 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     setIsBrowsing(true);
     setIsIframeLoading(true);
     if (initialBrowseRequest.projectId) {
-      void handleBrowseProjectById(initialBrowseRequest.projectId, initialBrowseRequest.url);
+      void handleBrowseProjectById(initialBrowseRequest.projectId, initialBrowseRequest.url, false);
     } else if (initialBrowseRequest.url) {
-      handleBrowseUrl(initialBrowseRequest.url);
+      handleBrowseUrl(initialBrowseRequest.url, false);
     }
     onBrowseHandled?.();
   }, [initialBrowseRequest]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || projects.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlParam = params.get('url');
+    if (!urlParam) return;
+    const normalized = normalizeDomain(urlParam);
+    const matchedIndex = projects.findIndex(project => normalizeDomain(project.domain || '') === normalized);
+    if (matchedIndex !== -1) {
+      setCurrentProjectIndex(matchedIndex);
+      void handleBrowseProjectById(projects[matchedIndex].id, projects[matchedIndex].domain, false);
+    } else {
+      handleBrowseUrl(urlParam, false);
+    }
+  }, [projects]);
 
   useEffect(() => {
     return () => {
