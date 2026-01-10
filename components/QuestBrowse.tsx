@@ -1017,9 +1017,52 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                 ))}
               </div>
 
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-12 pb-10">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button
+                        key={i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                          currentPage === i + 1
+                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              )}
+
               {/* Sliding Featured Cards */}
               {SLIDING_LINKS.some((link) => featuredImages[link.domain]) && (
                 <div className="mt-12">
+                  <div className="mb-4 text-center text-sm font-black uppercase tracking-[0.4em] text-slate-400">
+                    Earn With Web3 Quests
+                  </div>
+                  <div className="mb-6 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                    Discover leading projects, complete missions, and get rewarded instantly.
+                  </div>
                   <div className="relative overflow-hidden">
                     <div className="flex gap-4 w-max animate-[ql-marquee_40s_linear_infinite]">
                       {SLIDING_LINKS
@@ -1055,43 +1098,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         ))}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-12 pb-10">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  
-                  <div className="flex items-center gap-2">
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i + 1}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
-                          currentPage === i + 1
-                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
-                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                        }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
                 </div>
               )}
             </>
