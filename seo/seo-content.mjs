@@ -12,7 +12,7 @@ export const corePages = [
     title: 'Quest widget for guided missions | QuestLayer',
     description: 'Launch a quest widget that turns any site into a guided mission hub with XP, streaks, and rewards.',
     definition:
-      'QuestLayer delivers a quest widget you can embed to guide users through missions, collect proof, and reward progress without rebuilding your site.',
+      'QuestLayer delivers a quest widget you can embed to guide users through missions, collect proof, and reward progress without rebuilding your site. Use it to turn onboarding, launches, or seasonal campaigns into visible quests that live directly inside your product.',
     steps: [
       'Connect your project, theme the widget, and select placement.',
       'Add quests, tasks, and XP rewards with clear completion rules.',
@@ -21,7 +21,9 @@ export const corePages = [
     benefits: [
       'Launch quest flows without engineering a custom UI.',
       'Turn onboarding into a visible, rewarding journey.',
-      'Measure which tasks drive retention and wallet connects.'
+      'Show progress, XP, and completion state in a single widget.',
+      'Measure which tasks drive retention and wallet connects.',
+      'Iterate quests in minutes from the dashboard.'
     ],
     useCases: ['web3', 'saas', 'community'],
     templates: ['daily-login', 'twitter-share'],
@@ -42,6 +44,11 @@ export const corePages = [
         question: 'How is progress tracked?',
         answer:
           'QuestLayer records task completion and XP so users can continue across sessions.'
+      },
+      {
+        question: 'How fast can I launch?',
+        answer:
+          'Most teams launch in under an hour by picking a template, adjusting tasks, and embedding the script.'
       }
     ]
   },
@@ -51,7 +58,7 @@ export const corePages = [
     title: 'Task widget to activate users | QuestLayer',
     description: 'Deploy a task widget that highlights the exact actions you want users to finish, with XP and streak tracking.',
     definition:
-      'QuestLayer makes a task widget that sits on your site and guides users through specific actions that increase adoption and retention.',
+      'QuestLayer makes a task widget that sits on your site and guides users through specific actions that increase adoption and retention. Use it as a dynamic checklist that updates instantly as users complete steps.',
     steps: [
       'Pick the tasks that move activation forward.',
       'Assign XP values and completion links for each task.',
@@ -60,7 +67,9 @@ export const corePages = [
     benefits: [
       'Turn scattered onboarding into a clear checklist.',
       'Increase completion rates with visible progress.',
-      'Tie each task to measurable outcomes.'
+      'Tie each task to measurable outcomes.',
+      'Swap tasks anytime without code deploys.',
+      'Keep users focused on the next best action.'
     ],
     useCases: ['saas', 'education', 'ecommerce'],
     templates: ['twitter-share', 'referral-campaign'],
@@ -78,6 +87,10 @@ export const corePages = [
       {
         question: 'Do users need an account to complete tasks?',
         answer: 'No. You can start with anonymous tasks and add wallet login when needed.'
+      },
+      {
+        question: 'Can I change task order or rewards later?',
+        answer: 'Yes. Edit tasks in the dashboard and updates appear immediately in the widget.'
       }
     ]
   },
@@ -87,7 +100,7 @@ export const corePages = [
     title: 'Embed quests on any website | QuestLayer',
     description: 'Embed quests on any website with a single script and offer XP, streaks, and rewards instantly.',
     definition:
-      'QuestLayer lets you embed quests as a lightweight widget so users can discover, start, and finish missions without leaving your site.',
+      'QuestLayer lets you embed quests as a lightweight widget so users can discover, start, and finish missions without leaving your site. You control the tasks, rewards, and pacing from a single dashboard.',
     steps: [
       'Choose a quest template or build your own flow.',
       'Customize tasks, rewards, and visuals.',
@@ -96,7 +109,9 @@ export const corePages = [
     benefits: [
       'Turn static pages into interactive mission hubs.',
       'Increase time on site with clear goals.',
-      'Launch quests without engineering new pages.'
+      'Launch quests without engineering new pages.',
+      'Own the full quest flow without sending users off-site.',
+      'Ship new quests quickly for launches or campaigns.'
     ],
     useCases: ['web3', 'community', 'games'],
     templates: ['discord-join', 'daily-login'],
@@ -114,6 +129,10 @@ export const corePages = [
       {
         question: 'Can I update quests without touching code?',
         answer: 'Updates are managed in the dashboard and reflected instantly.'
+      },
+      {
+        question: 'Can I preview changes before going live?',
+        answer: 'Yes. Use the builder preview to validate placement, tasks, and rewards.'
       }
     ]
   },
@@ -123,7 +142,7 @@ export const corePages = [
     title: 'Embed tasks with XP rewards | QuestLayer',
     description: 'Embed tasks directly in your product to drive daily actions, completions, and referrals.',
     definition:
-      'QuestLayer gives you an embeddable task flow so users can complete actions, earn XP, and build momentum inside your product.',
+      'QuestLayer gives you an embeddable task flow so users can complete actions, earn XP, and build momentum inside your product. It is the fastest way to guide activation without custom UI work.',
     steps: [
       'Create tasks tied to activation or retention.',
       'Set XP rewards and completion triggers.',
@@ -132,7 +151,9 @@ export const corePages = [
     benefits: [
       'Drive completion of your most important actions.',
       'Make progress visible without building custom UI.',
-      'Keep users coming back with streaks and rewards.'
+      'Keep users coming back with streaks and rewards.',
+      'Turn any page into an action checklist.',
+      'Track which tasks move retention.'
     ],
     useCases: ['saas', 'games', 'community'],
     templates: ['daily-login', 'discord-join'],
@@ -150,6 +171,10 @@ export const corePages = [
       {
         question: 'Will tasks track progress across devices?',
         answer: 'Progress can sync per user when wallet login is enabled.'
+      },
+      {
+        question: 'Can I include sponsored tasks?',
+        answer: 'Yes. You can mark tasks as sponsored and track their completion separately.'
       }
     ]
   },
@@ -159,7 +184,7 @@ export const corePages = [
     title: 'Daily task widget for habit loops | QuestLayer',
     description: 'Launch a daily task widget that keeps users returning with streaks, XP, and evolving rewards.',
     definition:
-      'QuestLayer powers a daily task widget that highlights the next action users should take every day, turning engagement into a habit.',
+      'QuestLayer powers a daily task widget that highlights the next action users should take every day, turning engagement into a habit. Pair daily tasks with streak bonuses to keep momentum high.',
     steps: [
       'Pick the daily action you want repeated.',
       'Set streak rewards and XP pacing.',
@@ -168,7 +193,9 @@ export const corePages = [
     benefits: [
       'Create predictable daily traffic and usage.',
       'Reward consistency with visible streaks.',
-      'Highlight the single most important action each day.'
+      'Highlight the single most important action each day.',
+      'Increase retention without adding new screens.',
+      'Tune reward cadence to fit your community.'
     ],
     useCases: ['education', 'saas', 'community'],
     templates: ['daily-login', 'twitter-share'],
@@ -186,6 +213,10 @@ export const corePages = [
       {
         question: 'Do users see past streak history?',
         answer: 'The widget shows current streak progress and XP earned.'
+      },
+      {
+        question: 'How do daily tasks affect rewards?',
+        answer: 'Daily completions can add XP bonuses or unlock tiered perks.'
       }
     ]
   },
@@ -195,7 +226,7 @@ export const corePages = [
     title: 'Streak widget that boosts retention | QuestLayer',
     description: 'Use a streak widget to keep users coming back with visible progress, daily rewards, and tiered XP.',
     definition:
-      'QuestLayer offers a streak widget that displays consecutive activity and rewards users for consistency across sessions.',
+      'QuestLayer offers a streak widget that displays consecutive activity and rewards users for consistency across sessions. Streaks make progress visible and encourage daily returns.',
     steps: [
       'Choose the streak behavior and reward cadence.',
       'Tie streaks to tasks or daily claims.',
@@ -204,7 +235,9 @@ export const corePages = [
     benefits: [
       'Drive return visits with clear streak milestones.',
       'Reward users before they churn.',
-      'Create shareable progress moments.'
+      'Create shareable progress moments.',
+      'Pair streaks with tasks for a simple habit loop.',
+      'Control streak resets or loops for flexibility.'
     ],
     useCases: ['games', 'web3', 'education'],
     templates: ['daily-login', 'referral-campaign'],
@@ -222,6 +255,10 @@ export const corePages = [
       {
         question: 'Do streaks work without wallet login?',
         answer: 'Yes, but wallet login enables cross-device tracking.'
+      },
+      {
+        question: 'Can streaks be tied to different tasks?',
+        answer: 'Yes. You can connect streak logic to any task or daily claim.'
       }
     ]
   },
@@ -231,7 +268,7 @@ export const corePages = [
     title: 'Rewards widget for engaged users | QuestLayer',
     description: 'Offer a rewards widget that turns completed tasks into XP, perks, and on-chain incentives.',
     definition:
-      'QuestLayer provides a rewards widget that highlights what users earn for completing quests, streaks, and referrals.',
+      'QuestLayer provides a rewards widget that highlights what users earn for completing quests, streaks, and referrals. It makes incentives clear at the moment users take action.',
     steps: [
       'Define reward tiers and XP thresholds.',
       'Match rewards to tasks and streaks.',
@@ -240,7 +277,9 @@ export const corePages = [
     benefits: [
       'Make incentives visible at the moment of action.',
       'Connect rewards directly to your product goals.',
-      'Scale rewards without building custom UI.'
+      'Scale rewards without building custom UI.',
+      'Mix XP, perks, discounts, or on-chain rewards.',
+      'Keep reward logic consistent across quests.'
     ],
     useCases: ['web3', 'ecommerce', 'community'],
     templates: ['referral-campaign', 'nft-holder-only'],
@@ -258,6 +297,10 @@ export const corePages = [
       {
         question: 'How do users claim rewards?',
         answer: 'Rewards can be claimed inside the widget or routed to your preferred flow.'
+      },
+      {
+        question: 'Can I change rewards per campaign?',
+        answer: 'Yes. Rewards are configurable per quest or template.'
       }
     ]
   },
@@ -267,7 +310,7 @@ export const corePages = [
     title: 'Gamification widget for retention | QuestLayer',
     description: 'Add a gamification widget that combines quests, XP, levels, and rewards in one embed.',
     definition:
-      'QuestLayer unifies quests, XP, and rewards into a gamification widget that turns product actions into an engaging game loop.',
+      'QuestLayer unifies quests, XP, and rewards into a gamification widget that turns product actions into an engaging game loop. It keeps progress, streaks, and levels in one place.',
     steps: [
       'Design quests that map to your product journey.',
       'Assign XP and tiered rewards.',
@@ -276,7 +319,9 @@ export const corePages = [
     benefits: [
       'Increase activation with visible progression.',
       'Make product engagement feel like a game.',
-      'Launch gamified experiences without heavy builds.'
+      'Launch gamified experiences without heavy builds.',
+      'Align tasks, XP, and rewards into one loop.',
+      'Scale gamification without new pages.'
     ],
     useCases: ['saas', 'games', 'education'],
     templates: ['daily-login', 'discord-join'],
@@ -294,6 +339,10 @@ export const corePages = [
       {
         question: 'Is the widget mobile friendly?',
         answer: 'Yes. The embed adapts to mobile and desktop layouts.'
+      },
+      {
+        question: 'Can I run seasonal quests?',
+        answer: 'Yes. Swap campaigns and templates without rebuilding your product.'
       }
     ]
   },
@@ -303,7 +352,7 @@ export const corePages = [
     title: 'Web3 quest widget for on-chain growth | QuestLayer',
     description: 'Deploy a Web3 quest widget that connects wallets, rewards on-chain actions, and grows community participation.',
     definition:
-      'QuestLayer is a Web3 quest widget built for wallet login, NFT gating, and on-chain reward experiences embedded on any site.',
+      'QuestLayer is a Web3 quest widget built for wallet login, NFT gating, and on-chain reward experiences embedded on any site. It is designed for Web3 growth loops without custom dapp work.',
     steps: [
       'Enable wallet login and optional NFT gating.',
       'Build quests tied to on-chain actions.',
@@ -312,7 +361,9 @@ export const corePages = [
     benefits: [
       'Increase wallet connections with targeted quests.',
       'Reward on-chain activity without custom dapps.',
-      'Unify quest progress across protocols.'
+      'Unify quest progress across protocols.',
+      'Gate access to holders and verified communities.',
+      'Track XP across campaigns and wallets.'
     ],
     useCases: ['web3', 'community', 'games'],
     templates: ['nft-holder-only', 'discord-join'],
@@ -330,6 +381,10 @@ export const corePages = [
       {
         question: 'How is on-chain activity validated?',
         answer: 'QuestLayer can link tasks to wallet actions or off-chain proofs.'
+      },
+      {
+        question: 'Which chains are supported?',
+        answer: 'Wallet login supports major EVM chains and can expand with AppKit settings.'
       }
     ]
   }
