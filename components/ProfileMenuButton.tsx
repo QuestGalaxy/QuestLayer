@@ -48,7 +48,7 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
     <div className="relative" ref={profileRef}>
       <div
         onClick={() => setIsProfileOpen(!isProfileOpen)}
-        className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 p-1.5 pr-5 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
+        className="flex items-center gap-3 h-12 px-2 pr-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
       >
         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
           <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
@@ -56,9 +56,11 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
           </div>
         </div>
         <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-black text-white uppercase tracking-wider">Lvl {level}</span>
-            <span className="w-1 h-1 rounded-full bg-slate-600" />
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <span className="text-xs font-black text-white uppercase tracking-wider opacity-0 max-w-0 overflow-hidden group-hover:opacity-100 group-hover:max-w-[80px] transition-all">
+              Lvl {level}
+            </span>
+            <span className="w-1 h-1 rounded-full bg-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
               <Star size={10} fill="currentColor" /> {xp} XP
             </span>

@@ -565,29 +565,28 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     return (
         <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col">
             {/* Browser Header */}
-            <div className="sticky top-0 z-50 h-16 bg-gradient-to-r from-slate-950/95 via-slate-900/90 to-slate-950/95 border-b border-white/10 flex items-center px-4 gap-4 shrink-0 backdrop-blur-xl shadow-[0_12px_30px_rgba(0,0,0,0.4)] relative">
+            <div className="sticky top-0 z-50 h-16 bg-gradient-to-r from-slate-950/95 via-slate-900/90 to-slate-950/95 border-b border-white/10 flex items-center px-4 shrink-0 backdrop-blur-xl shadow-[0_12px_30px_rgba(0,0,0,0.4)] relative">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent" />
                 <div className="pointer-events-none absolute inset-x-8 bottom-0 h-px bg-gradient-to-r from-transparent via-purple-400/40 to-transparent" />
-                <button 
-                    onClick={() => setIsBrowsing(false)}
-                    className="p-2.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-colors border border-white/10 bg-slate-900/60 shadow-lg"
-                >
-                    <X size={20} />
-                </button>
-                <div className="flex-1 max-w-3xl mx-auto relative flex items-center gap-4">
-                    <div className="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-slate-400">
-                        <span className="h-2 w-2 rounded-full bg-emerald-400/80 shadow-[0_0_12px_rgba(52,211,153,0.6)]" />
-                        Quest Browse
-                    </div>
+                <div className="flex-1 relative flex items-center gap-4">
                     <div className="flex-1 relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                        <div className="absolute left-1.5 top-1/2 -translate-y-1/2 flex items-center">
+                            <button 
+                                onClick={() => setIsBrowsing(false)}
+                                className="p-2 rounded-full text-slate-400 hover:text-white transition-colors"
+                            >
+                                <X size={14} />
+                            </button>
+                            <div className="h-5 w-px bg-white/10 mx-1.5" />
+                        </div>
+                        <div className="absolute left-11 top-1/2 -translate-y-1/2 text-slate-500 hidden sm:block">
                             <Globe size={14} />
                         </div>
                         <input 
                             value={currentUrl}
                             onChange={(e) => setCurrentUrl(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(currentUrl)}
-                            className="w-full bg-slate-950/70 border border-white/10 rounded-full py-2 pl-9 pr-28 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-400/60 focus:shadow-[0_0_0_1px_rgba(99,102,241,0.35)] font-mono"
+                            className="w-full bg-slate-950/70 border border-white/10 rounded-full py-2 pl-16 sm:pl-20 pr-28 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-400/60 focus:shadow-[0_0_0_1px_rgba(99,102,241,0.35)] font-mono"
                         />
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 pr-1">
                             <div className="w-px h-5 bg-white/10 mr-1" />
@@ -610,7 +609,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         </div>
                     </div>
                 </div>
-                <div className="w-10" /> {/* Spacer */}
             </div>
 
             {/* Browser Content */}
@@ -775,6 +773,31 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             0%, 100% { transform: translateX(0); }
             50% { transform: translateX(4px); }
           }
+          @keyframes ql-flicker {
+            0%, 100% { opacity: 1; }
+            10% { opacity: 0.85; }
+            12% { opacity: 0.6; }
+            16% { opacity: 1; }
+            24% { opacity: 0.9; }
+            26% { opacity: 1; }
+            44% { opacity: 0.8; }
+            46% { opacity: 1; }
+            70% { opacity: 0.9; }
+          }
+          @keyframes ql-scanline {
+            0% { transform: translateY(-120%); opacity: 0; }
+            10% { opacity: 0.4; }
+            50% { opacity: 0.35; }
+            100% { transform: translateY(140%); opacity: 0; }
+          }
+          @keyframes ql-pixel-jitter {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-0.5px, 0.5px); }
+            40% { transform: translate(0.5px, -0.5px); }
+            60% { transform: translate(-0.5px, -0.5px); }
+            80% { transform: translate(0.5px, 0.5px); }
+            100% { transform: translate(0, 0); }
+          }
         `}
       </style>
       
@@ -782,9 +805,13 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       <div className="flex-1 relative">
         <button 
             onClick={onBack}
-            className="fixed top-6 left-6 z-50 p-2 text-slate-400 hover:text-white transition-colors bg-slate-950/50 backdrop-blur-md rounded-xl border border-white/10 shadow-lg"
+            className="fixed top-6 left-6 z-50 px-3 py-2 text-slate-200 hover:text-white transition-colors bg-slate-950/70 backdrop-blur-md rounded-xl border border-white/10 shadow-lg relative overflow-hidden group"
         >
-            <ArrowRight size={20} className="rotate-180" />
+            <span className="absolute inset-0 bg-[linear-gradient(0deg,transparent,rgba(99,102,241,0.35),transparent)] animate-[ql-scanline_3.2s_linear_infinite] pointer-events-none" />
+            <span className="absolute inset-0 opacity-60 bg-[linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:4px_100%] pointer-events-none group-hover:opacity-90 transition-opacity" />
+            <span className="pixel-text inline-block text-[12px] uppercase tracking-[0.4em] animate-[ql-flicker_3.4s_ease-in-out_infinite] text-indigo-200 group-hover:text-indigo-100 group-hover:scale-110 transition-transform duration-200 group-hover:animate-[ql-pixel-jitter_0.4s_steps(2,end)_infinite] will-change-transform">
+              QuestLayer
+            </span>
         </button>
 
         {/* Wallet Connect / Profile Button */}
