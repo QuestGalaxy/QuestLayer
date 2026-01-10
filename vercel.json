@@ -2,6 +2,10 @@
   "rewrites": [
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/terms", "destination": "/terms/index.html" },
+    { "source": "/terms/", "destination": "/terms/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" },
+    { "source": "/privacy/", "destination": "/privacy/index.html" },
     { "source": "/quest-widget", "destination": "/quest-widget/index.html" },
     { "source": "/quest-widget/", "destination": "/quest-widget/index.html" },
     { "source": "/task-widget", "destination": "/task-widget/index.html" },

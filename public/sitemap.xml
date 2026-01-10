@@ -6,6 +6,16 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://questlayer.app/terms</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://questlayer.app/privacy</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://questlayer.app/quest-widget</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

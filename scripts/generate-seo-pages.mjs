@@ -561,6 +561,8 @@ const generate = async () => {
 
   const urls = [
     '/',
+    '/terms',
+    '/privacy',
     ...corePages.map((page) => `/${page.slug}`),
     '/features',
     ...featurePages.map((page) => `/features/${page.slug}`),
