@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID': JSON.stringify(env.VITE_WALLET_CONNECT_PROJECT_ID)
     },
     plugins: [react()],
+    base: '/',
     build: {
       lib: {
         entry: path.resolve(__dirname, 'widget-runtime.tsx'),

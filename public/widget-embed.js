@@ -50,6 +50,13 @@
     return path;
   }
 
+  function logRuntimeLoadFailure(err, context) {
+    console.error("[QuestLayer] Failed to load widget runtime (" + context + ").", err);
+    console.error(
+      "[QuestLayer] Ensure dist/widget-runtime.js and dist/assets/* are deployed to the same origin as widget-embed.js."
+    );
+  }
+
   function runInit(mod) {
     var init = mod.init || mod.initQuestLayer || (window.QuestLayer && window.QuestLayer.init);
     if (init) {
@@ -112,12 +119,13 @@
         })
         .then(runInit)
         .catch(function (err) {
+          logRuntimeLoadFailure(err, "vite runtime");
           var fallbackUrl = resolveFromScript("widget-runtime.tsx") + "?" + cacheBuster;
           import(fallbackUrl)
             .then(runInit)
             .catch(function (fallbackErr) {
-              console.error("[QuestLayer] Failed to load widget runtime", err);
-              console.error("[QuestLayer] Failed to load widget runtime fallback", fallbackErr);
+              logRuntimeLoadFailure(err, "vite runtime");
+              logRuntimeLoadFailure(fallbackErr, "vite runtime fallback");
             });
         });
       return;
@@ -126,12 +134,13 @@
     import(runtimeUrl)
       .then(runInit)
       .catch(function (err) {
+        logRuntimeLoadFailure(err, "runtime");
         var distUrl = resolveFromScript("dist/widget-runtime.js") + "?" + cacheBuster;
         import(distUrl)
           .then(runInit)
           .catch(function (distErr) {
-            console.error("[QuestLayer] Failed to load widget runtime", err);
-            console.error("[QuestLayer] Failed to load dist widget runtime", distErr);
+            logRuntimeLoadFailure(err, "runtime");
+            logRuntimeLoadFailure(distErr, "dist runtime");
           });
       });
   }
