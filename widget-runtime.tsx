@@ -6,7 +6,11 @@ import { AppKitProvider } from './appkit.tsx';
 import type { AppState } from './types.ts';
 import widgetStyles from './widget.css?inline';
 
-export type WidgetConfig = Partial<Pick<AppState, 'projectName' | 'accentColor' | 'position' | 'activeTheme' | 'tasks'>>;
+export type WidgetConfig = Partial<
+  Pick<AppState, 'projectName' | 'accentColor' | 'position' | 'activeTheme' | 'tasks'>
+> & {
+  mountId?: string;
+};
 
 declare global {
   interface Window {
@@ -19,7 +23,7 @@ declare global {
 const DEFAULT_STATE: AppState = {
   projectName: 'QuestLayer',
   accentColor: '#6366f1',
-  position: 'bottom-right',
+  position: 'free-form',
   activeTheme: 'sleek',
   tasks: INITIAL_TASKS,
   userXP: 0,
@@ -27,14 +31,19 @@ const DEFAULT_STATE: AppState = {
   dailyClaimed: false
 };
 
-const normalizeConfig = (config?: WidgetConfig): AppState => ({
-  ...DEFAULT_STATE,
-  ...config,
-  tasks: config?.tasks?.length ? config.tasks : DEFAULT_STATE.tasks
-});
+const normalizeConfig = (config?: WidgetConfig): AppState => {
+  const { mountId, ...safeConfig } = config ?? {};
+  return {
+    ...DEFAULT_STATE,
+    ...safeConfig,
+    tasks: config?.tasks?.length ? config.tasks : DEFAULT_STATE.tasks
+  };
+};
 
 const HOST_ID = 'questlayer-widget-host';
 const ROOT_ID = 'questlayer-widget-root';
+const PORTAL_HOST_ID = 'questlayer-widget-portal';
+const PORTAL_ROOT_ID = 'questlayer-widget-portal-root';
 const STYLE_ATTR = 'data-questlayer-styles';
 const FONT_ATTR = 'data-questlayer-fonts';
 const GLOBAL_FONT_ATTR = 'data-questlayer-fonts-global';
@@ -44,32 +53,7 @@ const FONT_URL =
 let widgetRoot: Root | null = null;
 let renderVersion = 0;
 
-const ensureMount = (): HTMLDivElement => {
-  const legacyRoot = document.getElementById(ROOT_ID);
-  if (legacyRoot && legacyRoot.parentElement && legacyRoot.parentElement.id !== HOST_ID) {
-    legacyRoot.remove();
-  }
-
-  let host = document.getElementById(HOST_ID) as HTMLDivElement | null;
-  if (!host) {
-    host = document.createElement('div');
-    host.id = HOST_ID;
-    host.style.cssText = [
-      'position: fixed',
-      'top: 0',
-      'left: 0',
-      'width: 100%',
-      'height: 100%',
-      'z-index: 2147483647',
-      'pointer-events: none',
-      'font-size: 16px',
-      'line-height: normal'
-    ].join('; ');
-    document.body.appendChild(host);
-  }
-
-  const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
-
+const ensureShadowAssets = (shadow: ShadowRoot) => {
   if (!shadow.querySelector(`style[${STYLE_ATTR}]`)) {
     const style = document.createElement('style');
     style.setAttribute(STYLE_ATTR, 'true');
@@ -81,6 +65,9 @@ const ensureMount = (): HTMLDivElement => {
         font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+      }
+      :host([data-questlayer-inline='true']) {
+        display: inline-block;
       }
       * {
         box-sizing: border-box;
@@ -112,6 +99,58 @@ const ensureMount = (): HTMLDivElement => {
     style.textContent = 'w3m-modal { z-index: 2147483647 !important; }';
     document.head.appendChild(style);
   }
+};
+
+const ensureMount = (options: { mountId?: string; inline?: boolean } = {}): HTMLDivElement => {
+  const { mountId, inline } = options;
+  const targetHostId = inline && mountId ? mountId : HOST_ID;
+  const legacyRoot = document.getElementById(ROOT_ID);
+  if (legacyRoot && legacyRoot.parentElement && legacyRoot.parentElement.id !== targetHostId) {
+    legacyRoot.remove();
+  }
+
+  let host = document.getElementById(targetHostId) as HTMLDivElement | null;
+  if (!host) {
+    host = document.createElement('div');
+    host.id = targetHostId;
+    if (document.body) {
+      document.body.appendChild(host);
+    }
+  }
+  if (inline) {
+    host.setAttribute('data-questlayer-inline', 'true');
+    if (!mountId) {
+      console.warn('[QuestLayer] Free-form embed missing mountId; falling back to inline host.');
+    }
+    if (mountId) {
+      if (!host.style.pointerEvents) host.style.pointerEvents = 'none';
+      if (!host.style.fontSize) host.style.fontSize = '16px';
+      if (!host.style.lineHeight) host.style.lineHeight = 'normal';
+    } else {
+      host.style.cssText = [
+        'position: relative',
+        'pointer-events: none',
+        'font-size: 16px',
+        'line-height: normal'
+      ].join('; ');
+    }
+  } else {
+    host.removeAttribute('data-questlayer-inline');
+    host.style.cssText = [
+      'position: fixed',
+      'top: 0',
+      'left: 0',
+      'width: 100%',
+      'height: 100%',
+      'z-index: 2147483647',
+      'pointer-events: none',
+      'font-size: 16px',
+      'line-height: normal'
+    ].join('; ');
+  }
+
+  const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
+  ensureShadowAssets(shadow);
 
   let container = shadow.querySelector(`#${ROOT_ID}`) as HTMLDivElement | null;
   if (!container) {
@@ -124,10 +163,49 @@ const ensureMount = (): HTMLDivElement => {
   return container;
 };
 
+const ensurePortalMount = (): HTMLDivElement => {
+  let host = document.getElementById(PORTAL_HOST_ID) as HTMLDivElement | null;
+  if (!host) {
+    host = document.createElement('div');
+    host.id = PORTAL_HOST_ID;
+    if (document.body) {
+      document.body.appendChild(host);
+    }
+  }
+  host.style.cssText = [
+    'position: fixed',
+    'top: 0',
+    'left: 0',
+    'width: 100%',
+    'height: 100%',
+    'z-index: 2147483647',
+    'pointer-events: none',
+    'font-size: 16px',
+    'line-height: normal'
+  ].join('; ');
+
+  const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
+  ensureShadowAssets(shadow);
+
+  let container = shadow.querySelector(`#${PORTAL_ROOT_ID}`) as HTMLDivElement | null;
+  if (!container) {
+    container = document.createElement('div');
+    container.id = PORTAL_ROOT_ID;
+    container.style.pointerEvents = 'auto';
+    shadow.appendChild(container);
+  }
+
+  return container;
+};
+
 import { fetchProjectDetails, supabase } from './lib/supabase.ts';
 import type { Task, Position, ThemeType } from './types.ts';
 
-const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ initialState, version }) => {
+const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalContainer?: HTMLDivElement | null }> = ({
+  initialState,
+  version,
+  portalContainer
+}) => {
   const [state, setState] = useState<AppState>(initialState);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -155,6 +233,14 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
          if (targetProjectId) {
             const { project, tasks } = await fetchProjectDetails(targetProjectId);
             if (project) {
+              const mappedTasks = tasks.map((t: any) => ({
+                id: t.id, 
+                title: t.title,
+                desc: t.description,
+                link: t.link,
+                icon: t.icon_url,
+                xp: t.xp_reward
+              }));
               setState(prev => ({
                 ...prev,
                 projectId: project.id, // Ensure ID is set
@@ -162,14 +248,7 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,
-                tasks: tasks.map((t: any) => ({
-                  id: t.id, 
-                  title: t.title,
-                  desc: t.description,
-                  link: t.link,
-                  icon: t.icon_url,
-                  xp: t.xp_reward
-                }))
+                tasks: mappedTasks.length ? mappedTasks : prev.tasks
               }));
             }
          }
@@ -189,6 +268,7 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
         state={state}
         setState={setState}
         isPreview={false}
+        portalContainer={portalContainer}
       />
     </AppKitProvider>
   );
@@ -197,12 +277,14 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number }> = ({ ini
 export const initQuestLayer = (config?: WidgetConfig) => {
   const boot = () => {
     const state = normalizeConfig(config);
-    const container = ensureMount();
+    const inlineMode = state.position === 'free-form' || Boolean(config?.mountId);
+    const container = ensureMount({ mountId: config?.mountId, inline: inlineMode });
+    const portalContainer = inlineMode ? ensurePortalMount() : null;
     if (!widgetRoot) {
       widgetRoot = createRoot(container);
     }
     renderVersion += 1;
-    widgetRoot.render(<RuntimeApp initialState={state} version={renderVersion} />);
+    widgetRoot.render(<RuntimeApp initialState={state} version={renderVersion} portalContainer={portalContainer} />);
   };
 
   if (document.readyState === 'loading') {

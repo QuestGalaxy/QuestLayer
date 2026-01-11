@@ -469,6 +469,7 @@ const Editor: React.FC<EditorProps> = ({
                   <option value="bottom-left">Bottom Left</option>
                   <option value="top-right">Top Right</option>
                   <option value="top-left">Top Left</option>
+                  <option value="free-form">Custom (embed anywhere)</option>
                 </select>
               </div>
             </div>

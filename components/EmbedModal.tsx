@@ -19,25 +19,32 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, state }) => {
   // Generate unique ID based on project ID or timestamp
   const projectId = state.projectId || `ql-${Date.now()}`;
   
+  const isFreeForm = state.position === 'free-form';
+  const mountId = `questlayer-widget-${projectId}`;
+
   const config = {
     projectName: state.projectName,
     projectId: projectId,
-    // We only export essential config that differs from defaults or needs specific ID
+    position: state.position
   };
 
   const embedOrigin = import.meta.env.DEV && typeof window !== 'undefined'
     ? window.location.origin
     : 'https://questlayer.app';
-  const scriptCode = `<script src="${embedOrigin}/widget-embed.js" data-config='${JSON.stringify(config)}'></script>`;
+  const scriptTag = `<script src="${embedOrigin}/widget-embed.js" data-config='${JSON.stringify(config)}'${isFreeForm ? ` data-mount="${mountId}"` : ''}></script>`;
+  const scriptCode = isFreeForm
+    ? `<div id="${mountId}"></div>\n${scriptTag}`
+    : scriptTag;
 
   const reactCode = `import { initQuestLayer } from 'questlayer';
 
 useEffect(() => {
   initQuestLayer({
     projectId: '${projectId}',
-    projectName: '${state.projectName}'
+    projectName: '${state.projectName}',
+    position: '${state.position}'${isFreeForm ? `,\n    mountId: '${mountId}'` : ''}
   });
-}, []);`;
+}, []);${isFreeForm ? `\n\nreturn <div id="${mountId}" />;` : ''}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(activeTab === 'script' ? scriptCode : reactCode);
@@ -98,7 +105,9 @@ useEffect(() => {
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2">
                 <Terminal size={12} />
-                {activeTab === 'script' ? 'Paste this before </body> tag' : 'Install & Initialize'}
+                {activeTab === 'script'
+                  ? (isFreeForm ? 'Paste this where you want the button' : 'Paste this before </body> tag')
+                  : 'Install & Initialize'}
               </label>
               {activeTab === 'react' && (
                 <span className="text-[10px] font-mono text-slate-500">npm install questlayer</span>

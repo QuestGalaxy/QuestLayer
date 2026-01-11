@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { THEMES } from '../constants.ts';
 import { 
@@ -16,9 +17,17 @@ interface WidgetProps {
   state: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   isPreview?: boolean;
+  portalContainer?: HTMLElement | null;
 }
 
-const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isPreview = false }) => {
+const Widget: React.FC<WidgetProps> = ({
+  isOpen,
+  setIsOpen,
+  state,
+  setState,
+  isPreview = false,
+  portalContainer = null
+}) => {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -62,7 +71,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
   const isTransparentTheme = state.activeTheme === 'glass';
 
-  const positionClasses = isPreview ? 'absolute' : 'fixed';
+  const isFreeForm = state.position === 'free-form';
+  const overlayPositionClasses = isPreview ? 'absolute' : 'fixed';
   const [widgetScale, setWidgetScale] = useState(1);
 
   const getWidgetScale = () => {
@@ -101,6 +111,25 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
       viewport?.removeEventListener('resize', updateScale);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isFreeForm || isPreview) return;
+    const root = document.documentElement;
+    const body = document.body;
+    const prevRootOverflow = root.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    if (isOpen) {
+      root.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
+    } else {
+      root.style.overflow = prevRootOverflow;
+      body.style.overflow = prevBodyOverflow;
+    }
+    return () => {
+      root.style.overflow = prevRootOverflow;
+      body.style.overflow = prevBodyOverflow;
+    };
+  }, [isOpen, isFreeForm]);
 
   // --- SUPABASE SYNC ---
   useEffect(() => {
@@ -337,9 +366,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
         };
         setState(prev => ({
           ...prev,
-          // In preview mode, we NEVER want to overwrite the tasks with cached data,
-          // as the user is actively editing them.
-          tasks: isPreview ? prev.tasks : (parsed.tasks ?? prev.tasks),
+          // Avoid overwriting server-driven tasks for published projects.
+          tasks: (isPreview || prev.projectId) ? prev.tasks : (parsed.tasks ?? prev.tasks),
           userXP: parsed.userXP ?? prev.userXP,
           currentStreak: parsed.currentStreak ?? prev.currentStreak,
           dailyClaimed: parsed.dailyClaimed ?? prev.dailyClaimed
@@ -663,13 +691,18 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   };
 
   const getPositionClasses = () => {
-    const classes = {
-      'bottom-right': 'bottom-4 right-4 md:bottom-8 md:right-8',
-      'bottom-left': 'bottom-4 left-4 md:bottom-8 md:left-8',
-      'top-right': 'top-4 right-4 md:top-8 md:right-8',
-      'top-left': 'top-4 left-4 md:top-8 md:left-8'
-    };
-    return classes[state.position];
+    switch (state.position) {
+      case 'bottom-right':
+        return 'bottom-4 right-4 md:bottom-8 md:right-8';
+      case 'bottom-left':
+        return 'bottom-4 left-4 md:bottom-8 md:left-8';
+      case 'top-right':
+        return 'top-4 right-4 md:top-8 md:right-8';
+      case 'top-left':
+        return 'top-4 left-4 md:top-8 md:left-8';
+      default:
+        return '';
+    }
   };
 
   const isBottom = state.position.includes('bottom');
@@ -677,22 +710,26 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
   const effectiveScale = isOpen ? Math.min(widgetScale, 1.1) : widgetScale;
   const wrapperStyle: React.CSSProperties = {
     transform: effectiveScale > 1 ? `scale(${effectiveScale})` : undefined,
-    transformOrigin: isBottom
-      ? (isRight ? 'bottom right' : 'bottom left')
-      : (isRight ? 'top right' : 'top left')
+    transformOrigin: isFreeForm
+      ? 'center'
+      : (isBottom
+        ? (isRight ? 'bottom right' : 'bottom left')
+        : (isRight ? 'top right' : 'top left'))
   };
+  const isCenteredPreview = isPreview && isFreeForm;
+  const shouldPortal = Boolean(portalContainer) && isFreeForm && !isPreview;
   const wrapperClasses = [
-    positionClasses,
+    isCenteredPreview ? 'absolute inset-0' : (isFreeForm ? 'relative' : overlayPositionClasses),
     'z-[2147483000]',
-    'flex',
+    isCenteredPreview ? 'flex' : (isFreeForm ? 'inline-flex' : 'flex'),
     activeTheme.font,
-    isBottom ? 'flex-col-reverse' : 'flex-col',
-    isRight ? 'items-end' : 'items-start',
+    isFreeForm ? 'flex-col' : (isBottom ? 'flex-col-reverse' : 'flex-col'),
+    isCenteredPreview ? 'items-center' : (isFreeForm ? 'items-start' : (isRight ? 'items-end' : 'items-start')),
+    isCenteredPreview ? 'justify-center' : '',
     getPositionClasses(),
     'gap-2',
     'antialiased'
   ].join(' ');
-
   const formatXP = (val: number) => val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val;
 
   const currentLevelData = calculateLevel(visualXP);
@@ -755,230 +792,200 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
     }
   })();
 
-  return (
-    <>
-      {isOpen && (
-        <div className={`${positionClasses} inset-0 bg-black/60 md:hidden z-[45]`} onClick={() => setIsOpen(false)} />
-      )}
+  const overlayElement = (
+    <div
+      className={`${overlayPositionClasses} inset-0 bg-black/60 ${isFreeForm ? 'z-[2147482990]' : 'md:hidden z-[45]'}`}
+      onClick={() => setIsOpen(false)}
+    />
+  );
 
-      <div
-        className={`${wrapperClasses} ${isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}
-        style={wrapperStyle}
+  const popupContent = (
+    <div
+      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition ${isFreeForm ? `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
+      style={{
+        borderColor: state.activeTheme === 'cyber'
+          ? state.accentColor
+          : (state.activeTheme === 'gaming'
+            ? '#fbbf24'
+            : (state.activeTheme === 'avatar'
+              ? '#67e8f9'
+              : (state.activeTheme === 'ironman'
+                ? '#f59e0b'
+                : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))))
+      }}
+    >
+      {/* Header */}
+      <div 
+        className={`px-4 py-3 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}
+        style={{ borderColor: state.activeTheme === 'gaming' ? '#fbbf24' : undefined }}
       >
-        <button
-          onClick={() => {
-            if (!isOpen) initAudio();
-            setIsOpen(prev => !prev);
-          }}
-          style={triggerStyle}
-          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
-        >
-          {!effectiveConnected ? (
-            <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">
-              <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
-              Connect
-            </span>
-          ) : (
-            <span className="flex items-center gap-2 md:gap-3">
-              <div className="bg-white/10 px-1 py-0.5 rounded text-[9px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
-                {shortAddress}
-              </div>
-              <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
-                <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
-                <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
-              </div>
-            </span>
-          )}
-        </button>
-
-        {isOpen && (
+        <div className="flex items-center gap-2 md:gap-3 truncate">
           <div
-            className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition relative ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
-            style={{
-              borderColor: state.activeTheme === 'cyber'
-                ? state.accentColor
-                : (state.activeTheme === 'gaming'
-                  ? '#fbbf24'
-                  : (state.activeTheme === 'avatar'
-                    ? '#67e8f9'
-                    : (state.activeTheme === 'ironman'
-                      ? '#f59e0b'
-                      : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))))
-            }}
+            style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
+            className={`p-2 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
           >
-            {/* Header */}
-            <div 
-              className={`px-4 py-3 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}
-              style={{ borderColor: state.activeTheme === 'gaming' ? '#fbbf24' : undefined }}
-            >
-              <div className="flex items-center gap-2 md:gap-3 truncate">
-                <div
-                  style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
-                  className={`p-2 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
-                >
-                  <Zap className="w-[12px] h-[12px] md:w-[14px] md:h-[14px]" fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
-                </div>
-                <span 
-                  className={`font-black text-sm md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
-                  style={isTransparentTheme ? { color: state.accentColor } : {}}
-                >
-                  {state.projectName}
-                </span>
+            <Zap className="w-[12px] h-[12px] md:w-[14px] md:h-[14px]" fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
+          </div>
+          <span 
+            className={`font-black text-sm md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
+            style={isTransparentTheme ? { color: state.accentColor } : {}}
+          >
+            {state.projectName}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 md:gap-2 shrink-0 ml-2">
+          {effectiveConnected && (
+            <button onClick={handleDisconnect} className="p-2 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
+            <LogOut className="w-[12px] h-[12px] md:w-[12px] md:h-[12px]" />
+            </button>
+          )}
+          <button
+            onClick={() => setIsOpen(false)}
+            className={`p-2 md:p-1.5 rounded-lg ${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
+          >
+            <X className="w-[16px] h-[16px] md:w-[16px] md:h-[16px]" />
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-4 md:space-y-5 custom-scroll">
+        {!effectiveConnected ? (
+          <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
+            <div className="space-y-2">
+              <div 
+                className="mx-auto w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
+                style={{ backgroundColor: `${state.accentColor}15`, color: state.accentColor }}
+              >
+                <ShieldCheck className="w-[26px] h-[26px] md:w-[32px] md:h-[32px]" />
               </div>
-              <div className="flex items-center gap-2 md:gap-2 shrink-0 ml-2">
-                {effectiveConnected && (
-                  <button onClick={handleDisconnect} className="p-2 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
-                  <LogOut className="w-[12px] h-[12px] md:w-[12px] md:h-[12px]" />
+              <h3 className={`text-[13px] md:text-lg font-black uppercase tracking-tighter ${isLightTheme ? 'text-black' : 'text-white'}`}>
+                Connect to unlock <br/><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
+              </h3>
+            </div>
+            <div className={`w-full space-y-3 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
+              <p className={`text-[11px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
+                <ChevronRight size={8} /> Protocol Intel
+              </p>
+              <p className={`text-[13px] md:text-xs leading-relaxed ${isLightTheme ? 'text-slate-800' : 'text-slate-300 opacity-70'}`}>
+                Connect to personalize your rank, unlock streaks, and earn XP inside {state.projectName}.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
+                  <Zap size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '0ms' }} />
+                  <span className="leading-none">XP Quests</span>
+                </div>
+                <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
+                  <Flame size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '200ms' }} />
+                  <span className="leading-none">Daily Streaks</span>
+                </div>
+                <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
+                  <Trophy size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '400ms' }} />
+                  <span className="leading-none">Leaderboard</span>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={handleConnect} 
+              disabled={isConnecting}
+              style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})} 
+              className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isConnecting ? (
+                <><Loader2 size={10} className="animate-spin" /> Connecting...</>
+              ) : (
+                "Connect Wallet"
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3.5 md:space-y-5">
+            {/* Progress Card */}
+            <div className={`p-2.5 md:p-4 border border-opacity-20 shadow-sm ${activeTheme.itemCard}`}>
+              <div className="flex justify-between items-start mb-2 md:mb-4">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <button
+                  onClick={() => handleQuestLayerNav('/browse')}
+                    title="Open profile"
+                    className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-transform hover:scale-105`}
+                    style={{ backgroundColor: isLightTheme ? '#000' : state.accentColor }}
+                  >
+                    <span className="group-hover/level:opacity-0 transition-opacity">
+                      {currentLevelData.lvl}
+                    </span>
+                    <span className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover/level:opacity-100 group-hover/level:scale-100 transition-all">
+                      <span className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/20 flex items-center justify-center">
+                        <User className="w-3 h-3 md:w-4 md:h-4" />
+                      </span>
+                    </span>
+                    {visualXP < state.userXP && <Sparkles size={6} className="absolute -top-1 -right-1 text-white animate-bounce" />}
                   </button>
-                )}
+                  <div>
+                    <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank</p>
+                    <p className={`text-[11px] md:text-[11px] font-black uppercase tracking-widest ${isLightTheme ? 'text-indigo-700' : 'text-indigo-500'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>{getRankName()}</p>
+                  </div>
+                </div>
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className={`p-2 md:p-1.5 rounded-lg ${isLightTheme ? 'text-slate-400 hover:text-black' : 'text-white/40 hover:text-white'} hover:scale-110 transition-all`}
+                  onClick={() => handleQuestLayerNav('/leaderboard')}
+                  title="Open leaderboard"
+                  className="text-right group/rankxp"
                 >
-                  <X className="w-[16px] h-[16px] md:w-[16px] md:h-[16px]" />
+                  <p className={`text-xs md:text-xl font-black tabular-nums ${isLightTheme ? 'text-black' : 'text-white'}`}>{currentLevelData.effectiveXP >= 1000 ? (currentLevelData.effectiveXP / 1000).toFixed(1) + 'k' : currentLevelData.effectiveXP}</p>
+                  <p className={`relative text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>
+                    <span className="group-hover/rankxp:opacity-0 transition-opacity">Rank XP</span>
+                    <span className="absolute right-0 opacity-0 group-hover/rankxp:opacity-100 transition-opacity">
+                      Leaderboard
+                    </span>
+                  </p>
                 </button>
               </div>
-            </div>
-
-        {/* Body */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-4 md:space-y-5 custom-scroll">
-          {!effectiveConnected ? (
-            <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
-              <div className="space-y-2">
+              <div className={`h-1 md:h-2 w-full overflow-hidden border relative mb-1 ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
                 <div 
-                  className="mx-auto w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
-                  style={{ backgroundColor: `${state.accentColor}15`, color: state.accentColor }}
+                  className={`h-full transition-all duration-300 ease-out relative`} 
+                  style={{ width: `${currentLevelData.progress}%`, backgroundColor: state.accentColor }}
                 >
-                  <ShieldCheck className="w-[26px] h-[26px] md:w-[32px] md:h-[32px]" />
-                </div>
-                <h3 className={`text-[13px] md:text-lg font-black uppercase tracking-tighter ${isLightTheme ? 'text-black' : 'text-white'}`}>
-                  Connect to unlock <br/><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
-                </h3>
-              </div>
-              <div className={`w-full space-y-3 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
-                <p className={`text-[11px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
-                  <ChevronRight size={8} /> Protocol Intel
-                </p>
-                <p className={`text-[13px] md:text-xs leading-relaxed ${isLightTheme ? 'text-slate-800' : 'text-slate-300 opacity-70'}`}>
-                  Connect to personalize your rank, unlock streaks, and earn XP inside {state.projectName}.
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
-                    <Zap size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '0ms' }} />
-                    <span className="leading-none">XP Quests</span>
-                  </div>
-                  <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
-                    <Flame size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '200ms' }} />
-                    <span className="leading-none">Daily Streaks</span>
-                  </div>
-                  <div className={`flex flex-col items-center gap-1 text-[9px] font-bold uppercase text-center ${isLightTheme ? 'text-slate-600' : 'text-white/60'}`}>
-                    <Trophy size={16} strokeWidth={2.5} className="animate-pulse text-yellow-400" style={{ animationDelay: '400ms' }} />
-                    <span className="leading-none">Leaderboard</span>
-                  </div>
+                   {visualXP < state.userXP && (
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1s_infinite]" />
+                   )}
                 </div>
               </div>
-              <button 
-                onClick={handleConnect} 
-                disabled={isConnecting}
-                style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})} 
-                className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isConnecting ? (
-                  <><Loader2 size={10} className="animate-spin" /> Connecting...</>
-                ) : (
-                  "Connect Wallet"
-                )}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3.5 md:space-y-5">
-              {/* Progress Card */}
-              <div className={`p-2.5 md:p-4 border border-opacity-20 shadow-sm ${activeTheme.itemCard}`}>
-                <div className="flex justify-between items-start mb-2 md:mb-4">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <button
-                    onClick={() => handleQuestLayerNav('/browse')}
-                      title="Open profile"
-                      className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-transform hover:scale-105`}
-                      style={{ backgroundColor: isLightTheme ? '#000' : state.accentColor }}
-                    >
-                      <span className="group-hover/level:opacity-0 transition-opacity">
-                        {currentLevelData.lvl}
-                      </span>
-                      <span className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover/level:opacity-100 group-hover/level:scale-100 transition-all">
-                        <span className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/20 flex items-center justify-center">
-                          <User className="w-3 h-3 md:w-4 md:h-4" />
-                        </span>
-                      </span>
-                      {visualXP < state.userXP && <Sparkles size={6} className="absolute -top-1 -right-1 text-white animate-bounce" />}
-                    </button>
-                    <div>
-                      <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank</p>
-                      <p className={`text-[11px] md:text-[11px] font-black uppercase tracking-widest ${isLightTheme ? 'text-indigo-700' : 'text-indigo-500'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>{getRankName()}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleQuestLayerNav('/leaderboard')}
-                    title="Open leaderboard"
-                    className="text-right group/rankxp"
-                  >
-                    <p className={`text-xs md:text-xl font-black tabular-nums ${isLightTheme ? 'text-black' : 'text-white'}`}>{currentLevelData.effectiveXP >= 1000 ? (currentLevelData.effectiveXP / 1000).toFixed(1) + 'k' : currentLevelData.effectiveXP}</p>
-                    <p className={`relative text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>
-                      <span className="group-hover/rankxp:opacity-0 transition-opacity">Rank XP</span>
-                      <span className="absolute right-0 opacity-0 group-hover/rankxp:opacity-100 transition-opacity">
-                        Leaderboard
-                      </span>
-                    </p>
-                  </button>
-                </div>
-                <div className={`h-1 md:h-2 w-full overflow-hidden border relative mb-1 ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
-                  <div 
-                    className={`h-full transition-all duration-300 ease-out relative`} 
-                    style={{ width: `${currentLevelData.progress}%`, backgroundColor: state.accentColor }}
-                  >
-                     {visualXP < state.userXP && (
-                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1s_infinite]" />
-                     )}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
-                    Quest XP: <span className={isLightTheme ? 'text-slate-600' : 'text-white/70'}>{visualXP}</span>
-                  </p>
-                  <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
-                    {currentLevelData.xpNeeded} XP to Lvl {currentLevelData.lvl + 1}
-                  </p>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => handleQuestLayerNav('/browse')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-                      isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
-                    }`}
-                    style={{
-                      borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
-                      backgroundColor: `${state.accentColor}12`,
-                      color: isTransparentTheme ? state.accentColor : undefined
-                    }}
-                  >
-                    <User className="w-[12px] h-[12px]" />
-                    Profile
-                  </button>
-                  <button
-                    onClick={() => handleQuestLayerNav('/leaderboard')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-                      isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
-                    }`}
-                    style={{
-                      borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
-                      backgroundColor: `${state.accentColor}12`,
-                      color: isTransparentTheme ? state.accentColor : undefined
-                    }}
-                  >
-                    <Trophy className="w-[12px] h-[12px]" />
-                    Leaderboard
-                  </button>
-                </div>
+              <div className="flex justify-between items-center">
+                <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
+                  Quest XP: <span className={isLightTheme ? 'text-slate-600' : 'text-white/70'}>{visualXP}</span>
+                </p>
+                <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: state.accentColor } : {}}>
+                  {currentLevelData.xpNeeded} XP to Lvl {currentLevelData.lvl + 1}
+                </p>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => handleQuestLayerNav('/browse')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                    isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                  }`}
+                  style={{
+                    borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
+                    backgroundColor: `${state.accentColor}12`,
+                    color: isTransparentTheme ? state.accentColor : undefined
+                  }}
+                >
+                  <User className="w-[12px] h-[12px]" />
+                  Profile
+                </button>
+                <button
+                  onClick={() => handleQuestLayerNav('/leaderboard')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                    isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                  }`}
+                  style={{
+                    borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
+                    backgroundColor: `${state.accentColor}12`,
+                    color: isTransparentTheme ? state.accentColor : undefined
+                  }}
+                >
+                  <Trophy className="w-[12px] h-[12px]" />
+                  Leaderboard
+                </button>
               </div>
 
               {/* Streak Section */}
@@ -1261,6 +1268,7 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
                 </div>
               </div>
             </div>
+          </div>
           )}
         </div>
 
@@ -1280,8 +1288,45 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
           </a>
         </div>
       </div>
-        )}
+  );
+
+  return (
+    <>
+      {isOpen && (shouldPortal && portalContainer ? createPortal(overlayElement, portalContainer) : overlayElement)}
+
+      <div
+        className={`${wrapperClasses} ${!isFreeForm && isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}
+        style={wrapperStyle}
+      >
+        <button
+          onClick={() => {
+            if (!isOpen) initAudio();
+            setIsOpen(prev => !prev);
+          }}
+          style={triggerStyle}
+          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
+        >
+          {!effectiveConnected ? (
+            <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">
+              <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
+              Connect
+            </span>
+          ) : (
+            <span className="flex items-center gap-2 md:gap-3">
+              <div className="bg-white/10 px-1 py-0.5 rounded text-[9px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
+                {shortAddress}
+              </div>
+              <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
+                <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
+                <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
+              </div>
+            </span>
+          )}
+        </button>
+        {isOpen && !shouldPortal && popupContent}
       </div>
+
+      {isOpen && shouldPortal && portalContainer && createPortal(popupContent, portalContainer)}
       <style>{`
         .ql-share-progress {
           stroke-dasharray: 113;
@@ -1298,6 +1343,8 @@ const Widget: React.FC<WidgetProps> = ({ isOpen, setIsOpen, state, setState, isP
       `}</style>
     </>
   );
+
+
 };
 
 export default Widget;

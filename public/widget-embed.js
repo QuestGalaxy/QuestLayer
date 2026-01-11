@@ -13,6 +13,31 @@
       console.error("[QuestLayer] Invalid data-config JSON", err);
     }
   }
+  var rawMountId = script && (script.getAttribute("data-mount") || script.getAttribute("data-mount-id"));
+  if (rawMountId && typeof rawMountId === "string") {
+    rawMountId = rawMountId.replace(/^#/, "");
+    config.mountId = config.mountId || rawMountId;
+  }
+
+  var inlineMode = config.position === "free-form" || Boolean(config.mountId);
+  if (inlineMode) {
+    if (!config.position) {
+      config.position = "free-form";
+    }
+    if (!config.mountId) {
+      config.mountId = "questlayer-inline-" + Math.random().toString(36).slice(2, 10);
+    }
+    var mountEl = document.getElementById(config.mountId);
+    if (!mountEl) {
+      mountEl = document.createElement("div");
+      mountEl.id = config.mountId;
+      if (script && script.parentNode) {
+        script.parentNode.insertBefore(mountEl, script);
+      } else if (document.body) {
+        document.body.appendChild(mountEl);
+      }
+    }
+  }
 
   function resolveFromScript(path) {
     if (script && script.src) {

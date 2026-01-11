@@ -101,6 +101,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({
                     <option value="bottom-left">Bottom left</option>
                     <option value="top-right">Top right</option>
                     <option value="top-left">Top left</option>
+                    <option value="free-form">Custom (embed anywhere)</option>
                   </select>
                 </div>
               </div>

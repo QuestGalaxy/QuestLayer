@@ -19,7 +19,7 @@ interface QuestBrowseProps {
 const DEFAULT_WIDGET_STATE: AppState = {
   projectName: 'Quest Browser',
   accentColor: '#6366f1',
-  position: 'bottom-right',
+  position: 'free-form',
   activeTheme: 'sleek',
   tasks: INITIAL_TASKS,
   userXP: 0,
@@ -439,12 +439,15 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     try {
       const { project, tasks } = await fetchProjectDetails(projectId);
       if (!project) return;
+      const resolvedPosition = project.position === 'free-form'
+        ? 'bottom-right'
+        : (project.position as Position);
       const newState: AppState = {
         projectId: project.id,
         projectName: project.name,
         projectDomain: project.domain,
         accentColor: project.accent_color,
-        position: project.position as Position,
+        position: resolvedPosition,
         activeTheme: project.theme as ThemeType,
         tasks: tasks.map((t: any) => ({
           id: t.id,
@@ -851,7 +854,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         setIsOpen={setIsWidgetOpen}
                         state={widgetState}
                         setState={setWidgetState}
-                        isPreview={true} // Use preview mode to avoid writing to local storage with wrong keys
+                        isPreview={!widgetState.projectId} // Sync when projectId is known
                     />
                 )}
             </div>
