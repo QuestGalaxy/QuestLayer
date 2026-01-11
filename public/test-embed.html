@@ -350,6 +350,23 @@
         </div>
       </div>
 
+      <div class="controls-section" style="margin-top: 24px;">
+        <div class="section-title" style="margin-bottom: 8px;">Theme</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Select a visual style.</p>
+        <div class="control-grid" id="theme-switcher">
+          <button class="pos-btn" data-theme="sleek">Sleek</button>
+          <button class="pos-btn" data-theme="cyber">Cyber</button>
+          <button class="pos-btn" data-theme="minimal">Minimal</button>
+          <button class="pos-btn" data-theme="gaming">Gaming</button>
+          <button class="pos-btn" data-theme="brutal">Brutal</button>
+          <button class="pos-btn" data-theme="glass">Glass</button>
+          <button class="pos-btn" data-theme="terminal">Terminal</button>
+          <button class="pos-btn" data-theme="aura">Aura</button>
+          <button class="pos-btn" data-theme="avatar">Avatar</button>
+          <button class="pos-btn" data-theme="ironman">Ironman</button>
+        </div>
+      </div>
+
       <div id="inline-widget-area" class="content-block" style="display: none;">
         <h3>Inline Widget Area</h3>
         <p>In free-form mode, the widget renders directly here instead of floating.</p>
@@ -441,10 +458,11 @@
         // Get initial position from URL or default
         const urlParams = new URLSearchParams(window.location.search);
         const currentPos = urlParams.get('pos') || 'bottom-right';
+        const currentTheme = urlParams.get('theme') || 'sleek';
 
-        // Initialize Switcher UI
-        const buttons = document.querySelectorAll('.pos-btn');
-        buttons.forEach(btn => {
+        // Initialize Position Switcher UI
+        const posButtons = document.querySelectorAll('.pos-btn[data-pos]');
+        posButtons.forEach(btn => {
           if (btn.dataset.pos === currentPos) {
             btn.classList.add('active');
           }
@@ -456,6 +474,20 @@
           });
         });
 
+        // Initialize Theme Switcher UI
+        const themeButtons = document.querySelectorAll('.pos-btn[data-theme]');
+        themeButtons.forEach(btn => {
+          if (btn.dataset.theme === currentTheme) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            const newTheme = btn.dataset.theme;
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('theme', newTheme);
+            window.location.href = newUrl.toString();
+          });
+        });
+
         // Mount Widget
         const script = document.createElement('script');
         script.src = EMBED_SRC;
@@ -463,7 +495,8 @@
         const config = {
           projectName: PROJECT_NAME,
           projectId: PROJECT_ID,
-          position: currentPos
+          position: currentPos,
+          activeTheme: currentTheme
         };
 
         if (currentPos === 'free-form') {
