@@ -74,6 +74,7 @@ const Widget: React.FC<WidgetProps> = ({
   const isFreeForm = state.position === 'free-form';
   const overlayPositionClasses = isPreview ? 'absolute' : 'fixed';
   const [widgetScale, setWidgetScale] = useState(1);
+  const [maxPanelHeight, setMaxPanelHeight] = useState<number | null>(null);
 
   const getWidgetScale = () => {
     if (typeof window === 'undefined') return 1;
@@ -94,6 +95,15 @@ const Widget: React.FC<WidgetProps> = ({
     return 1;
   };
 
+  const getMaxPanelHeight = (_connected: boolean) => {
+    if (typeof window === 'undefined') return null;
+    const viewportHeight = window.visualViewport?.height || window.innerHeight || 0;
+    if (!viewportHeight) return null;
+    const gap = 100;
+    const available = viewportHeight - (gap * 2);
+    return Math.max(280, available);
+  };
+
   useEffect(() => {
     const updateScale = () => {
       const nextScale = getWidgetScale();
@@ -111,6 +121,25 @@ const Widget: React.FC<WidgetProps> = ({
       viewport?.removeEventListener('resize', updateScale);
     };
   }, []);
+
+  useEffect(() => {
+    const updateMaxHeight = () => {
+      const nextMax = getMaxPanelHeight(effectiveConnected);
+      if (nextMax === null) return;
+      setMaxPanelHeight(prev => (prev && Math.abs(prev - nextMax) < 2 ? prev : nextMax));
+    };
+
+    updateMaxHeight();
+    window.addEventListener('resize', updateMaxHeight);
+    window.addEventListener('orientationchange', updateMaxHeight);
+    const viewport = window.visualViewport;
+    viewport?.addEventListener('resize', updateMaxHeight);
+    return () => {
+      window.removeEventListener('resize', updateMaxHeight);
+      window.removeEventListener('orientationchange', updateMaxHeight);
+      viewport?.removeEventListener('resize', updateMaxHeight);
+    };
+  }, [effectiveConnected]);
 
   useEffect(() => {
     if (!isFreeForm || isPreview) return;
@@ -707,7 +736,7 @@ const Widget: React.FC<WidgetProps> = ({
 
   const isBottom = state.position.includes('bottom');
   const isRight = state.position.includes('right');
-  const effectiveScale = isOpen ? Math.min(widgetScale, 1.1) : widgetScale;
+  const effectiveScale = widgetScale;
   const wrapperStyle: React.CSSProperties = {
     transform: effectiveScale > 1 ? `scale(${effectiveScale})` : undefined,
     transformOrigin: isFreeForm
@@ -803,6 +832,9 @@ const Widget: React.FC<WidgetProps> = ({
     <div
       className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition ${isFreeForm ? `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
       style={{
+        maxHeight: (!isPreview && isOpen && maxPanelHeight)
+          ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
+          : undefined,
         borderColor: state.activeTheme === 'cyber'
           ? state.accentColor
           : (state.activeTheme === 'gaming'
