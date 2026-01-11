@@ -2,50 +2,482 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QuestLayer Embed Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>QuestLayer Mobile Mockup</title>
     <link rel="icon" href="/logoLayer.webp" type="image/webp" />
     <style>
+      :root {
+        --primary: #3b82f6;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --nav-height: 60px;
+        --safe-bottom: env(safe-area-inset-bottom, 20px);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
+      }
+
+      /* Mobile Header */
+      header {
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        height: var(--nav-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .logo {
+        font-weight: 800;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .logo-circle {
+        width: 32px;
+        height: 32px;
+        background: var(--primary);
+        border-radius: 8px;
+      }
+
+      .menu-btn {
+        width: 40px;
+        height: 40px;
+        display: flex;
         align-items: center;
         justify-content: center;
-        height: 100vh;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 1.5rem;
+      }
+
+      /* Main Content */
+      main {
+        flex: 1;
+        padding: 16px;
+        /* Padding adjusted for scroll testing, no bottom nav */
+        padding-bottom: calc(40px + var(--safe-bottom));
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .welcome-card {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+      }
+
+      .welcome-card h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.5rem;
+      }
+
+      .welcome-card p {
         margin: 0;
-        padding: 32px;
-        background-color: #f3f4f6;
-        color: #1f2937;
+        opacity: 0.9;
+        font-size: 0.95rem;
+        line-height: 1.4;
       }
-      .container {
-        text-align: center;
-        padding: 2rem;
-        background: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+
+      /* Stats Grid */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
       }
-      h1 {
-        margin-bottom: 1rem;
+
+      .stat-card {
+        background: var(--card);
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
       }
-      p {
-        color: #4b5563;
+
+      .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 4px;
       }
-      #questlayer-widget-81f990d1-5596-4ed4-8a9d-611b6c553ded {
-        width: 360px;
-        height: 640px;
-        margin-top: 24px;
+
+      .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
       }
+
+      .stat-trend {
+        font-size: 0.75rem;
+        color: #10b981;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      /* Feed */
+      .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .feed-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .feed-item {
+        background: var(--card);
+        padding: 16px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--border);
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        background: #e0e7ff;
+        color: #4338ca;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      }
+
+      .feed-content {
+        flex: 1;
+      }
+
+      .feed-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+      }
+
+      .feed-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+
+      /* Widget Controls */
+      .controls-section {
+        margin-top: 32px;
+        background: var(--card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .pos-btn {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .pos-btn.active {
+        background: var(--text);
+        color: white;
+        border-color: var(--text);
+      }
+
+      /* Bottom Nav Removed */
+      
+      .content-block {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border);
+        margin-bottom: 24px;
+      }
+
+      .content-block h3 {
+        margin: 0 0 12px 0;
+        font-size: 1.1rem;
+      }
+
+      .content-block p {
+        color: var(--text-muted);
+        line-height: 1.6;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .feature-item {
+        background: var(--bg);
+        padding: 16px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .feature-icon {
+        width: 32px;
+        height: 32px;
+        background: #e0f2fe;
+        color: #0ea5e9;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1>QuestLayer Embed Test</h1>
-      <p>The widget should appear in the bottom-right corner.</p>
-    </div>
+    <header>
+      <div class="logo">
+        <div class="logo-circle"></div>
+        QuestLayer
+      </div>
+      <button class="menu-btn">☰</button>
+    </header>
 
-    <!-- QuestLayer Widget Embed -->
-    <div id="questlayer-widget-81f990d1-5596-4ed4-8a9d-611b6c553ded"></div>
-    <script src="http://localhost:3001/widget-embed.js" data-config='{"projectName":"Open the Door","projectId":"81f990d1-5596-4ed4-8a9d-611b6c553ded","position":"free-form"}' data-mount="questlayer-widget-81f990d1-5596-4ed4-8a9d-611b6c553ded"></script>
+    <main>
+      <div class="welcome-card">
+        <h1>Welcome Back!</h1>
+        <p>Your daily quests are refreshed. Check your progress and claim rewards.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total XP</div>
+          <div class="stat-value">2,450</div>
+          <div class="stat-trend">↗ +12%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value">5 Days</div>
+          <div class="stat-trend">🔥 On Fire</div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <span>Recent Activity</span>
+        <a href="#" style="font-size: 0.85rem; color: var(--primary); text-decoration: none;">View All</a>
+      </div>
+
+      <div class="feed-list">
+        <div class="feed-item">
+          <div class="avatar">JD</div>
+          <div class="feed-content">
+            <div class="feed-title">Completed "First Steps"</div>
+            <div class="feed-meta">2 minutes ago • +100 XP</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="avatar" style="background: #fce7f3; color: #db2777;">AS</div>
+          <div class="feed-content">
+            <div class="feed-title">Claimed Weekly Reward</div>
+            <div class="feed-meta">1 hour ago • 50 Tokens</div>
+          </div>
+        </div>
+        <div class="feed-item">
+          <div class="avatar" style="background: #dcfce7; color: #16a34a;">MK</div>
+          <div class="feed-content">
+            <div class="feed-title">Joined Discord Community</div>
+            <div class="feed-meta">3 hours ago • +50 XP</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <div class="section-title" style="margin-bottom: 8px;">Widget Position</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Test how the widget floats on different corners.</p>
+        <div class="control-grid" id="pos-switcher">
+          <button class="pos-btn" data-pos="bottom-right">Bottom Right</button>
+          <button class="pos-btn" data-pos="bottom-left">Bottom Left</button>
+          <button class="pos-btn" data-pos="top-right">Top Right</button>
+          <button class="pos-btn" data-pos="top-left">Top Left</button>
+          <button class="pos-btn" data-pos="free-form" style="grid-column: span 2;">Free Form (Inline)</button>
+        </div>
+      </div>
+
+      <div id="inline-widget-area" class="content-block" style="display: none;">
+        <h3>Inline Widget Area</h3>
+        <p>In free-form mode, the widget renders directly here instead of floating.</p>
+        <div id="questlayer-mount" style="min-height: 400px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+          <!-- Widget will mount here -->
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3>Featured Quests</h3>
+        <p>Explore our curated list of quests designed to help you level up faster.</p>
+        <div class="feature-grid">
+          <div class="feature-item">
+            <div class="feature-icon">🚀</div>
+            <div>
+              <div class="feed-title">Launch Mission</div>
+              <div class="feed-meta">Start your journey</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">💎</div>
+            <div>
+              <div class="feed-title">Crystal Collector</div>
+              <div class="feed-meta">Rare item hunt</div>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🛡️</div>
+            <div>
+              <div class="feed-title">Guild Defense</div>
+              <div class="feed-meta">Team challenge</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3>Community Highlights</h3>
+        <p>See what others are achieving in the QuestLayer ecosystem this week.</p>
+        <div class="feed-list">
+          <div class="feed-item">
+            <div class="avatar" style="background: #ffedd5; color: #ea580c;">TL</div>
+            <div class="feed-content">
+              <div class="feed-title">Reached Level 10</div>
+              <div class="feed-meta">5 hours ago • Top 1%</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="avatar" style="background: #f3e8ff; color: #9333ea;">RK</div>
+            <div class="feed-content">
+              <div class="feed-title">Unlocked "Master" Badge</div>
+              <div class="feed-meta">8 hours ago • Achievement</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="avatar" style="background: #e0f2fe; color: #0284c7;">BN</div>
+            <div class="feed-content">
+              <div class="feed-title">First 100 Streak</div>
+              <div class="feed-meta">12 hours ago • Milestone</div>
+            </div>
+          </div>
+          <div class="feed-item">
+            <div class="avatar" style="background: #ffe4e6; color: #e11d48;">SA</div>
+            <div class="feed-content">
+              <div class="feed-title">Won Tournament</div>
+              <div class="feed-meta">1 day ago • 1000 Tokens</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3>Why QuestLayer?</h3>
+        <p>Engage your users with gamified experiences that drive retention and loyalty. Our widgets are easy to integrate and highly customizable.</p>
+        <p>From simple daily logins to complex multi-step quests, QuestLayer handles the logic so you can focus on your product.</p>
+      </div>
+
+      <!-- Spacer for bottom scrolling -->
+      <div style="height: 100px;"></div>
+    </main>
+
+    <!-- Widget Logic -->
+    <script>
+      (function() {
+        const PROJECT_ID = "81f990d1-5596-4ed4-8a9d-611b6c553ded";
+        const PROJECT_NAME = "Open the Door";
+        const EMBED_SRC = "/widget-embed.js";
+
+        // Get initial position from URL or default
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPos = urlParams.get('pos') || 'bottom-right';
+
+        // Initialize Switcher UI
+        const buttons = document.querySelectorAll('.pos-btn');
+        buttons.forEach(btn => {
+          if (btn.dataset.pos === currentPos) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            const newPos = btn.dataset.pos;
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('pos', newPos);
+            window.location.href = newUrl.toString();
+          });
+        });
+
+        // Mount Widget
+        const script = document.createElement('script');
+        script.src = EMBED_SRC;
+        
+        const config = {
+          projectName: PROJECT_NAME,
+          projectId: PROJECT_ID,
+          position: currentPos
+        };
+
+        if (currentPos === 'free-form') {
+          // Show the inline container
+          const inlineArea = document.getElementById('inline-widget-area');
+          if (inlineArea) inlineArea.style.display = 'block';
+          
+          // Tell widget where to mount
+          script.dataset.mount = "questlayer-mount";
+        }
+
+        script.dataset.config = JSON.stringify(config);
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>
