@@ -229,11 +229,13 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [browseFilter, setBrowseFilter] = useState<'popular' | 'new'>('popular');
   const [urlInput, setUrlInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
   const isDev = import.meta.env.DEV;
+  const NEW_WIDGET_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
   
   const handleNextProject = () => {
     if (projects.length === 0) return;
@@ -571,14 +573,31 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     return lastPing > Date.now() - 60 * 60 * 1000;
   };
 
+  const isNewProject = (project: any) => {
+    if (!project.created_at) return false;
+    const createdAt = new Date(project.created_at).getTime();
+    return createdAt >= Date.now() - NEW_WIDGET_WINDOW_MS;
+  };
+
   const filteredProjects = projects
-    .filter(p => 
+    .filter(p =>
       p.domain && (
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.domain.toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
+    .filter(p => (browseFilter === 'new' ? isNewProject(p) : true))
     .sort((a, b) => {
+      if (browseFilter === 'new') {
+        const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bCreated = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (aCreated !== bCreated) return bCreated - aCreated;
+        return (a.name || '').localeCompare(b.name || '');
+      }
+
+      const visitsA = a.stats?.total_visits || 0;
+      const visitsB = b.stats?.total_visits || 0;
+      if (visitsA !== visitsB) return visitsB - visitsA;
       const aOnline = isProjectOnline(a);
       const bOnline = isProjectOnline(b);
       if (aOnline !== bOnline) return aOnline ? -1 : 1;
@@ -599,7 +618,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, browseFilter]);
 
   useEffect(() => {
     if (!initialBrowseRequest) return;
@@ -877,6 +896,32 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             80% { transform: translate(0.5px, 0.5px); }
             100% { transform: translate(0, 0); }
           }
+          @keyframes ql-title-float {
+            0%, 100% { transform: translateY(0); color: #94a3b8; }
+            50% { transform: translateY(-2px); color: #c7d2fe; }
+          }
+          @keyframes ql-title-arrow {
+            0%, 100% { transform: translate(-50%, 0); opacity: 0.7; }
+            50% { transform: translate(-50%, 2px); opacity: 1; }
+          }
+          .ql-browse-word {
+            display: inline-block;
+            animation: ql-title-float 2.6s ease-in-out infinite;
+            position: relative;
+            padding-bottom: 8px;
+          }
+          .ql-browse-word::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 6px solid rgba(199, 210, 254, 0.85);
+            animation: ql-title-arrow 2.6s ease-in-out infinite;
+          }
         `}
       </style>
       
@@ -1001,8 +1046,17 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-500 tracking-widest mb-4">
-                <Zap size={14} /> Popular Ecosystems
+              <div className="flex flex-col gap-1 mb-4">
+                <button
+                  onClick={() => setBrowseFilter(prev => (prev === 'popular' ? 'new' : 'popular'))}
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase text-slate-500 tracking-widest hover:text-white transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 w-fit"
+                  aria-label={`Switch to ${browseFilter === 'new' ? 'popular' : 'new'} ecosystems`}
+                >
+                  <Zap size={14} />
+                  <span className="transition-colors">
+                    <span className="ql-browse-word">{browseFilter === 'new' ? 'New' : 'Popular'}</span> Ecosystems
+                  </span>
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedProjects.map((project) => (
