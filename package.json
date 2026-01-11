@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build && npm run build:widget && npm run check:widget-build",
     "build:widget": "vite build --config vite.widget.config.ts",
-    "check:widget-build": "node scripts/check-widget-build.js",
+    "check:widget-build": "node scripts/check-widget-build.cjs",
     "seo:generate": "node scripts/generate-seo-pages.mjs",
     "preview": "vite preview"
   },
