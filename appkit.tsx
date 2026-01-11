@@ -7,7 +7,14 @@ import { arbitrum, avalanche, base, bsc, mainnet, optimism, polygon } from '@reo
 
 const queryClient = new QueryClient();
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || 'YOUR_PROJECT_ID';
+const isDefaultProject = !projectId || projectId === 'YOUR_PROJECT_ID' || projectId.includes('your-project-id');
+
+if (isDefaultProject) {
+  console.warn('[QuestLayer] Using default Reown Project ID. Analytics and WalletConnect features may not work. Set VITE_REOWN_PROJECT_ID in .env.local');
+}
+
 const appOrigin = globalThis.location?.origin ?? 'https://questlayer.com';
+const isLocalOrigin = /^(http:\/\/|https:\/\/)(localhost|127\.0\.0\.1)(:\\d+)?$/i.test(appOrigin);
 
 const metadata = {
   name: 'QuestLayer Builder Pro',
@@ -31,7 +38,7 @@ createAppKit({
   projectId,
   metadata,
   features: {
-    analytics: true
+    analytics: !(isDefaultProject || isLocalOrigin)
   }
 });
 

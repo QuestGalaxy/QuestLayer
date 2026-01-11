@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    const disableCdpTracking = env.DISABLE_CDP_USAGE_TRACKING === 'true' || mode === 'development';
+    const disableCdpErrorReporting = env.DISABLE_CDP_ERROR_REPORTING === 'true' || mode === 'development';
     return {
       server: {
         port: 3000,
@@ -13,7 +15,9 @@ export default defineConfig(({ mode }) => {
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.DISABLE_CDP_USAGE_TRACKING': JSON.stringify(disableCdpTracking ? 'true' : 'false'),
+        'process.env.DISABLE_CDP_ERROR_REPORTING': JSON.stringify(disableCdpErrorReporting ? 'true' : 'false')
       },
       resolve: {
         alias: {
