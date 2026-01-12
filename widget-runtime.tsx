@@ -268,6 +268,7 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalCont
         state={state}
         setState={setState}
         isPreview={false}
+        isEmbedded={true}
         portalContainer={portalContainer}
       />
     </AppKitProvider>

@@ -17,6 +17,7 @@ interface WidgetProps {
   state: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   isPreview?: boolean;
+  isEmbedded?: boolean;
   portalContainer?: HTMLElement | null;
 }
 
@@ -26,6 +27,7 @@ const Widget: React.FC<WidgetProps> = ({
   state,
   setState,
   isPreview = false,
+  isEmbedded = false,
   portalContainer = null
 }) => {
   const { open } = useAppKit();
@@ -216,16 +218,6 @@ const Widget: React.FC<WidgetProps> = ({
         }
 
         setDbProjectId(projectId);
-
-        // 7. Log View Analytics (Once per session/mount)
-        if (!isPreview) {
-          const host = normalizeHost(window.location.hostname || '');
-          const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
-          const shouldLogView = host && projectHost && host === projectHost;
-          if (shouldLogView) {
-            logProjectView(projectId);
-          }
-        }
 
         // 2. Fetch Tasks Mappings (Read-Only)
         // We only map tasks that exist in the DB. New unsaved tasks won't have IDs.
@@ -710,6 +702,30 @@ const Widget: React.FC<WidgetProps> = ({
         setIsWidgetActive(true);
         playSound('connect');
     } else {
+        if (!isPreview && isEmbedded) {
+          const trackConnect = async () => {
+            let projectId = state.projectId;
+
+            if (!projectId && state.projectName) {
+              const { data: projects } = await supabase
+                .from('projects')
+                .select('id')
+                .eq('name', state.projectName)
+                .limit(1);
+              projectId = projects?.[0]?.id;
+            }
+
+            if (!projectId) return;
+
+            const host = normalizeHost(window.location.hostname || '');
+            const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
+            if (!host || !projectHost || host !== projectHost) return;
+
+            await logProjectView(projectId);
+          };
+
+          void trackConnect();
+        }
         setIsWidgetActive(true);
         open();
     }
