@@ -66,6 +66,11 @@ const Widget: React.FC<WidgetProps> = ({
   const projectScope = state.projectId ?? (state.projectName ? `name:${state.projectName}` : 'unknown-project');
   const walletKey = address ? `questlayer:wallet:${address.toLowerCase()}:${cacheScope}:${projectScope}` : '';
   const projectScopeRef = useRef<string | null>(null);
+  const normalizeHost = (value: string) => value.toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0]
+    .split(':')[0];
 
   const activeTheme = THEMES[state.activeTheme];
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
@@ -214,7 +219,12 @@ const Widget: React.FC<WidgetProps> = ({
 
         // 7. Log View Analytics (Once per session/mount)
         if (!isPreview) {
-          logProjectView(projectId);
+          const host = normalizeHost(window.location.hostname || '');
+          const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
+          const shouldLogView = host && projectHost && host === projectHost;
+          if (shouldLogView) {
+            logProjectView(projectId);
+          }
         }
 
         // 2. Fetch Tasks Mappings (Read-Only)

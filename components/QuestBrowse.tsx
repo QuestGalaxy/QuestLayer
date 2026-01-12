@@ -574,7 +574,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const isProjectOnline = (project: any) => {
     if (!project.last_ping_at) return false;
     const lastPing = new Date(project.last_ping_at).getTime();
-    return lastPing > Date.now() - 60 * 60 * 1000;
+    return lastPing > Date.now() - 24 * 60 * 60 * 1000;
   };
 
   const isNewProject = (project: any) => {
@@ -599,12 +599,12 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
         return (a.name || '').localeCompare(b.name || '');
       }
 
-      const visitsA = a.stats?.total_visits || 0;
-      const visitsB = b.stats?.total_visits || 0;
-      if (visitsA !== visitsB) return visitsB - visitsA;
       const aOnline = isProjectOnline(a);
       const bOnline = isProjectOnline(b);
       if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      const visitsA = a.stats?.total_visits || 0;
+      const visitsB = b.stats?.total_visits || 0;
+      if (visitsA !== visitsB) return visitsB - visitsA;
       const aPing = a.last_ping_at ? new Date(a.last_ping_at).getTime() : 0;
       const bPing = b.last_ping_at ? new Date(b.last_ping_at).getTime() : 0;
       if (aPing !== bPing) return bPing - aPing;
