@@ -773,17 +773,20 @@ const Widget: React.FC<WidgetProps> = ({
         ? (isRight ? 'bottom right' : 'bottom left')
         : (isRight ? 'top right' : 'top left'))
   };
-  const isPreviewFreeFormCentered = isPreview && isFreeForm && previewPositionMode === 'state';
+  const isPreviewStatePosition = isPreview && previewPositionMode === 'state';
+  const isPreviewFreeFormCentered = isPreviewStatePosition && isFreeForm;
   const previewPositionClasses = isPreviewFreeFormCentered
     ? 'inset-0'
     : 'bottom-4 right-4 md:bottom-8 md:right-8';
   const effectivePreviewPositionClasses = previewPositionMode === 'fixed'
     ? previewPositionClasses
     : (isPreviewFreeFormCentered ? 'inset-0' : getPositionClasses());
-  const previewStackClass = 'flex-col-reverse';
+  const previewStackClass = isPreviewStatePosition
+    ? (isBottom ? 'flex-col-reverse' : 'flex-col')
+    : 'flex-col-reverse';
   const previewAlignmentClasses = isPreviewFreeFormCentered
     ? 'items-center justify-center'
-    : 'items-end';
+    : (isPreviewStatePosition ? (isRight ? 'items-end' : 'items-start') : 'items-end');
   const shouldPortal = Boolean(portalContainer) && isFreeForm && !isPreview;
   const wrapperClasses = [
     isPreview ? overlayPositionClasses : (isFreeForm ? 'relative' : overlayPositionClasses),
