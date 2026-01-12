@@ -199,7 +199,7 @@ const ensurePortalMount = (): HTMLDivElement => {
 };
 
 import { fetchProjectDetails, supabase } from './lib/supabase.ts';
-import type { Task, Position, ThemeType } from './types.ts';
+import type { Position, ThemeType } from './types.ts';
 
 const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalContainer?: HTMLDivElement | null }> = ({
   initialState,

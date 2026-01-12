@@ -660,7 +660,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
   if (isBrowsing) {
     return (
-        <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col">
+        <div
+            className="fixed inset-0 z-50 bg-slate-950 flex flex-col"
+            style={{ '--questlayer-top-offset': '64px' } as React.CSSProperties}
+        >
             {/* Browser Header */}
             <div className="sticky top-0 z-50 h-16 bg-gradient-to-r from-slate-950/95 via-slate-900/90 to-slate-950/95 border-b border-white/10 flex items-center px-4 shrink-0 backdrop-blur-xl shadow-[0_12px_30px_rgba(0,0,0,0.4)] relative">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent" />

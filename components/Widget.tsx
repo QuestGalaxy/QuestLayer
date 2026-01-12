@@ -726,9 +726,9 @@ const Widget: React.FC<WidgetProps> = ({
       case 'bottom-left':
         return 'bottom-4 left-4 md:bottom-8 md:left-8';
       case 'top-right':
-        return 'top-4 right-4 md:top-8 md:right-8';
+        return 'ql-pos-top ql-pos-top-right right-4 md:right-8';
       case 'top-left':
-        return 'top-4 left-4 md:top-8 md:left-8';
+        return 'ql-pos-top ql-pos-top-left left-4 md:left-8';
       default:
         return '';
     }
@@ -745,17 +745,17 @@ const Widget: React.FC<WidgetProps> = ({
         ? (isRight ? 'bottom right' : 'bottom left')
         : (isRight ? 'top right' : 'top left'))
   };
-  const isCenteredPreview = isPreview && isFreeForm;
+  const previewPositionClasses = 'bottom-4 right-4 md:bottom-8 md:right-8';
+  const previewStackClass = 'flex-col-reverse';
   const shouldPortal = Boolean(portalContainer) && isFreeForm && !isPreview;
   const wrapperClasses = [
-    isCenteredPreview ? 'absolute inset-0' : (isFreeForm ? 'relative' : overlayPositionClasses),
+    isPreview ? overlayPositionClasses : (isFreeForm ? 'relative' : overlayPositionClasses),
     'z-[2147483000]',
-    isCenteredPreview ? 'flex' : (isFreeForm ? 'inline-flex' : 'flex'),
+    isPreview ? 'flex' : (isFreeForm ? 'inline-flex' : 'flex'),
     activeTheme.font,
-    isFreeForm ? 'flex-col' : (isBottom ? 'flex-col-reverse' : 'flex-col'),
-    isCenteredPreview ? 'items-center' : (isFreeForm ? 'items-start' : (isRight ? 'items-end' : 'items-start')),
-    isCenteredPreview ? 'justify-center' : '',
-    getPositionClasses(),
+    isPreview ? previewStackClass : (isFreeForm ? 'flex-col' : (isBottom ? 'flex-col-reverse' : 'flex-col')),
+    isPreview ? 'items-end' : (isFreeForm ? 'items-start' : (isRight ? 'items-end' : 'items-start')),
+    isPreview ? previewPositionClasses : getPositionClasses(),
     'gap-2',
     'antialiased'
   ].join(' ');
@@ -830,9 +830,9 @@ const Widget: React.FC<WidgetProps> = ({
 
   const popupContent = (
     <div
-      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition ${isFreeForm ? `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
+      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition ${isFreeForm ? `${isPreview ? 'relative' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`} z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
       style={{
-        maxHeight: (!isPreview && isOpen && maxPanelHeight)
+        maxHeight: (isOpen && maxPanelHeight)
           ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
           : undefined,
         borderColor: state.activeTheme === 'cyber'
@@ -1360,6 +1360,14 @@ const Widget: React.FC<WidgetProps> = ({
 
       {isOpen && shouldPortal && portalContainer && createPortal(popupContent, portalContainer)}
       <style>{`
+        .ql-pos-top {
+          top: calc(var(--questlayer-top-offset, 0px) + 1rem);
+        }
+        @media (min-width: 768px) {
+          .ql-pos-top {
+            top: calc(var(--questlayer-top-offset, 0px) + 2rem);
+          }
+        }
         .ql-share-progress {
           stroke-dasharray: 113;
           stroke-dashoffset: 113;
