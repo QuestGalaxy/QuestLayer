@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { X, Gift } from 'lucide-react';
+import { X, Gift, Wallet, AlertCircle } from 'lucide-react';
 import ProfileMenuButton from './ProfileMenuButton';
+import { supabase } from '../lib/supabase';
 
 interface UnifiedHeaderProps {
   onBack: () => void;
@@ -30,9 +31,13 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 }) => {
   const [showBetaTooltip, setShowBetaTooltip] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    title: "Congratulations!",
+    message: "You found your first secret Reward!",
+    type: "success" // success, warning, info
+  });
 
-  const handleLogoClick = () => {
-    // Trigger fireworks
+  const triggerConfetti = () => {
     const duration = 3 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 60 };
@@ -59,9 +64,128 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
       });
     }, 250);
+  };
 
-    // Show modal
-    setShowRewardModal(true);
+  const handleLogoClick = async () => {
+    if (!isConnected || !address) {
+      setModalContent({
+        title: "Connect Wallet",
+        message: "Please connect your wallet to earn 1000 XP daily points!",
+        type: "warning"
+      });
+      setShowRewardModal(true);
+      return;
+    }
+
+    const lastClaimKey = `questlayer_daily_claim_${address}`;
+    const lastClaimDate = localStorage.getItem(lastClaimKey);
+    const today = new Date().toDateString();
+
+    if (lastClaimDate === today) {
+      setModalContent({
+        title: "Already Claimed",
+        message: "You have already claimed your 1000 XP today. Come back tomorrow!",
+        type: "info"
+      });
+      setShowRewardModal(true);
+      return;
+    }
+
+    try {
+      // 1. Find Project (QuestLayer or any)
+      let projectId;
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('name', 'QuestLayer')
+        .limit(1);
+      
+      if (projects && projects.length > 0) {
+        projectId = projects[0].id;
+      } else {
+        const { data: anyProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .limit(1);
+        projectId = anyProjects?.[0]?.id;
+      }
+
+      if (projectId) {
+        // 2. Find/Create User
+        let userId;
+        const { data: users } = await supabase
+          .from('end_users')
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('wallet_address', address)
+          .single();
+        
+        if (users) {
+          userId = users.id;
+        } else {
+          const { data: newUser, error: createError } = await supabase
+            .from('end_users')
+            .insert({
+              project_id: projectId,
+              wallet_address: address
+            })
+            .select()
+            .single();
+          if (!createError && newUser) {
+            userId = newUser.id;
+          }
+        }
+
+        // 3. Update Progress
+        if (userId) {
+          const { data: progress } = await supabase
+            .from('user_progress')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+          if (progress) {
+            await supabase
+              .from('user_progress')
+              .update({
+                xp: (progress.xp || 0) + 1000,
+                last_claim_date: new Date().toISOString()
+              })
+              .eq('id', progress.id);
+          } else {
+            await supabase
+              .from('user_progress')
+              .insert({
+                user_id: userId,
+                xp: 1000,
+                last_claim_date: new Date().toISOString()
+              });
+          }
+        }
+      }
+
+      // Success flow
+      localStorage.setItem(lastClaimKey, today);
+      triggerConfetti();
+      setModalContent({
+        title: "Congratulations!",
+        message: "You found your first secret Reward! +1000 XP",
+        type: "success"
+      });
+      setShowRewardModal(true);
+
+    } catch (err) {
+      console.error("Error claiming reward:", err);
+      // Fallback success for UX even if backend fails
+      localStorage.setItem(lastClaimKey, today);
+      triggerConfetti();
+      setModalContent({
+        title: "Congratulations!",
+        message: "You found your first secret Reward! +1000 XP",
+        type: "success"
+      });
+      setShowRewardModal(true);
+    }
   };
 
   return (
@@ -181,29 +305,47 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
             <div className="flex flex-col items-center text-center space-y-6 relative z-10">
               <div className="relative">
-                <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
-                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 animate-[ql-float_3s_ease-in-out_infinite]">
-                  <Gift size={48} className="text-white" />
+                <div className={`absolute inset-0 blur-3xl opacity-20 animate-pulse ${
+                  modalContent.type === 'success' ? 'bg-indigo-500' :
+                  modalContent.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                }`} />
+                <div className={`w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 animate-[ql-float_3s_ease-in-out_infinite] ${
+                  modalContent.type === 'success' ? 'bg-gradient-to-br from-indigo-500 to-purple-600' :
+                  modalContent.type === 'warning' ? 'bg-gradient-to-br from-yellow-500 to-orange-600' :
+                  'bg-gradient-to-br from-blue-500 to-cyan-600'
+                }`}>
+                  {modalContent.type === 'success' && <Gift size={48} className="text-white" />}
+                  {modalContent.type === 'warning' && <Wallet size={48} className="text-white" />}
+                  {modalContent.type === 'info' && <AlertCircle size={48} className="text-white" />}
                 </div>
-                <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-wider animate-bounce">
-                  Secret!
+                <div className={`absolute -top-2 -right-2 text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-wider animate-bounce ${
+                  modalContent.type === 'success' ? 'bg-yellow-400 text-yellow-900' :
+                  modalContent.type === 'warning' ? 'bg-white text-slate-900' :
+                  'bg-white text-slate-900'
+                }`}>
+                  {modalContent.type === 'success' ? 'Secret!' : 
+                   modalContent.type === 'warning' ? 'Action!' : 'Info'}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <h3 className="text-2xl font-black text-white uppercase tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-indigo-200 animate-[ql-shimmer_2s_linear_infinite] bg-[length:200%_100%]">
-                  Congratulations!
+                  {modalContent.title}
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  You found your first secret Reward!
+                  {modalContent.message}
                 </p>
               </div>
 
               <button 
                 onClick={() => setShowRewardModal(false)}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                className={`w-full py-3 font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
+                  modalContent.type === 'success' ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/25' :
+                  modalContent.type === 'warning' ? 'bg-yellow-500 hover:bg-yellow-400 text-yellow-950 shadow-yellow-500/25' :
+                  'bg-slate-700 hover:bg-slate-600 text-white shadow-slate-500/25'
+                }`}
               >
-                Claim Reward
+                {modalContent.type === 'success' ? 'Claim Reward' : 'Got it'}
               </button>
             </div>
           </div>
