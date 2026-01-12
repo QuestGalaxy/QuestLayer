@@ -3,6 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Crown, Flame, Globe, Loader2, St
 import { fetchAllProjects, fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
+import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 
 interface LeaderboardPageProps {
@@ -343,30 +344,24 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-y-auto">
-      <div className="fixed top-6 right-6 z-50">
-        <ProfileMenuButton
+      {/* Unified Sticky Header */}
+      <UnifiedHeader
+          onBack={onBack}
+          onHome={onBack}
           isConnected={isConnected}
           address={address}
-          xp={userStats.xp}
-          level={userStats.level}
+          userStats={userStats}
           nextLevelXP={nextLevelXP}
           onConnect={() => open()}
           onDisconnect={() => disconnect()}
-          onHome={onBack}
           onLeaderboard={() => {}}
           onWidgetBuilder={onWidgetBuilder}
-        />
-      </div>
-      <div className="relative overflow-hidden">
+      />
+
+      <div className="relative overflow-hidden pt-28 md:pt-36">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.35),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(14,165,233,0.3),transparent_55%)]" />
         <div className="relative z-10 px-6 py-10 md:px-12">
-          <button
-            onClick={onBack}
-            className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-200 hover:text-white"
-          >
-            <ArrowRight size={14} className="rotate-180" /> Back
-          </button>
 
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>

@@ -3,6 +3,7 @@ import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP }
 import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles } from 'lucide-react';
 import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
+import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 import { INITIAL_TASKS, SPONSORED_TASKS, THEMES } from '../constants';
 import { AppState, Position, ThemeType, Task } from '../types';
@@ -255,7 +256,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [iframeBlocked, setIframeBlocked] = useState(false);
   const iframeLoadTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
-  const [showBetaTooltip, setShowBetaTooltip] = useState(false);
 
   const ITEMS_PER_PAGE = 12;
 
@@ -929,54 +929,22 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       
       {/* Content */}
       <div className="flex-1 relative">
-        <div className="fixed top-6 left-6 z-50 group/logo">
-            <button 
-                onClick={onBack}
-                className="px-3 py-2 text-slate-200 hover:text-white transition-colors bg-slate-950/70 backdrop-blur-md rounded-xl border border-white/10 shadow-lg relative overflow-hidden group"
-            >
-                <span className="absolute inset-0 bg-[linear-gradient(0deg,transparent,rgba(99,102,241,0.35),transparent)] animate-[ql-scanline_3.2s_linear_infinite] pointer-events-none" />
-                <span className="absolute inset-0 opacity-60 bg-[linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-[size:4px_100%] pointer-events-none group-hover:opacity-90 transition-opacity" />
-                <span className="pixel-text inline-block text-[12px] uppercase tracking-[0.4em] animate-[ql-flicker_3.4s_ease-in-out_infinite] text-indigo-200 group-hover:text-indigo-100 group-hover:scale-110 transition-transform duration-200 group-hover:animate-[ql-pixel-jitter_0.4s_steps(2,end)_infinite] will-change-transform">
-                  QuestLayer
-                </span>
-            </button>
-
-            <div 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setShowBetaTooltip(prev => !prev);
-                }}
-                className="absolute -top-2 -right-3 bg-indigo-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md border border-white/20 shadow-lg cursor-pointer hover:bg-indigo-400 hover:scale-110 transition-all z-20 select-none"
-            >
-                BETA
-            </div>
-
-            {showBetaTooltip && (
-                <div className="absolute top-full left-0 mt-2 w-64 p-4 bg-slate-900 border border-white/10 rounded-xl shadow-xl text-xs text-slate-300 z-30 backdrop-blur-md">
-                    <div className="font-bold text-white mb-1">BETA v0.4</div>
-                    QuestLayer is currently in public beta. Please note that as we optimize the platform, progress and data may occasionally be reset.
-                </div>
-            )}
-        </div>
-
-        {/* Wallet Connect / Profile Button */}
-        <div className="fixed top-6 right-6 z-50">
-            <ProfileMenuButton
-                isConnected={isConnected}
-                address={address}
-                xp={userStats.xp}
-                level={userStats.level}
-                nextLevelXP={nextLevelXP}
-                onConnect={() => open()}
-                onDisconnect={() => disconnect()}
-                onHome={() => {
-                  setIsBrowsing(false);
-                  setIsIframeLoading(false);
-                }}
-                onLeaderboard={onLeaderboard}
-                onWidgetBuilder={onWidgetBuilder}
-            />
-        </div>
+        {/* Unified Sticky Header */}
+        <UnifiedHeader
+            onBack={onBack}
+            onHome={() => {
+                setIsBrowsing(false);
+                setIsIframeLoading(false);
+            }}
+            isConnected={isConnected}
+            address={address}
+            userStats={userStats}
+            nextLevelXP={nextLevelXP}
+            onConnect={() => open()}
+            onDisconnect={() => disconnect()}
+            onLeaderboard={onLeaderboard}
+            onWidgetBuilder={onWidgetBuilder}
+        />
 
         {/* Video Background */}
         <div className="absolute top-0 left-0 w-full h-[500px] overflow-hidden pointer-events-none opacity-30 mask-linear-fade">
