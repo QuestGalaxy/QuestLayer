@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import confetti from 'canvas-confetti';
+import { X, Gift } from 'lucide-react';
 import ProfileMenuButton from './ProfileMenuButton';
 
 interface UnifiedHeaderProps {
@@ -27,6 +29,40 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   onWidgetBuilder
 }) => {
   const [showBetaTooltip, setShowBetaTooltip] = useState(false);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+
+  const handleLogoClick = () => {
+    // Trigger fireworks
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 60 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        ...defaults, 
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults, 
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
+
+    // Show modal
+    setShowRewardModal(true);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
@@ -36,14 +72,17 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         <div className="relative flex items-center justify-between gap-2 md:gap-4 bg-slate-950/40 backdrop-blur-xl rounded-2xl border border-white/10 p-1.5 md:p-2 shadow-2xl hover:bg-slate-950/60 transition-all duration-300 ring-1 ring-white/5 w-full">
           
           {/* Center Video - Absolute Positioned behind content */}
-          <div className="absolute bottom-0 z-0 pointer-events-none select-none flex items-center justify-center ql-video-patrol">
+          <div 
+            onClick={handleLogoClick}
+            className="absolute bottom-0 z-0 pointer-events-auto cursor-pointer select-none flex items-center justify-center ql-video-patrol hover:scale-110 transition-transform duration-300"
+          >
             <video 
               src="/questLogo.webm"
               autoPlay 
               loop 
               muted 
               playsInline
-              className="h-18 md:h-24 w-auto object-contain opacity-90"
+              className="h-20 md:h-28 w-auto object-contain opacity-90"
             />
           </div>
           
@@ -119,6 +158,76 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Secret Reward Modal */}
+      {showRewardModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 pointer-events-auto">
+          <div 
+            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setShowRewardModal(false)}
+          />
+          <div className="relative w-full max-w-md bg-slate-900 border border-indigo-500/30 rounded-2xl p-8 shadow-2xl transform transition-all scale-100 animate-[ql-modal-pop_0.4s_ease-out]">
+            {/* Shiny Border Effect */}
+            <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+              <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-[ql-shine_3s_linear_infinite]" />
+            </div>
+
+            <button 
+              onClick={() => setShowRewardModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex flex-col items-center text-center space-y-6 relative z-10">
+              <div className="relative">
+                <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
+                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 animate-[ql-float_3s_ease-in-out_infinite]">
+                  <Gift size={48} className="text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-wider animate-bounce">
+                  Secret!
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 via-white to-indigo-200 animate-[ql-shimmer_2s_linear_infinite] bg-[length:200%_100%]">
+                  Congratulations!
+                </h3>
+                <p className="text-slate-400 leading-relaxed">
+                  You found your first secret Reward!
+                </p>
+              </div>
+
+              <button 
+                onClick={() => setShowRewardModal(false)}
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Claim Reward
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes ql-modal-pop {
+          0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes ql-shine {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes ql-float {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        @keyframes ql-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </header>
   );
 };
