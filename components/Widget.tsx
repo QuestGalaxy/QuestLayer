@@ -1362,6 +1362,8 @@ const Widget: React.FC<WidgetProps> = ({
       </div>
   );
 
+  const shouldShowTrigger = !(isPreviewStatePosition && isFreeForm && isOpen);
+
   return (
     <>
       {isOpen && (shouldPortal && portalContainer ? createPortal(overlayElement, portalContainer) : overlayElement)}
@@ -1370,31 +1372,33 @@ const Widget: React.FC<WidgetProps> = ({
         className={`${wrapperClasses} ${!isFreeForm && isOpen ? (isPreview ? 'max-h-[calc(100%-6rem)]' : 'max-h-[calc(100vh-6rem)]') : ''}`}
         style={wrapperStyle}
       >
-        <button
-          onClick={() => {
-            if (!isOpen) initAudio();
-            setIsOpen(prev => !prev);
-          }}
-          style={triggerStyle}
-          className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
-        >
-          {!effectiveConnected ? (
-            <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">
-              <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
-              Connect
-            </span>
-          ) : (
-            <span className="flex items-center gap-2 md:gap-3">
-              <div className="bg-white/10 px-1 py-0.5 rounded text-[9px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
-                {shortAddress}
-              </div>
-              <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
-                <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
-                <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
-              </div>
-            </span>
-          )}
-        </button>
+        {shouldShowTrigger && (
+          <button
+            onClick={() => {
+              if (!isOpen) initAudio();
+              setIsOpen(prev => !prev);
+            }}
+            style={triggerStyle}
+            className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
+          >
+            {!effectiveConnected ? (
+              <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">
+                <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
+                Connect
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 md:gap-3">
+                <div className="bg-white/10 px-1 py-0.5 rounded text-[9px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
+                  {shortAddress}
+                </div>
+                <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
+                  <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
+                  <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
+                </div>
+              </span>
+            )}
+          </button>
+        )}
         {isOpen && !shouldPortal && popupContent}
       </div>
 
