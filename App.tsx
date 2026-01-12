@@ -542,6 +542,7 @@ const App: React.FC = () => {
               state={state} 
               setState={setState} 
               isPreview={true}
+              previewPositionMode="state"
             />
           </div>
         </main>

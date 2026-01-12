@@ -17,6 +17,7 @@ interface WidgetProps {
   state: AppState;
   setState: React.Dispatch<React.SetStateAction<AppState>>;
   isPreview?: boolean;
+  previewPositionMode?: 'fixed' | 'state';
   isEmbedded?: boolean;
   portalContainer?: HTMLElement | null;
 }
@@ -27,6 +28,7 @@ const Widget: React.FC<WidgetProps> = ({
   state,
   setState,
   isPreview = false,
+  previewPositionMode = 'fixed',
   isEmbedded = false,
   portalContainer = null
 }) => {
@@ -771,8 +773,17 @@ const Widget: React.FC<WidgetProps> = ({
         ? (isRight ? 'bottom right' : 'bottom left')
         : (isRight ? 'top right' : 'top left'))
   };
-  const previewPositionClasses = 'bottom-4 right-4 md:bottom-8 md:right-8';
+  const isPreviewFreeFormCentered = isPreview && isFreeForm && previewPositionMode === 'state';
+  const previewPositionClasses = isPreviewFreeFormCentered
+    ? 'inset-0'
+    : 'bottom-4 right-4 md:bottom-8 md:right-8';
+  const effectivePreviewPositionClasses = previewPositionMode === 'fixed'
+    ? previewPositionClasses
+    : (isPreviewFreeFormCentered ? 'inset-0' : getPositionClasses());
   const previewStackClass = 'flex-col-reverse';
+  const previewAlignmentClasses = isPreviewFreeFormCentered
+    ? 'items-center justify-center'
+    : 'items-end';
   const shouldPortal = Boolean(portalContainer) && isFreeForm && !isPreview;
   const wrapperClasses = [
     isPreview ? overlayPositionClasses : (isFreeForm ? 'relative' : overlayPositionClasses),
@@ -780,8 +791,8 @@ const Widget: React.FC<WidgetProps> = ({
     isPreview ? 'flex' : (isFreeForm ? 'inline-flex' : 'flex'),
     activeTheme.font,
     isPreview ? previewStackClass : (isFreeForm ? 'flex-col' : (isBottom ? 'flex-col-reverse' : 'flex-col')),
-    isPreview ? 'items-end' : (isFreeForm ? 'items-start' : (isRight ? 'items-end' : 'items-start')),
-    isPreview ? previewPositionClasses : getPositionClasses(),
+    isPreview ? previewAlignmentClasses : (isFreeForm ? 'items-start' : (isRight ? 'items-end' : 'items-start')),
+    isPreview ? effectivePreviewPositionClasses : getPositionClasses(),
     'gap-2',
     'antialiased'
   ].join(' ');
