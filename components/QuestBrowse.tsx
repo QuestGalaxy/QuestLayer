@@ -284,17 +284,41 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           );
           
           const sortedProjects = projectsWithStats.sort((a, b) => {
+            // Sort by Online status first (24h window)
+            const isOnlineA = a.last_ping_at && (new Date(a.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000);
+            const isOnlineB = b.last_ping_at && (new Date(b.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000);
+            if (isOnlineA !== isOnlineB) return isOnlineA ? -1 : 1;
+
+            // Then by visits
             const visitsA = a.stats?.total_visits || 0;
             const visitsB = b.stats?.total_visits || 0;
-            return visitsB - visitsA;
+            if (visitsA !== visitsB) return visitsB - visitsA;
+
+            // Then by creation date (newest first)
+            const createdA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const createdB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return createdB - createdA;
           });
 
-          const seenDomains = new Set();
+          // Deduplicate: Allow same domain from DIFFERENT users, but unique per user.
+          // Key = domain + owner_wallet
+          const normalize = (d: string) => {
+            try {
+              const url = d.trim().startsWith('http') ? d.trim() : `https://${d.trim()}`;
+              return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
+            } catch { return d.toLowerCase(); }
+          };
+
+          const seenKeys = new Set();
           const uniqueProjects = sortedProjects.filter(project => {
             if (!project.domain) return false;
-            const domain = project.domain.toLowerCase();
-            if (seenDomains.has(domain)) return false;
-            seenDomains.add(domain);
+            
+            const domain = normalize(project.domain);
+            const owner = project.owner_wallet || 'anon'; // Handle cases with missing owner if any
+            const key = `${domain}|${owner}`;
+
+            if (seenKeys.has(key)) return false;
+            seenKeys.add(key);
             return true;
           });
 
