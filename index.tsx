@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { AppKitProvider } from './appkit.tsx';
 import './index.css';
+import './lib/audio-effects.js';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

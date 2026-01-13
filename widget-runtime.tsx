@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import Widget from './components/Widget.tsx';
 import { INITIAL_TASKS } from './constants.ts';
 import { AppKitProvider } from './appkit.tsx';
+import { setupAudioListeners } from './lib/audio-effects.js';
 import type { AppState } from './types.ts';
 import widgetStyles from './widget.css?inline';
 
@@ -151,6 +152,7 @@ const ensureMount = (options: { mountId?: string; inline?: boolean } = {}): HTML
 
   const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
   ensureShadowAssets(shadow);
+  setupAudioListeners(shadow);
 
   let container = shadow.querySelector(`#${ROOT_ID}`) as HTMLDivElement | null;
   if (!container) {
@@ -186,6 +188,7 @@ const ensurePortalMount = (): HTMLDivElement => {
 
   const shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
   ensureShadowAssets(shadow);
+  setupAudioListeners(shadow);
 
   let container = shadow.querySelector(`#${PORTAL_ROOT_ID}`) as HTMLDivElement | null;
   if (!container) {
