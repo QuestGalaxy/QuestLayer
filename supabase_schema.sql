@@ -310,6 +310,13 @@ alter table viral_boost_completions enable row level security;
 create policy "Users can read own viral boosts" on viral_boost_completions for select using (true);
 create policy "Users can insert own viral boosts" on viral_boost_completions for insert with check (true);
 
+-- Grant Execute Permissions for RPCs
+GRANT EXECUTE ON FUNCTION log_project_view(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_project_stats(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_global_dashboard_stats(text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION claim_daily_bonus(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_global_xp(text) TO anon, authenticated;
+
 -- 11. Daily Claim Logs (For Analytics)
 create table if not exists daily_claim_logs (
   id uuid default uuid_generate_v4() primary key,

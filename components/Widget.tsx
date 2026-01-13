@@ -721,7 +721,18 @@ const Widget: React.FC<WidgetProps> = ({
 
             const host = normalizeHost(window.location.hostname || '');
             const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
-            if (!host || !projectHost || host !== projectHost) return;
+            
+            console.log('[QuestLayer] Tracking Connect:', { 
+              host, 
+              projectHost, 
+              projectId, 
+              match: host === projectHost 
+            });
+
+            if (!host || !projectHost || host !== projectHost) {
+              console.warn('[QuestLayer] Domain mismatch or missing configuration. Tracking skipped.');
+              return;
+            }
 
             await logProjectView(projectId);
           };
