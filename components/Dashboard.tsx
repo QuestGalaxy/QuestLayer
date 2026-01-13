@@ -154,42 +154,97 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
     return lastPing > fiveMinutesAgo;
   }, [project.last_ping_at]);
 
+  const getFaviconUrl = (link: string) => {
+    try {
+      if (!link || link.length < 4) return '';
+      let validLink = link.trim();
+      validLink = validLink.replace(/[\/.]+$/, ''); 
+      if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
+        validLink = `https://${validLink}`;
+      }
+      const url = new URL(validLink);
+      let hostname = url.hostname;
+      if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
+      const parts = hostname.split('.');
+      if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
+      return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${hostname}&size=128`;
+    } catch {
+      return '';
+    }
+  };
+
+  const projectIconUrl = project.logo || (project.domain ? getFaviconUrl(project.domain) : '');
+
   return (
     <div
       onClick={onSelect}
       className="group relative cursor-pointer rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_30px_rgba(99,102,241,0.1)] flex flex-col h-full"
     >
       {/* Card Header / Image Area */}
-      <div className="relative h-32 w-full bg-slate-950/50 border-b border-white/5 overflow-hidden">
-        {ogImage ? (
-          <img 
-            src={ogImage} 
-            alt="Preview" 
-            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105 transform"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div
-              className="absolute inset-0 opacity-70"
-              style={{
-                background: `radial-gradient(120% 120% at 10% 10%, ${project.accent_color}55, transparent 60%), radial-gradient(120% 120% at 90% 90%, ${project.accent_color}33, transparent 65%), linear-gradient(135deg, #0f172a 0%, #0b1120 60%)`
-              }}
+      <div className="relative h-32 w-full bg-slate-950/50 border-b border-white/5">
+        <div className="absolute inset-0 overflow-hidden">
+          {ogImage ? (
+            <img 
+              src={ogImage} 
+              alt="Preview" 
+              className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105 transform"
             />
-            <div className="relative flex flex-col items-center justify-center text-white/80">
-              <span className="text-3xl font-black tracking-tight">
-                {getProjectInitials(project.name)}
-              </span>
-              <span className="text-[9px] uppercase tracking-[0.35em] text-white/40">Widget</span>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className="absolute inset-0 opacity-70"
+                style={{
+                  background: `radial-gradient(120% 120% at 10% 10%, ${project.accent_color}55, transparent 60%), radial-gradient(120% 120% at 90% 90%, ${project.accent_color}33, transparent 65%), linear-gradient(135deg, #0f172a 0%, #0b1120 60%)`
+                }}
+              />
+              <div className="relative flex flex-col items-center justify-center text-white/80">
+                <span className="text-3xl font-black tracking-tight">
+                  {getProjectInitials(project.name)}
+                </span>
+                <span className="text-[9px] uppercase tracking-[0.35em] text-white/40">Widget</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
         
         {/* Floating Icon Badge */}
         <div 
-          className="absolute -bottom-5 left-6 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg z-10 border-2 border-slate-900"
-          style={{ backgroundColor: project.accent_color }}
+          className="absolute -bottom-5 left-6 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg z-20 border-2 border-slate-900 overflow-hidden"
+          style={{ 
+            backgroundColor: projectIconUrl ? 'transparent' : project.accent_color 
+          }}
         >
-          <Layout size={20} />
+          {projectIconUrl ? (
+            <img 
+              src={projectIconUrl} 
+              alt={project.name} 
+              className="w-full h-full object-cover"
+              onLoad={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (img.naturalWidth < 32) {
+                  img.style.display = 'none';
+                  const zapIcon = img.nextElementSibling as HTMLElement;
+                  if (zapIcon) zapIcon.style.display = 'flex';
+                  const parent = img.parentElement;
+                  if (parent) parent.style.backgroundColor = project.accent_color;
+                }
+              }}
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+                const zapIcon = img.nextElementSibling as HTMLElement;
+                if (zapIcon) zapIcon.style.display = 'flex';
+                const parent = img.parentElement;
+                if (parent) parent.style.backgroundColor = project.accent_color;
+              }}
+            />
+          ) : null}
+          <div 
+            style={{ display: projectIconUrl ? 'none' : 'flex' }}
+            className="w-full h-full items-center justify-center"
+          >
+            <Layout size={20} />
+          </div>
         </div>
 
         {/* Theme Badge */}
@@ -211,7 +266,7 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
         </div>
       </div>
 
-      <div className="p-6 pt-8 flex-1 flex flex-col">
+      <div className="p-6 pt-8 flex-1 flex flex-col relative z-0">
         <h3 className="text-xl font-bold text-white mb-1 truncate group-hover:text-indigo-400 transition-colors">
           {project.name}
         </h3>

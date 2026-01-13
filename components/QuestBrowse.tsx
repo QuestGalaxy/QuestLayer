@@ -80,6 +80,29 @@ const createSeededRandom = (seed: number) => {
   };
 };
 
+const getFaviconUrl = (link: string) => {
+  try {
+    if (!link || link.length < 4) return '';
+    let validLink = link.trim();
+    // Remove trailing slashes and dots
+    validLink = validLink.replace(/[\/.]+$/, ''); 
+    if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
+      validLink = `https://${validLink}`;
+    }
+    const url = new URL(validLink);
+    let hostname = url.hostname;
+    // Remove trailing dot if exists
+    if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
+    const parts = hostname.split('.');
+    if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
+    
+    // Use Google's newer favicon API which provides higher resolution
+    return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${hostname}&size=128`;
+  } catch {
+    return '';
+  }
+};
+
 const pickRandomTasks = (tasks: Task[], count: number, rng: () => number) => {
   const pool = [...tasks];
   for (let i = pool.length - 1; i > 0; i -= 1) {
@@ -172,10 +195,42 @@ const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClic
         )}
 
         <div 
-          className="absolute -bottom-6 left-6 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl z-10 border-4 border-slate-900 transition-transform group-hover:scale-110 duration-300"
-          style={{ backgroundColor: project.accent_color }}
+          className="absolute -bottom-6 left-6 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl z-20 border-4 border-slate-900 transition-transform group-hover:scale-110 duration-300 overflow-hidden"
+          style={{ 
+            backgroundColor: getFaviconUrl(project.domain) ? 'transparent' : project.accent_color 
+          }}
         >
-          <Zap size={24} fill="currentColor" />
+          {getFaviconUrl(project.domain) ? (
+            <img 
+              src={getFaviconUrl(project.domain)}
+              alt={project.name}
+              className="w-full h-full object-cover"
+              onLoad={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (img.naturalWidth < 32) {
+                  img.style.display = 'none';
+                  const zapIcon = img.nextElementSibling as HTMLElement;
+                  if (zapIcon) zapIcon.style.display = 'flex';
+                  const parent = img.parentElement;
+                  if (parent) parent.style.backgroundColor = project.accent_color;
+                }
+              }}
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+                const zapIcon = img.nextElementSibling as HTMLElement;
+                if (zapIcon) zapIcon.style.display = 'flex';
+                const parent = img.parentElement;
+                if (parent) parent.style.backgroundColor = project.accent_color;
+              }}
+            />
+          ) : null}
+          <div 
+            style={{ display: getFaviconUrl(project.domain) ? 'none' : 'flex' }}
+            className="items-center justify-center w-full h-full"
+          >
+            <Zap size={24} fill="currentColor" />
+          </div>
         </div>
       </div>
 
