@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Code, Wallet, Target, Trophy, ChevronRight, Sparkles, LogIn } from 'lucide-react';
+import { Code, Wallet, Target, Trophy, ChevronRight, Sparkles, LogIn, X } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
 
@@ -12,6 +12,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAutoLaunch = true }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
@@ -211,6 +212,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
             <div 
               onMouseEnter={() => setHoveredCard(1)} 
               onMouseLeave={() => setHoveredCard(null)}
+              onClick={() => setActiveVideo('/EmbedCode.webm')}
               className="group cursor-pointer"
             >
               <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]">
@@ -228,7 +230,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-orange-500/10 transition-all overflow-hidden">
                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(251,146,60,0.25),transparent_65%)] pointer-events-none" />
-                     <Code size={48} className="text-orange-500/50 group-hover:text-orange-200 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
+                     <video
+                        src="/EmbedCode.webm"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
+                     />
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Inject QuestLayer Snippet</p>
                 </div>
@@ -239,6 +248,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
             <div 
               onMouseEnter={() => setHoveredCard(2)} 
               onMouseLeave={() => setHoveredCard(null)}
+              onClick={() => setActiveVideo('/ConnectWallet.webm')}
               className="group cursor-pointer"
             >
               <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '0.4s' }}>
@@ -256,7 +266,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 transition-all overflow-hidden">
                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(129,140,248,0.25),transparent_65%)] pointer-events-none" />
-                     <Wallet size={48} className="text-indigo-500/50 group-hover:text-indigo-200 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500" />
+                     <video
+                        src="/ConnectWallet.webm"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
+                     />
+                     <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-500">
+                        <Wallet size={48} className="text-indigo-500/50" />
+                     </div>
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Floating Wallet Button</p>
                 </div>
@@ -397,6 +417,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
       <div className="mt-10 border-t border-white/1 bg-white/2 backdrop-blur-sm">
         <GlobalFooter className="pt-8" />
       </div>
+
+      {/* Video Lightbox Modal */}
+       {activeVideo && (
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+           <div 
+             className="absolute inset-0 bg-[#05010d]/90 backdrop-blur-2xl cursor-pointer"
+             onClick={() => setActiveVideo(null)}
+           />
+           
+           <div className="relative w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(249,115,22,0.2)] animate-in zoom-in-95 duration-300">
+             {/* Close Button */}
+             <button 
+               onClick={() => setActiveVideo(null)}
+               className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-white/10 text-white rounded-full backdrop-blur-md transition-all border border-white/10 group"
+             >
+               <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+             </button>
+ 
+             {/* Modal Video */}
+             <video
+               key={activeVideo}
+               src={activeVideo}
+               autoPlay
+               controls
+               loop
+               className="w-full h-full object-contain"
+             />
+ 
+             {/* Decorative Glows */}
+             <div className="absolute -top-24 -left-24 w-64 h-64 bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
+             <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+           </div>
+         </div>
+       )}
     </div>
   );
 };
