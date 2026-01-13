@@ -892,7 +892,7 @@ const Widget: React.FC<WidgetProps> = ({
       if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
       const parts = hostname.split('.');
       if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
-      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
+      return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${hostname}&size=128`;
     } catch {
       return '';
     }
@@ -925,7 +925,11 @@ const Widget: React.FC<WidgetProps> = ({
       >
         <div className="flex items-center gap-2 md:gap-3 truncate">
           <div
-            style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
+            style={{ 
+              backgroundColor: projectIconUrl 
+                ? 'transparent' 
+                : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor)) 
+            }}
             className={`w-8 h-8 md:w-9 md:h-9 shadow-lg shrink-0 overflow-hidden flex items-center justify-center ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
           >
             {projectIconUrl ? (
@@ -933,11 +937,32 @@ const Widget: React.FC<WidgetProps> = ({
                 src={projectIconUrl}
                 alt={state.projectName}
                 className="w-full h-full object-cover"
+                onLoad={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  // Google's fallback "globe" is usually 16x16 or 32x32
+                  // If it's too small and we requested 128, it's likely a fallback or low quality
+                  if (img.naturalWidth < 32) {
+                    img.style.display = 'none';
+                    const zapIcon = img.nextElementSibling as HTMLElement;
+                    if (zapIcon) zapIcon.style.display = 'flex';
+                    // Restore background if falling back to Zap
+                    const parent = img.parentElement;
+                    if (parent) {
+                      parent.style.backgroundColor = isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor);
+                    }
+                  }
+                }}
                 onError={(e) => {
                   // If favicon fails, fallback to Zap icon
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  const zapIcon = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                  const zapIcon = img.nextElementSibling as HTMLElement;
                   if (zapIcon) zapIcon.style.display = 'flex';
+                  // Restore background if falling back to Zap
+                  const parent = img.parentElement;
+                  if (parent) {
+                    parent.style.backgroundColor = isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor);
+                  }
                 }}
               />
             ) : null}
