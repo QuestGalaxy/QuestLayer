@@ -1199,12 +1199,12 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                           <button
                             key={`${link.domain}-${index}`}
                             onClick={() => handleBrowseUrl(link.domain)}
-                            className="relative w-64 h-36 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.2)] transition-all"
+                            className="group relative w-64 h-36 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)] transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:border-indigo-500/30"
                           >
                             <img
                               src={featuredImages[link.domain]}
                               alt={link.name}
-                              className="absolute inset-0 w-full h-full object-cover"
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                               loading="lazy"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
