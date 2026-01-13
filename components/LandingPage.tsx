@@ -118,14 +118,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
         {/* --- HERO SECTION --- */}
         <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000 w-full">
            <div className="flex flex-col items-center">
-             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mb-6">
-                <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20 glow-orange">
-                  <img
-                    src="/logoLayer.webp"
-                    alt="QuestLayer logo"
-                    className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-                  />
-                </div>
+             <div className="flex flex-row items-center gap-2 sm:gap-4 mb-6">
+                <video
+                   src="/questLogo.webm"
+                   autoPlay
+                   loop
+                   muted
+                   playsInline
+                   className="h-16 w-16 sm:h-24 sm:w-24 object-contain"
+                 />
                 <h1 className="pixel-text text-3xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
                   QUESTLAYER
                 </h1>
@@ -187,10 +188,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
             <div className={`w-32 h-32 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-400/20 p-1.5 animate-float transition-all duration-700 border-4 ${getHubGlow()}`}>
                <div className="w-full h-full rounded-full bg-slate-950/90 flex flex-col items-center justify-center backdrop-blur-3xl overflow-hidden relative">
                   <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
-                  <img
-                    src="/logoLayer.webp"
-                    alt="QuestLayer logo"
-                    className="h-14 w-14 md:h-16 md:w-16 object-contain mb-2 relative z-10"
+                  <video
+                    src="/questLogo.webm"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="h-20 w-20 md:h-24 md:w-24 object-contain mb-2 relative z-10"
                   />
                   <span className="pixel-text text-[10px] text-white/40 tracking-[0.4em] relative z-10">CORE</span>
                </div>
