@@ -879,6 +879,27 @@ const Widget: React.FC<WidgetProps> = ({
     />
   );
 
+  const getFaviconUrl = (link: string) => {
+    try {
+      if (!link || link.length < 4) return '';
+      let validLink = link.trim();
+      validLink = validLink.replace(/[\/.]+$/, ''); 
+      if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
+        validLink = `https://${validLink}`;
+      }
+      const url = new URL(validLink);
+      let hostname = url.hostname;
+      if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
+      const parts = hostname.split('.');
+      if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
+      return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
+    } catch {
+      return '';
+    }
+  };
+
+  const projectIconUrl = state.projectLogo || (state.projectDomain ? getFaviconUrl(state.projectDomain) : '');
+
   const popupContent = (
     <div
       className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition ${isFreeForm ? `${isPreview ? 'relative' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`} z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
@@ -905,9 +926,27 @@ const Widget: React.FC<WidgetProps> = ({
         <div className="flex items-center gap-2 md:gap-3 truncate">
           <div
             style={{ backgroundColor: isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor) }}
-            className={`p-2 md:p-2 shadow-lg shrink-0 ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
+            className={`w-8 h-8 md:w-9 md:h-9 shadow-lg shrink-0 overflow-hidden flex items-center justify-center ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
           >
-            <Zap className="w-[12px] h-[12px] md:w-[14px] md:h-[14px]" fill="currentColor" style={isTransparentTheme ? { color: state.accentColor } : {}} />
+            {projectIconUrl ? (
+              <img 
+                src={projectIconUrl}
+                alt={state.projectName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // If favicon fails, fallback to Zap icon
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const zapIcon = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                  if (zapIcon) zapIcon.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              style={{ display: projectIconUrl ? 'none' : 'flex' }}
+              className="w-full h-full items-center justify-center"
+            >
+              <Zap className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" />
+            </div>
           </div>
           <span 
             className={`font-black text-sm md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
