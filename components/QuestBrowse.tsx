@@ -112,10 +112,23 @@ const pickRandomTasks = (tasks: Task[], count: number, rng: () => number) => {
   return pool.slice(0, Math.min(count, pool.length));
 };
 
-const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClick: () => void; onImageError: (id: string) => void }> = ({ project, stats, isOnline, onClick, onImageError }) => {
-  const [ogImage, setOgImage] = useState<string | null>(null);
+const BrowseCard: React.FC<{ 
+  project: any; 
+  stats: any; 
+  isOnline: boolean; 
+  onClick: () => void; 
+  onImageError: (id: string) => void;
+  cachedImage?: string | null;
+  onImageLoad: (id: string, url: string) => void;
+}> = ({ project, stats, isOnline, onClick, onImageError, cachedImage, onImageLoad }) => {
+  const [ogImage, setOgImage] = useState<string | null>(cachedImage || null);
   
   useEffect(() => {
+    if (cachedImage) {
+      setOgImage(cachedImage);
+      return;
+    }
+
     if (!project.domain) {
         onImageError(project.id);
         return;
@@ -131,6 +144,7 @@ const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClic
         if (isMounted) {
             if (data?.image) {
                 setOgImage(data.image);
+                onImageLoad(project.id, data.image);
             } else {
                 onImageError(project.id);
             }
@@ -144,7 +158,7 @@ const BrowseCard: React.FC<{ project: any; stats: any; isOnline: boolean; onClic
 
     fetchOg();
     return () => { isMounted = false; };
-  }, [project.domain, project.id, onImageError]);
+  }, [project.domain, project.id, onImageError, cachedImage, onImageLoad]);
 
   const fallbackAccent = project.accent_color || '#6366f1';
   const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();
@@ -284,6 +298,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [urlInput, setUrlInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
+  const [ogImageCache, setOgImageCache] = useState<Record<string, string>>({});
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
   const isDev = import.meta.env.DEV;
   const NEW_WIDGET_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
@@ -1135,6 +1150,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                     isOnline={isProjectOnline(project)}
                     onClick={() => handleProjectClick(project)}
                     onImageError={handleImageError} 
+                    cachedImage={ogImageCache[project.id]}
+                    onImageLoad={(id, url) => setOgImageCache(prev => ({ ...prev, [id]: url }))}
                   />
                 ))}
               </div>
