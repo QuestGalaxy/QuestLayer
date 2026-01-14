@@ -26,6 +26,7 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/seo.css">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="/widget-runtime.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-26XSSG4VLF"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -73,15 +74,92 @@
         </div>
       </div>
       
-    <div class="hero-media">
-      <div class="media-frame">
-        <img src="/qlayer.jpeg" alt="QuestLayer widget preview" loading="lazy">
-        <div class="media-glow"></div>
-      </div>
+    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
+       <div id="widget-hero-xp-progression" class="widget-mount" style="width: 100%; height: 100%;"></div>
+       <script type="module">
+         import { initQuestLayer } from '/widget-runtime.js';
+         const boot = () => {
+             initQuestLayer({
+                mountId: 'widget-hero-xp-progression',
+                mode: 'demo',
+                presetName: 'xp-progression',
+                demoConnected: true
+             });
+         };
+         if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+         } else {
+             boot();
+         }
+       </script>
     </div>
-
+  
     </div>
   </section>
+      
+        <section class="section">
+            <div class="container">
+                <h2>Live Demos</h2>
+                <div class="grid">
+                    
+                        <div class="card demo-widget-card" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <div style="width: 100%; height: 100%; display: flex; justify-content: center;">
+                                
+    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
+       <div id="widget-grid-twitter-share" class="widget-mount" style="width: 100%; height: 100%;"></div>
+       <script type="module">
+         import { initQuestLayer } from '/widget-runtime.js';
+         const boot = () => {
+             initQuestLayer({
+                mountId: 'widget-grid-twitter-share',
+                mode: 'demo',
+                presetName: 'twitter-share',
+                demoConnected: true
+             });
+         };
+         if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+         } else {
+             boot();
+         }
+       </script>
+    </div>
+  
+                            </div>
+                            <h3 style="margin-top: 1rem; text-align: center; text-transform: capitalize;">twitter share</h3>
+                        </div>
+                    
+                        <div class="card demo-widget-card" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <div style="width: 100%; height: 100%; display: flex; justify-content: center;">
+                                
+    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
+       <div id="widget-grid-discord-join" class="widget-mount" style="width: 100%; height: 100%;"></div>
+       <script type="module">
+         import { initQuestLayer } from '/widget-runtime.js';
+         const boot = () => {
+             initQuestLayer({
+                mountId: 'widget-grid-discord-join',
+                mode: 'demo',
+                presetName: 'discord-join',
+                demoConnected: true
+             });
+         };
+         if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+         } else {
+             boot();
+         }
+       </script>
+    </div>
+  
+                            </div>
+                            <h3 style="margin-top: 1rem; text-align: center; text-transform: capitalize;">discord join</h3>
+                        </div>
+                    
+                </div>
+            </div>
+        </section>
+      
       
   <section class="section">
     <div class="container">
