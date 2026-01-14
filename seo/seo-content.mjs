@@ -709,3 +709,57 @@ export const docsPages = [
     relatedCore: ['rewards-widget', 'web3-quest-widget']
   }
 ];
+
+export const integrationPages = [
+  {
+    slug: 'react',
+    title: 'React quest widget',
+    description: 'Embed a quest widget in your React app with a simple component wrapper.',
+    steps: [
+      'Install the QuestLayer React SDK.',
+      'Import the widget component.',
+      'Pass your widget ID as a prop.'
+    ],
+    benefits: [
+      'Native React component integration.',
+      'TypeScript support out of the box.',
+      'Zero impact on bundle size (lazy loaded).'
+    ],
+    relatedCore: ['quest-widget', 'embed-quests'],
+    docs: ['embed-widget', 'customize-theme']
+  },
+  {
+    slug: 'nextjs',
+    title: 'Next.js quest widget',
+    description: 'Add quests to your Next.js application with server-side rendering support.',
+    steps: [
+      'Add the widget script to your layout file.',
+      'Configure allowed domains in dashboard.',
+      'Deploy to Vercel or any host.'
+    ],
+    benefits: [
+      'Compatible with App Router and Pages Router.',
+      'Optimized for core web vitals.',
+      'Works with static and dynamic rendering.'
+    ],
+    relatedCore: ['task-widget', 'web3-quest-widget'],
+    docs: ['getting-started', 'embed-widget']
+  },
+  {
+    slug: 'vue',
+    title: 'Vue.js quest widget',
+    description: 'Drop a quest widget into your Vue 3 or Nuxt application.',
+    steps: [
+      'Add the script tag to your index.html.',
+      'Or use our Vue plugin wrapper.',
+      'Control widget state via props.'
+    ],
+    benefits: [
+      'Works with Vue 2 and Vue 3.',
+      'Lightweight embed for fast loading.',
+      'Reactive event listeners for quest completion.'
+    ],
+    relatedCore: ['gamification-widget', 'streak-widget'],
+    docs: ['embed-widget', 'rewards']
+  }
+];

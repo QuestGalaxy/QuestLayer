@@ -6,7 +6,8 @@ import {
   featurePages,
   useCasePages,
   templatePages,
-  docsPages
+  docsPages,
+  integrationPages
 } from '../seo/seo-content.mjs';
 
 const root = path.resolve(process.cwd(), 'public');
@@ -425,17 +426,115 @@ const renderDocsPage = (page) => {
     renderBreadcrumbSchema(breadcrumbs)
   ]);
 
-  return `<!DOCTYPE html>\n<html lang="en">\n<head>${renderMeta({
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>${renderMeta({
     title: `${page.title} | QuestLayer docs`,
     description: page.description,
     path: `/docs/${page.slug}`
-  })}\n${schemas}\n</head>\n<body>\n  <div class="page">${renderHeader()}\n    <main>\n      ${renderHero({
+  })}
+${schemas}
+</head>
+<body>
+  <div class="page">${renderHeader()}
+    <main>
+      ${renderHero({
         kicker: 'Docs',
         title: page.title,
         description: page.description,
         secondaryHref: '/docs',
         secondaryCta: 'Docs home'
-      })}\n      ${renderSection('Steps', `<ul class="list">${steps}</ul>`)}\n      ${renderSection('Tips', `<ul class="list">${tips}</ul>`)}\n      ${renderSection('Related product pages', renderCardGrid(relatedCards))}\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
+      })}
+      ${renderSection('Steps', `<ul class="list">${steps}</ul>`)}
+      ${renderSection('Tips', `<ul class="list">${tips}</ul>`)}
+      ${renderSection('Related product pages', renderCardGrid(relatedCards))}
+    </main>
+${renderFooter()}
+  </div>
+</body>
+</html>`;
+};
+
+const renderIntegrationPage = (page) => {
+  const breadcrumbs = [
+    { name: 'Home', path: '/' },
+    { name: 'Integrations', path: '/integrations' },
+    { name: page.title, path: `/integrations/${page.slug}` }
+  ];
+
+  const steps = page.steps
+    .map(
+      (step, index) => `
+        <li>
+          <div class="step-index">0${index + 1}</div>
+          <p>${step}</p>
+        </li>`
+    )
+    .join('');
+
+  const benefits = page.benefits.map((benefit) => `<li>${benefit}</li>`).join('');
+
+  const relatedCards = page.relatedCore.map((slug) => {
+    const core = corePages.find((item) => item.slug === slug);
+    return renderLinkCard({
+      title: core.keyword,
+      description: core.description,
+      href: `/${core.slug}`,
+      tag: 'Core'
+    });
+  });
+
+  const docCards = page.docs.map((slug) => {
+    const doc = docsMap[slug];
+    return renderLinkCard({
+      title: doc.title,
+      description: doc.description,
+      href: `/docs/${doc.slug}`,
+      tag: 'Docs'
+    });
+  });
+
+  const schemas = renderJsonLd([
+    renderSoftwareAppSchema({
+      ...page,
+      keyword: page.title,
+      slug: `integrations/${page.slug}`
+    }),
+    renderBreadcrumbSchema(breadcrumbs)
+  ]);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>${renderMeta({
+    title: `${page.title} | QuestLayer Integrations`,
+    description: page.description,
+    path: `/integrations/${page.slug}`
+  })}
+${schemas}
+</head>
+<body>
+  <div class="page">${renderHeader()}
+    <main>
+      ${renderHero({
+        kicker: 'Integration',
+        title: page.title,
+        description: page.description,
+        secondaryHref: '/integrations',
+        secondaryCta: 'All integrations'
+      })}
+      ${renderSection(
+        'Integration steps',
+        `<ol class="steps">${steps}
+        </ol>`
+      )}
+      ${renderSection('Benefits', `<ul class="list">${benefits}</ul>`)}
+      ${renderSection('Related widgets', renderCardGrid(relatedCards))}
+      ${renderSection('Documentation', renderCardGrid(docCards))}
+    </main>
+${renderFooter()}
+  </div>
+</body>
+</html>`;
 };
 
 const renderIndexPage = ({
@@ -511,6 +610,12 @@ const generate = async () => {
     )
   );
 
+  await Promise.all(
+    integrationPages.map((page) =>
+      writePage(path.join(root, 'integrations', page.slug, 'index.html'), renderIntegrationPage(page))
+    )
+  );
+
   await writePage(
     path.join(root, 'templates', 'index.html'),
     renderIndexPage({
@@ -532,6 +637,18 @@ const generate = async () => {
       kicker: 'Documentation',
       items: docsPages,
       itemTag: 'Docs'
+    })
+  );
+
+  await writePage(
+    path.join(root, 'integrations', 'index.html'),
+    renderIndexPage({
+      title: 'Integrations',
+      description: 'QuestLayer integrations with your favorite frameworks and tools.',
+      path: '/integrations',
+      kicker: 'Integration library',
+      items: integrationPages,
+      itemTag: 'Integration'
     })
   );
 
@@ -571,7 +688,9 @@ const generate = async () => {
     '/templates',
     ...templatePages.map((page) => `/templates/${page.slug}`),
     '/docs',
-    ...docsPages.map((page) => `/docs/${page.slug}`)
+    ...docsPages.map((page) => `/docs/${page.slug}`),
+    '/integrations',
+    ...integrationPages.map((page) => `/integrations/${page.slug}`)
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls

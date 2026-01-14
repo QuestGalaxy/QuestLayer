@@ -94,13 +94,31 @@ const App: React.FC = () => {
       setMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: imageUrl });
     };
 
+    const applyJsonLd = (schema: object) => {
+      let script = document.querySelector<HTMLScriptElement>('#json-ld-data');
+      if (!script) {
+        script = document.createElement('script');
+        script.id = 'json-ld-data';
+        script.type = 'application/ld+json';
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(schema);
+    };
+
     if (currentPage === 'questbrowse') {
       window.history.pushState(null, '', '/browse');
       applySeo({
         title: 'QuestBrowse - Browse Web3 & Earn XP',
         description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.',
         path: '/browse',
-        image: '/qlayer.jpeg'
+        image: '/questbrowse.jpeg'
+      });
+      applyJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'QuestBrowse - Browse Web3 & Earn XP',
+        description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.',
+        url: 'https://questlayer.app/browse'
       });
     } else if (currentPage === 'builder') {
       window.history.pushState(null, '', '/builder');
@@ -109,6 +127,15 @@ const App: React.FC = () => {
         description: 'Build and customize your QuestLayer widget, missions, and themes in minutes.',
         path: '/builder',
         image: '/qlayer.jpeg'
+      });
+      applyJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'QuestLayer Builder',
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Web',
+        description: 'Build and customize your QuestLayer widget, missions, and themes in minutes.',
+        url: 'https://questlayer.app/builder'
       });
     } else if (currentPage === 'dashboard') {
       window.history.pushState(null, '', '/dashboard');
@@ -120,10 +147,27 @@ const App: React.FC = () => {
       });
     } else if (currentPage === 'explore') {
       window.history.pushState(null, '', '/explore');
-      document.title = 'QuestLayer Explore';
+      applySeo({
+        title: 'QuestLayer Explore',
+        description: 'Explore the QuestLayer ecosystem.',
+        path: '/explore',
+        image: '/qlayer.jpeg'
+      });
     } else if (currentPage === 'leaderboard') {
       window.history.pushState(null, '', '/leaderboard');
-      document.title = 'QuestLayer Leaderboard - Your XP Legacy';
+      applySeo({
+        title: 'QuestLayer Leaderboard - Your XP Legacy',
+        description: 'See top QuestLayer users and compete for the highest XP rank.',
+        path: '/leaderboard',
+        image: '/leaderboard.jpeg'
+      });
+      applyJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'QuestLayer Leaderboard',
+        description: 'See top QuestLayer users and compete for the highest XP rank.',
+        url: 'https://questlayer.app/leaderboard'
+      });
     } else if (currentPage === 'landing') {
       window.history.pushState(null, '', '/');
       applySeo({
@@ -131,6 +175,17 @@ const App: React.FC = () => {
         description: 'Launch quests, grow communities, and reward users with on-chain XP across any website.',
         path: '/',
         image: '/qlayer.jpeg'
+      });
+      applyJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'QuestLayer',
+        url: 'https://questlayer.app/',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://questlayer.app/browse?q={search_term_string}',
+          'query-input': 'required name=search_term_string'
+        }
       });
     }
   }, [currentPage]);
