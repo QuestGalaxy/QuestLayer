@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const fetchProjects = async (ownerAddress: string) => {
   const { data, error } = await supabase
     .from('projects')
-    .select('*')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
     .eq('owner_wallet', ownerAddress)
     .order('created_at', { ascending: false });
   
@@ -30,7 +30,7 @@ export const fetchProjects = async (ownerAddress: string) => {
 export const fetchAllProjects = async () => {
   const { data, error } = await supabase
     .from('projects')
-    .select('*')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
     .order('created_at', { ascending: false });
   
   if (error) throw error;
@@ -40,7 +40,7 @@ export const fetchAllProjects = async () => {
 export const fetchProjectDetails = async (projectId: string) => {
   const { data: project, error: projectError } = await supabase
     .from('projects')
-    .select('*')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
     .eq('id', projectId)
     .single();
   

@@ -73,6 +73,9 @@ create policy "Public read access for projects" on projects for select using (tr
 create policy "Public insert access for projects" on projects for insert with check (true);
 create policy "Public update access for projects" on projects for update using (true);
 
+-- SECURITY: Revoke access to sensitive api_key column
+REVOKE SELECT (api_key) ON projects FROM anon, authenticated;
+
 -- Tasks
 create policy "Public read access for tasks" on tasks for select using (true);
 create policy "Public insert access for tasks" on tasks for insert with check (true);
@@ -114,6 +117,7 @@ create or replace function log_project_view(p_id uuid)
 returns void
 language plpgsql
 security definer
+set search_path = public
 as $$
 begin
   -- Insert view record
@@ -132,6 +136,7 @@ create or replace function get_project_stats(p_id uuid)
 returns json
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   total_visits bigint;
@@ -208,6 +213,7 @@ create or replace function get_global_dashboard_stats(owner_addr text)
 returns json
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   total_projects bigint;
@@ -280,6 +286,7 @@ create or replace function get_global_xp(wallet_addr text)
 returns bigint
 language sql
 security definer
+set search_path = public
 as $$
   select coalesce(sum(up.xp), 0)
   from user_progress up
@@ -337,6 +344,7 @@ create or replace function claim_daily_bonus(u_id uuid)
 returns json
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   current_xp int;

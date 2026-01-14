@@ -50,3 +50,6 @@ create policy "Enable all access for task_completions" on task_completions for a
 grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 grant all on all sequences in schema public to anon, authenticated;
+
+-- 5. SECURITY: Revoke access to sensitive api_key column (must run after GRANT ALL)
+REVOKE SELECT (api_key) ON projects FROM anon, authenticated;
