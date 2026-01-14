@@ -249,7 +249,7 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalCont
                 projectId: project.id, // Ensure ID is set
                 projectName: project.name,
                 projectDomain: project.domain,
-                projectLogo: project.logo,
+                projectLogo: (project as any).logo,
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,
