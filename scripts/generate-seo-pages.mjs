@@ -7,7 +7,8 @@ import {
   useCasePages,
   templatePages,
   docsPages,
-  integrationPages
+  integrationPages,
+  comparisonPages
 } from '../seo/seo-content.mjs';
 
 const root = path.resolve(process.cwd(), 'public');
@@ -27,11 +28,45 @@ const ensureDir = (dir) => fs.mkdir(dir, { recursive: true });
 
 const pageUrl = (pathname) => `${site.baseUrl}${pathname}`;
 
-const renderMeta = ({ title, description, path: pagePath }) => {
+const renderMeta = ({ title, description, path: pagePath, keywords = [] }) => {
   const url = pageUrl(pagePath);
   const image = site.ogImage.startsWith('http') ? site.ogImage : `${site.baseUrl}${site.ogImage}`;
+  const keywordsMeta = keywords.length > 0 ? `\n    <meta name="keywords" content="${keywords.join(', ')}">` : '';
 
-  return `\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    <title>${title}</title>\n    <meta name="title" content="${title}">\n    <meta name="description" content="${description}">\n    <link rel="canonical" href="${url}">\n\n    <meta property="og:type" content="website">\n    <meta property="og:title" content="${title}">\n    <meta property="og:description" content="${description}">\n    <meta property="og:url" content="${url}">\n    <meta property="og:image" content="${image}">\n\n    <meta name="twitter:card" content="summary_large_image">\n    <meta name="twitter:title" content="${title}">\n    <meta name="twitter:description" content="${description}">\n    <meta name="twitter:image" content="${image}">\n    <meta name="theme-color" content="#0b1020">\n    <link rel="icon" href="/favicon.ico" sizes="any">\n    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">\n    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">\n    <link rel="apple-touch-icon" href="/apple-touch-icon.png">\n    <link rel="manifest" href="/manifest.webmanifest">\n    <link rel="stylesheet" href="/seo.css">\n    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">\n    <script async src="https://www.googletagmanager.com/gtag/js?id=G-26XSSG4VLF"></script>\n    <script>\n      window.dataLayer = window.dataLayer || [];\n      function gtag(){dataLayer.push(arguments);}\n      gtag('js', new Date());\n      gtag('config', 'G-26XSSG4VLF');\n    </script>\n`;
+  return `
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+    <meta name="title" content="${title}">
+    <meta name="description" content="${description}">${keywordsMeta}
+    <link rel="canonical" href="${url}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    <meta property="og:url" content="${url}">
+    <meta property="og:image" content="${image}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${title}">
+    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:image" content="${image}">
+    <meta name="theme-color" content="#0b1020">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="stylesheet" href="/seo.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-26XSSG4VLF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-26XSSG4VLF');
+    </script>
+`;
 };
 
 const renderJsonLd = (schemas) =>
@@ -97,9 +132,31 @@ const renderTechArticleSchema = (page, pagePath) => ({
   dateModified: '2025-01-15'
 });
 
-const renderHeader = () => `\n  <header class="site-header">\n    <div class="container">\n      <a class="brand" href="/">\n        <span class="brand-mark">Q</span>\n        <span class="brand-text">QuestLayer</span>\n      </a>\n      <nav class="nav">\n        <a href="/features">Features</a>\n        <a href="/use-cases">Use cases</a>\n        <a href="/templates">Templates</a>\n        <a href="/docs">Docs</a>\n      </nav>\n      <div class="nav-cta">\n        <a class="btn ghost" href="/builder">Open builder</a>\n        <a class="btn primary" href="${site.dashboardUrl}">Create your widget</a>\n      </div>\n    </div>\n  </header>\n`;
+const renderHeader = () => `\n  <header class="site-header">\n    <div class="container">\n      <a class="brand" href="/">\n        <span class="brand-mark">Q</span>\n        <span class="brand-text">QuestLayer</span>\n      </a>\n      <nav class="nav">\n        <a href="/features">Features</a>\n        <a href="/use-cases">Use cases</a>\n        <a href="/templates">Templates</a>\n        <a href="/docs">Docs</a>\n        <a href="/comparisons">Comparisons</a>\n      </nav>\n      <div class="nav-cta">\n        <a class="btn ghost" href="/builder">Open builder</a>\n        <a class="btn primary" href="${site.dashboardUrl}">Create your widget</a>\n      </div>\n    </div>\n  </header>\n`;
 
-const renderFooter = () => `\n  <footer class="site-footer">\n    <div class="container footer-grid">\n      <div>\n        <div class="brand muted">QuestLayer</div>\n        <p class="muted">Embed quests, tasks, and rewards anywhere. Product-led SEO, no fluff.</p>\n      </div>\n      <div class="footer-links">\n        <a href="/quest-widget">Quest widget</a>\n        <a href="/task-widget">Task widget</a>\n        <a href="/templates">Templates</a>\n        <a href="/docs">Docs</a>\n      </div>\n      <div class="footer-links">\n        <a href="/use-cases/web3">Web3</a>\n        <a href="/use-cases/saas">SaaS</a>\n        <a href="/use-cases/community">Community</a>\n        <a href="/features/quests">Quest campaigns</a>\n      </div>\n    </div>\n  </footer>\n`;
+const renderFooter = () => `
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="brand muted">QuestLayer</div>
+        <p class="muted">Embed quests, tasks, and rewards anywhere. Product-led SEO, no fluff.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/quest-widget">Quest widget</a>
+        <a href="/task-widget">Task widget</a>
+        <a href="/templates">Templates</a>
+        <a href="/docs">Docs</a>
+        <a href="/comparisons">Comparisons</a>
+      </div>
+      <div class="footer-links">
+        <a href="/use-cases/web3">Web3</a>
+        <a href="/use-cases/saas">SaaS</a>
+        <a href="/use-cases/community">Community</a>
+        <a href="/features/quests">Quest campaigns</a>
+      </div>
+    </div>
+  </footer>
+`;
 
 const renderHeroMedia = () => `\n    <div class="hero-media">\n      <div class="media-frame">\n        <img src="/qlayer.jpeg" alt="QuestLayer widget preview" loading="lazy">\n        <div class="media-glow"></div>\n      </div>\n    </div>\n`;
 
@@ -176,6 +233,17 @@ const renderCorePage = (page) => {
     });
   });
 
+  const comparisonCards = comparisonPages
+    .filter((comp) => comp.relatedCore.includes(page.slug))
+    .map((comp) =>
+      renderLinkCard({
+        title: comp.keyword,
+        description: comp.description,
+        href: `/comparisons/${comp.slug}`,
+        tag: 'Comparison'
+      })
+    );
+
   const steps = page.steps
     .map(
       (step, index) => `\n        <li>\n          <div class="step-index">0${index + 1}</div>\n          <p>${step}</p>\n        </li>`
@@ -199,17 +267,24 @@ const renderCorePage = (page) => {
   return `<!DOCTYPE html>\n<html lang="en">\n<head>${renderMeta({
     title: page.title,
     description: page.description,
-    path: `/${page.slug}`
-  })}\n${schemas}\n</head>\n<body>\n  <div class="page">${renderHeader()}\n    <main>\n      ${renderHero({
+    path: `/${page.slug}`,
+    keywords: page.secondaryKeywords || []
+  })}\n${schemas}\n</head>\n<body>\n  <div class="page">${renderHeader()}\n    <main>
+      ${renderHero({
         kicker: 'Core category',
         title: page.keyword,
         description: page.definition,
         secondaryHref: '/templates',
         secondaryCta: 'Browse templates'
-      })}\n      ${renderSection(
-        'How it works',
-        `<ol class="steps">${steps}\n        </ol>`
-      )}\n      ${renderSection('Benefits', `<ul class="list">${benefits}</ul>`)}\n      ${renderSection('Use cases', renderCardGrid(useCaseCards))}\n      ${renderSection('Templates to launch fast', renderCardGrid(templateCards))}\n      ${renderSection('Features that power this widget', renderCardGrid(featureCards))}\n      ${renderSection('Docs to go deeper', renderCardGrid(docCards))}\n      ${renderSection('FAQ', `<div class="faq">${faqs}</div>`)}\n      <section class="cta-section">\n        <div class="container cta-panel">\n          <div>\n            <h2>Create your ${page.keyword} today</h2>\n            <p>Spin up a widget in minutes and embed it on any site.</p>\n          </div>\n          <a class="btn primary" href="${site.dashboardUrl}">Create your widget</a>\n        </div>\n      </section>\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
+      })}
+      ${renderSection(
+        `How our ${page.keyword} works`,
+        `<ol class="steps">${steps}
+        </ol>`
+      )}
+      ${renderSection(`Benefits of using a ${page.keyword}`, `<ul class="list">${benefits}</ul>`)}
+      ${comparisonCards.length > 0 ? renderSection('Comparisons', renderCardGrid(comparisonCards)) : ''}
+      ${renderSection('Use cases', renderCardGrid(useCaseCards))}\n      ${renderSection('Templates to launch fast', renderCardGrid(templateCards))}\n      ${renderSection('Features that power this widget', renderCardGrid(featureCards))}\n      ${renderSection('Docs to go deeper', renderCardGrid(docCards))}\n      ${renderSection('FAQ', `<div class="faq">${faqs}</div>`)}\n      <section class="cta-section">\n        <div class="container cta-panel">\n          <div>\n            <h2>Create your ${page.keyword} today</h2>\n            <p>Spin up a widget in minutes and embed it on any site.</p>\n          </div>\n          <a class="btn primary" href="${site.dashboardUrl}">Create your widget</a>\n        </div>\n      </section>\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
 };
 
 const renderFeaturePage = (page) => {
@@ -537,6 +612,79 @@ ${renderFooter()}
 </html>`;
 };
 
+const renderComparisonPage = (page) => {
+  const breadcrumbs = [
+    { name: 'Home', path: '/' },
+    { name: 'Comparisons', path: '/comparisons' },
+    { name: page.title, path: `/comparisons/${page.slug}` }
+  ];
+
+  const comparisonRows = page.comparison
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.feature}</td>
+          <td><strong>${row.ql}</strong></td>
+          <td>${row.competitor}</td>
+        </tr>`
+    )
+    .join('');
+
+  const relatedCards = page.relatedCore.map((slug) => {
+    const core = corePages.find((item) => item.slug === slug);
+    return renderLinkCard({
+      title: core.keyword,
+      description: core.description,
+      href: `/${core.slug}`,
+      tag: 'Core'
+    });
+  });
+
+  const schemas = renderJsonLd([renderBreadcrumbSchema(breadcrumbs)]);
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>${renderMeta({
+    title: page.title,
+    description: page.description,
+    path: `/comparisons/${page.slug}`
+  })}
+${schemas}
+</head>
+<body>
+  <div class="page">${renderHeader()}
+    <main>
+      ${renderHero({
+        kicker: 'Comparison',
+        title: page.keyword,
+        description: page.definition,
+        secondaryHref: '/comparisons',
+        secondaryCta: 'All comparisons'
+      })}
+      ${renderSection(
+        'Feature Comparison',
+        `<table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>QuestLayer</th>
+              <th>Alternative</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${comparisonRows}
+          </tbody>
+        </table>`
+      )}
+      ${renderSection('Why choose QuestLayer?', `<p class="lead">${page.definition}</p>`)}
+      ${renderSection('Related widgets', renderCardGrid(relatedCards))}
+    </main>
+${renderFooter()}
+  </div>
+</body>
+</html>`;
+};
+
 const renderIndexPage = ({
   title,
   description,
@@ -616,6 +764,24 @@ const generate = async () => {
     )
   );
 
+  await Promise.all(
+    comparisonPages.map((page) =>
+      writePage(path.join(root, 'comparisons', page.slug, 'index.html'), renderComparisonPage(page))
+    )
+  );
+
+  await writePage(
+    path.join(root, 'comparisons', 'index.html'),
+    renderIndexPage({
+      title: 'Comparisons',
+      description: 'See how QuestLayer stacks up against other quest and gamification platforms.',
+      path: '/comparisons',
+      kicker: 'Platform comparisons',
+      items: comparisonPages,
+      itemTag: 'Comparison'
+    })
+  );
+
   await writePage(
     path.join(root, 'templates', 'index.html'),
     renderIndexPage({
@@ -690,7 +856,9 @@ const generate = async () => {
     '/docs',
     ...docsPages.map((page) => `/docs/${page.slug}`),
     '/integrations',
-    ...integrationPages.map((page) => `/integrations/${page.slug}`)
+    ...integrationPages.map((page) => `/integrations/${page.slug}`),
+    '/comparisons',
+    ...comparisonPages.map((page) => `/comparisons/${page.slug}`)
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls

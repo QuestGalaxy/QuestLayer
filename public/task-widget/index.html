@@ -6,6 +6,7 @@
     <title>Task widget to activate users | QuestLayer</title>
     <meta name="title" content="Task widget to activate users | QuestLayer">
     <meta name="description" content="Deploy a task widget that highlights the exact actions you want users to finish, with XP and streak tracking.">
+    <meta name="keywords" content="task checklist, activation widget, onboarding checklist, progress tracker">
     <link rel="canonical" href="https://questlayer.app/task-widget">
 
     <meta property="og:type" content="website">
@@ -26,7 +27,6 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/seo.css">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-    <script type="module" src="/widget-runtime.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-26XSSG4VLF"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -52,6 +52,7 @@
         <a href="/use-cases">Use cases</a>
         <a href="/templates">Templates</a>
         <a href="/docs">Docs</a>
+        <a href="/comparisons">Comparisons</a>
       </nav>
       <div class="nav-cta">
         <a class="btn ghost" href="/builder">Open builder</a>
@@ -67,103 +68,26 @@
       <div>
         <div class="tag">Core category</div>
         <h1>task widget</h1>
-        <p class="lead">QuestLayer makes a task widget that sits on your site and guides users through specific actions that increase adoption and retention. Use it as a dynamic checklist that updates instantly as users complete steps.</p>
+        <p class="lead">QuestLayer makes a task widget that sits on your site and guides users through specific actions that increase adoption and retention. It functions as a dynamic task checklist and activation widget, helping you build a seamless onboarding checklist and progress tracker that updates instantly as users complete steps.</p>
         <div class="cta-row">
           <a class="btn primary" href="/dashboard">Create your widget</a>
           <a class="btn ghost" href="/templates">Browse templates</a>
         </div>
       </div>
       
-    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
-       <div id="widget-hero-xp-progression" class="widget-mount" style="width: 100%; height: 100%;"></div>
-       <script type="module">
-         import { initQuestLayer } from '/widget-runtime.js';
-         const boot = () => {
-             initQuestLayer({
-                mountId: 'widget-hero-xp-progression',
-                mode: 'demo',
-                presetName: 'xp-progression',
-                demoConnected: true
-             });
-         };
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
-         } else {
-             boot();
-         }
-       </script>
+    <div class="hero-media">
+      <div class="media-frame">
+        <img src="/qlayer.jpeg" alt="QuestLayer widget preview" loading="lazy">
+        <div class="media-glow"></div>
+      </div>
     </div>
-  
+
     </div>
   </section>
       
-        <section class="section">
-            <div class="container">
-                <h2>Live Demos</h2>
-                <div class="grid">
-                    
-                        <div class="card demo-widget-card" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <div style="width: 100%; height: 100%; display: flex; justify-content: center;">
-                                
-    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
-       <div id="widget-grid-twitter-share" class="widget-mount" style="width: 100%; height: 100%;"></div>
-       <script type="module">
-         import { initQuestLayer } from '/widget-runtime.js';
-         const boot = () => {
-             initQuestLayer({
-                mountId: 'widget-grid-twitter-share',
-                mode: 'demo',
-                presetName: 'twitter-share',
-                demoConnected: true
-             });
-         };
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
-         } else {
-             boot();
-         }
-       </script>
-    </div>
-  
-                            </div>
-                            <h3 style="margin-top: 1rem; text-align: center; text-transform: capitalize;">twitter share</h3>
-                        </div>
-                    
-                        <div class="card demo-widget-card" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <div style="width: 100%; height: 100%; display: flex; justify-content: center;">
-                                
-    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
-       <div id="widget-grid-discord-join" class="widget-mount" style="width: 100%; height: 100%;"></div>
-       <script type="module">
-         import { initQuestLayer } from '/widget-runtime.js';
-         const boot = () => {
-             initQuestLayer({
-                mountId: 'widget-grid-discord-join',
-                mode: 'demo',
-                presetName: 'discord-join',
-                demoConnected: true
-             });
-         };
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
-         } else {
-             boot();
-         }
-       </script>
-    </div>
-  
-                            </div>
-                            <h3 style="margin-top: 1rem; text-align: center; text-transform: capitalize;">discord join</h3>
-                        </div>
-                    
-                </div>
-            </div>
-        </section>
-      
-      
   <section class="section">
     <div class="container">
-      <h2>How it works</h2>
+      <h2>How our task widget works</h2>
       <ol class="steps">
         <li>
           <div class="step-index">01</div>
@@ -183,10 +107,11 @@
       
   <section class="section">
     <div class="container">
-      <h2>Benefits</h2>
+      <h2>Benefits of using a task widget</h2>
       <ul class="list"><li>Turn scattered onboarding into a clear checklist.</li><li>Increase completion rates with visible progress.</li><li>Tie each task to measurable outcomes.</li><li>Swap tasks anytime without code deploys.</li><li>Keep users focused on the next best action.</li></ul>
     </div>
   </section>
+      
       
   <section class="section">
     <div class="container">
@@ -318,6 +243,7 @@
         <a href="/task-widget">Task widget</a>
         <a href="/templates">Templates</a>
         <a href="/docs">Docs</a>
+        <a href="/comparisons">Comparisons</a>
       </div>
       <div class="footer-links">
         <a href="/use-cases/web3">Web3</a>

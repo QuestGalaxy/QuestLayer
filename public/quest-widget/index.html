@@ -6,6 +6,7 @@
     <title>Quest widget for guided missions | QuestLayer</title>
     <meta name="title" content="Quest widget for guided missions | QuestLayer">
     <meta name="description" content="Launch a quest widget that turns any site into a guided mission hub with XP, streaks, and rewards.">
+    <meta name="keywords" content="quest board, gamification software, mission widget, user onboarding tool">
     <link rel="canonical" href="https://questlayer.app/quest-widget">
 
     <meta property="og:type" content="website">
@@ -26,7 +27,6 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/seo.css">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-    <script type="module" src="/widget-runtime.js"></script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-26XSSG4VLF"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -52,6 +52,7 @@
         <a href="/use-cases">Use cases</a>
         <a href="/templates">Templates</a>
         <a href="/docs">Docs</a>
+        <a href="/comparisons">Comparisons</a>
       </nav>
       <div class="nav-cta">
         <a class="btn ghost" href="/builder">Open builder</a>
@@ -67,103 +68,26 @@
       <div>
         <div class="tag">Core category</div>
         <h1>quest widget</h1>
-        <p class="lead">QuestLayer delivers a quest widget you can embed to guide users through missions, collect proof, and reward progress without rebuilding your site. Use it to turn onboarding, launches, or seasonal campaigns into visible quests that live directly inside your product.</p>
+        <p class="lead">QuestLayer delivers a quest widget you can embed to guide users through missions, collect proof, and reward progress without rebuilding your site. It acts as a powerful quest board and gamification software layer for your product. Use it to turn onboarding, launches, or seasonal campaigns into visible quests that live directly inside your product, serving as a complete user onboarding tool.</p>
         <div class="cta-row">
           <a class="btn primary" href="/dashboard">Create your widget</a>
           <a class="btn ghost" href="/templates">Browse templates</a>
         </div>
       </div>
       
-    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
-       <div id="widget-hero-daily-login" class="widget-mount" style="width: 100%; height: 100%;"></div>
-       <script type="module">
-         import { initQuestLayer } from '/widget-runtime.js';
-         const boot = () => {
-             initQuestLayer({
-                mountId: 'widget-hero-daily-login',
-                mode: 'demo',
-                presetName: 'daily-login',
-                demoConnected: true
-             });
-         };
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
-         } else {
-             boot();
-         }
-       </script>
+    <div class="hero-media">
+      <div class="media-frame">
+        <img src="/qlayer.jpeg" alt="QuestLayer widget preview" loading="lazy">
+        <div class="media-glow"></div>
+      </div>
     </div>
-  
+
     </div>
   </section>
       
-        <section class="section">
-            <div class="container">
-                <h2>Live Demos</h2>
-                <div class="grid">
-                    
-                        <div class="card demo-widget-card" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <div style="width: 100%; height: 100%; display: flex; justify-content: center;">
-                                
-    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
-       <div id="widget-grid-multi-task" class="widget-mount" style="width: 100%; height: 100%;"></div>
-       <script type="module">
-         import { initQuestLayer } from '/widget-runtime.js';
-         const boot = () => {
-             initQuestLayer({
-                mountId: 'widget-grid-multi-task',
-                mode: 'demo',
-                presetName: 'multi-task',
-                demoConnected: true
-             });
-         };
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
-         } else {
-             boot();
-         }
-       </script>
-    </div>
-  
-                            </div>
-                            <h3 style="margin-top: 1rem; text-align: center; text-transform: capitalize;">multi task</h3>
-                        </div>
-                    
-                        <div class="card demo-widget-card" style="min-height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                            <div style="width: 100%; height: 100%; display: flex; justify-content: center;">
-                                
-    <div class="hero-media demo-widget-container" style="display: flex; justify-content: center; overflow: visible; min-height: 400px; width: 100%;">
-       <div id="widget-grid-wallet-connect" class="widget-mount" style="width: 100%; height: 100%;"></div>
-       <script type="module">
-         import { initQuestLayer } from '/widget-runtime.js';
-         const boot = () => {
-             initQuestLayer({
-                mountId: 'widget-grid-wallet-connect',
-                mode: 'demo',
-                presetName: 'wallet-connect',
-                demoConnected: false
-             });
-         };
-         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', boot);
-         } else {
-             boot();
-         }
-       </script>
-    </div>
-  
-                            </div>
-                            <h3 style="margin-top: 1rem; text-align: center; text-transform: capitalize;">wallet connect</h3>
-                        </div>
-                    
-                </div>
-            </div>
-        </section>
-      
-      
   <section class="section">
     <div class="container">
-      <h2>How it works</h2>
+      <h2>How our quest widget works</h2>
       <ol class="steps">
         <li>
           <div class="step-index">01</div>
@@ -183,8 +107,27 @@
       
   <section class="section">
     <div class="container">
-      <h2>Benefits</h2>
+      <h2>Benefits of using a quest widget</h2>
       <ul class="list"><li>Launch quest flows without engineering a custom UI.</li><li>Turn onboarding into a visible, rewarding journey.</li><li>Show progress, XP, and completion state in a single widget.</li><li>Measure which tasks drive retention and wallet connects.</li><li>Iterate quests in minutes from the dashboard.</li></ul>
+    </div>
+  </section>
+      
+  <section class="section">
+    <div class="container">
+      <h2>Comparisons</h2>
+      
+    <div class="grid">
+      <a class="card" href="/comparisons/questlayer-vs-galxe">
+        <div class="card-tag">Comparison</div>
+        <h3>QuestLayer vs Galxe</h3>
+        <p>Compare QuestLayer and Galxe. See why QuestLayer is the preferred choice for embedded quest widgets and product-led growth.</p>
+      </a>
+      <a class="card" href="/comparisons/questlayer-vs-layer3">
+        <div class="card-tag">Comparison</div>
+        <h3>QuestLayer vs Layer3</h3>
+        <p>A deep dive into the differences between QuestLayer and Layer3 for quest-based onboarding.</p>
+      </a>
+    </div>
     </div>
   </section>
       
@@ -318,6 +261,7 @@
         <a href="/task-widget">Task widget</a>
         <a href="/templates">Templates</a>
         <a href="/docs">Docs</a>
+        <a href="/comparisons">Comparisons</a>
       </div>
       <div class="footer-links">
         <a href="/use-cases/web3">Web3</a>

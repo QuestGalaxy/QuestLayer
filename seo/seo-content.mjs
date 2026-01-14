@@ -9,10 +9,11 @@ export const corePages = [
   {
     slug: 'quest-widget',
     keyword: 'quest widget',
+    secondaryKeywords: ['quest board', 'gamification software', 'mission widget', 'user onboarding tool'],
     title: 'Quest widget for guided missions | QuestLayer',
     description: 'Launch a quest widget that turns any site into a guided mission hub with XP, streaks, and rewards.',
     definition:
-      'QuestLayer delivers a quest widget you can embed to guide users through missions, collect proof, and reward progress without rebuilding your site. Use it to turn onboarding, launches, or seasonal campaigns into visible quests that live directly inside your product.',
+      'QuestLayer delivers a quest widget you can embed to guide users through missions, collect proof, and reward progress without rebuilding your site. It acts as a powerful quest board and gamification software layer for your product. Use it to turn onboarding, launches, or seasonal campaigns into visible quests that live directly inside your product, serving as a complete user onboarding tool.',
     steps: [
       'Connect your project, theme the widget, and select placement.',
       'Add quests, tasks, and XP rewards with clear completion rules.',
@@ -55,10 +56,11 @@ export const corePages = [
   {
     slug: 'task-widget',
     keyword: 'task widget',
+    secondaryKeywords: ['task checklist', 'activation widget', 'onboarding checklist', 'progress tracker'],
     title: 'Task widget to activate users | QuestLayer',
     description: 'Deploy a task widget that highlights the exact actions you want users to finish, with XP and streak tracking.',
     definition:
-      'QuestLayer makes a task widget that sits on your site and guides users through specific actions that increase adoption and retention. Use it as a dynamic checklist that updates instantly as users complete steps.',
+      'QuestLayer makes a task widget that sits on your site and guides users through specific actions that increase adoption and retention. It functions as a dynamic task checklist and activation widget, helping you build a seamless onboarding checklist and progress tracker that updates instantly as users complete steps.',
     steps: [
       'Pick the tasks that move activation forward.',
       'Assign XP values and completion links for each task.',
@@ -761,5 +763,35 @@ export const integrationPages = [
     ],
     relatedCore: ['gamification-widget', 'streak-widget'],
     docs: ['embed-widget', 'rewards']
+  }
+];
+
+export const comparisonPages = [
+  {
+    slug: 'questlayer-vs-galxe',
+    keyword: 'QuestLayer vs Galxe',
+    title: 'QuestLayer vs Galxe: Best quest widget for your site',
+    description: 'Compare QuestLayer and Galxe. See why QuestLayer is the preferred choice for embedded quest widgets and product-led growth.',
+    definition: 'While Galxe is a massive platform for ecosystem-wide discovery, QuestLayer is built specifically to live inside your product. It offers a lightweight, fully customizable quest widget that prioritizes your brand and user experience over a third-party marketplace.',
+    comparison: [
+      { feature: 'Embedding', ql: 'Native widget', competitor: 'External landing page' },
+      { feature: 'Branding', ql: 'Fully white-label', competitor: 'Galxe branded' },
+      { feature: 'Data ownership', ql: 'You own the user flow', competitor: 'Platform-centric' },
+      { feature: 'Setup time', ql: 'Minutes via dashboard', competitor: 'Requires campaign approval' }
+    ],
+    relatedCore: ['quest-widget', 'web3-quest-widget']
+  },
+  {
+    slug: 'questlayer-vs-layer3',
+    keyword: 'QuestLayer vs Layer3',
+    title: 'QuestLayer vs Layer3: Embedded quests vs Discovery platforms',
+    description: 'A deep dive into the differences between QuestLayer and Layer3 for quest-based onboarding.',
+    definition: 'Layer3 excels at bringing new users to your protocol through their discovery app. QuestLayer focuses on activating the users you already have by embedding quests directly into your application UI.',
+    comparison: [
+      { feature: 'Focus', ql: 'Retention & Activation', competitor: 'Discovery & Acquisition' },
+      { feature: 'UI/UX', ql: 'In-app widget', competitor: 'External platform' },
+      { feature: 'Customization', ql: 'Deep CSS & theme control', competitor: 'Limited template options' }
+    ],
+    relatedCore: ['quest-widget', 'gamification-widget']
   }
 ];
