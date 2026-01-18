@@ -307,6 +307,61 @@ const Editor: React.FC<EditorProps> = ({
     setEditForm(newTask);
   };
 
+  const addOnboardingTemplate = () => {
+    const remaining = calculateXPRemaining();
+    if (remaining <= 0) {
+      setAlertMessage(`You have reached the maximum ${getDynamicLimit()} XP limit.`);
+      return;
+    }
+    const xpPerTask = Math.min(50, Math.floor(remaining / 3));
+    if (xpPerTask <= 0) {
+      setAlertMessage('Not enough XP remaining for the onboarding pack.');
+      return;
+    }
+    const seed = Date.now();
+    const projectNameAnswer = state.projectName?.trim() || 'project';
+    const onboardingTasks: Task[] = [
+      {
+        id: seed,
+        title: 'Know the Project Name',
+        desc: 'Type the project name to unlock.',
+        link: '',
+        icon: 'icon:crown',
+        xp: xpPerTask,
+        section: 'onboarding',
+        kind: 'quiz',
+        question: 'What is this project called?',
+        answer: projectNameAnswer
+      },
+      {
+        id: seed + 1,
+        title: 'Find the Docs',
+        desc: 'Show you know where to learn more.',
+        link: '',
+        icon: 'icon:globe',
+        xp: xpPerTask,
+        section: 'onboarding',
+        kind: 'quiz',
+        question: 'Which page would you visit for docs?',
+        answer: 'docs'
+      },
+      {
+        id: seed + 2,
+        title: 'Join the Community',
+        desc: 'Tell us the main community hub.',
+        link: '',
+        icon: 'icon:discord',
+        xp: xpPerTask,
+        section: 'onboarding',
+        kind: 'quiz',
+        question: 'Where does the community hang out?',
+        answer: 'discord'
+      }
+    ];
+
+    setTasks([...onboardingTasks, ...state.tasks]);
+  };
+
   const getTotalXPExcludingEditing = () =>
     state.tasks
       .filter(t => t.id !== editingId && !t.isSponsored)
@@ -581,6 +636,19 @@ const Editor: React.FC<EditorProps> = ({
             <h3>Quick Templates</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button
+              onClick={addOnboardingTemplate}
+              disabled={calculateXPRemaining() <= 0}
+              className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/60 hover:bg-emerald-500/15 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="h-8 w-8 rounded-full bg-emerald-900/30 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Sparkles size={14} className="text-emerald-300" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[9px] font-black text-white uppercase">Onboarding Pack</p>
+                <p className="text-[8px] font-bold text-emerald-300">3 quiz tasks</p>
+              </div>
+            </button>
             {TASK_TEMPLATES.map((tpl) => (
               <button
                 key={tpl.id}
