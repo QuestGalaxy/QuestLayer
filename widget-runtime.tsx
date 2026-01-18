@@ -34,10 +34,23 @@ const DEFAULT_STATE: AppState = {
 
 const normalizeConfig = (config?: WidgetConfig): AppState => {
   const { mountId, ...safeConfig } = config ?? {};
+  const tasks = config?.tasks?.length
+    ? config.tasks.map(task => {
+      const rawKind = (task.kind ?? 'link') as string;
+      return ({
+        ...task,
+        link: task.link ?? '',
+        section: task.section ?? 'missions',
+        kind: rawKind === 'secret' ? 'quiz' : (rawKind as Task['kind']),
+        question: task.question ?? '',
+        answer: task.answer ?? ''
+      });
+    })
+    : DEFAULT_STATE.tasks;
   return {
     ...DEFAULT_STATE,
     ...safeConfig,
-    tasks: config?.tasks?.length ? config.tasks : DEFAULT_STATE.tasks
+    tasks
   };
 };
 
@@ -242,7 +255,11 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalCont
                 desc: t.description,
                 link: t.link,
                 icon: t.icon_url,
-                xp: t.xp_reward
+                xp: t.xp_reward,
+                section: t.task_section ?? 'missions',
+                kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
+                question: t.question ?? '',
+                answer: t.answer ?? ''
               }));
               setState(prev => ({
                 ...prev,

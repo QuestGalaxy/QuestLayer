@@ -26,8 +26,17 @@ create table if not exists tasks (
   icon_url text,
   xp_reward integer default 100,
   order_index integer default 0,
-  is_sponsored boolean default false
+  is_sponsored boolean default false,
+  task_section text default 'missions',
+  task_kind text default 'link',
+  question text,
+  answer text
 );
+
+alter table tasks add column if not exists task_section text default 'missions';
+alter table tasks add column if not exists task_kind text default 'link';
+alter table tasks add column if not exists question text;
+alter table tasks add column if not exists answer text;
 
 -- 3. End Users (People using the widget)
 create table if not exists end_users (

@@ -545,7 +545,11 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           desc: t.description,
           link: t.link,
           icon: t.icon_url,
-          xp: t.xp_reward
+          xp: t.xp_reward,
+          section: t.task_section ?? 'missions',
+          kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
+          question: t.question ?? '',
+          answer: t.answer ?? ''
         })),
         userXP: 0,
         currentStreak: 1,

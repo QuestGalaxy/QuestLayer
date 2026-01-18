@@ -3,6 +3,9 @@ export type Position = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 
 export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'glass' | 'terminal' | 'aura' | 'avatar' | 'ironman';
 
+export type TaskSection = 'missions' | 'onboarding';
+export type TaskKind = 'link' | 'quiz';
+
 export interface Task {
   id: string | number;
   title: string;
@@ -12,6 +15,10 @@ export interface Task {
   xp: number;
   isSponsored?: boolean;
   isDemo?: boolean;
+  section: TaskSection;
+  kind: TaskKind;
+  question?: string;
+  answer?: string;
 }
 
 export interface ThemeConfig {

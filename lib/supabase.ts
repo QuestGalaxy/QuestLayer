@@ -175,7 +175,11 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
             link: task.link,
             icon_url: task.icon,
             xp_reward: task.xp,
-            is_sponsored: task.isSponsored
+            is_sponsored: task.isSponsored,
+            task_section: task.section ?? 'missions',
+            task_kind: task.kind ?? 'link',
+            question: task.question ?? '',
+            answer: task.answer ?? ''
           }))
         );
       if (insertError) throw insertError;

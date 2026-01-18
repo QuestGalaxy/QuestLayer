@@ -104,7 +104,9 @@ export const SPONSORED_TASKS: Task[] = [
     link: 'https://x.com/QuestGalaxy',
     icon: 'icon:twitter',
     xp: 100,
-    isSponsored: true
+    isSponsored: true,
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'sp-discord-join',
@@ -113,7 +115,9 @@ export const SPONSORED_TASKS: Task[] = [
     link: 'https://discord.gg/questgalaxy',
     icon: 'icon:discord',
     xp: 100,
-    isSponsored: true
+    isSponsored: true,
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'sp-visit-web',
@@ -122,7 +126,9 @@ export const SPONSORED_TASKS: Task[] = [
     link: 'https://questgalaxy.com',
     icon: 'icon:globe',
     xp: 100,
-    isSponsored: true
+    isSponsored: true,
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'sp-share-x',
@@ -131,7 +137,9 @@ export const SPONSORED_TASKS: Task[] = [
     link: 'https://x.com/intent/tweet?text=I%20just%20built%20a%20quest%20on%20QuestLayer!',
     icon: 'icon:repost',
     xp: 100,
-    isSponsored: true
+    isSponsored: true,
+    section: 'missions',
+    kind: 'link'
   }
 ];
 

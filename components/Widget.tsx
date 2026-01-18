@@ -46,6 +46,9 @@ const Widget: React.FC<WidgetProps> = ({
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string | number>>(new Set());
+  const [onboardingInputs, setOnboardingInputs] = useState<Record<string | number, string>>({});
+  const [onboardingFeedback, setOnboardingFeedback] = useState<Record<string | number, { type: 'error' | 'success'; message: string }>>({});
+  const [onboardingCheckStatus, setOnboardingCheckStatus] = useState<Record<string | number, 'checking' | 'success' | 'error'>>({});
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
 
@@ -62,6 +65,7 @@ const Widget: React.FC<WidgetProps> = ({
 
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+  const onboardingCheckTimeoutsRef = useRef<Record<string | number, { check?: ReturnType<typeof setTimeout>; reset?: ReturnType<typeof setTimeout> }>>({});
   const audioCtxRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const wasConnectedRef = useRef(false);
@@ -75,6 +79,22 @@ const Widget: React.FC<WidgetProps> = ({
     .replace(/^www\./, '')
     .split('/')[0]
     .split(':')[0];
+  const normalizeAnswer = (value: string) => value
+    .toLowerCase()
+    .normalize('NFKC')
+    .replace(/[\s\p{P}\p{S}]+/gu, '');
+  const isAnswerMatch = (input: string, answer: string) => {
+    const normalizedAnswer = normalizeAnswer(answer);
+    if (!normalizedAnswer) return false;
+    return normalizeAnswer(input).includes(normalizedAnswer);
+  };
+  const clearOnboardingCheckTimeouts = (taskId: string | number) => {
+    const timers = onboardingCheckTimeoutsRef.current[taskId];
+    if (!timers) return;
+    if (timers.check) clearTimeout(timers.check);
+    if (timers.reset) clearTimeout(timers.reset);
+    delete onboardingCheckTimeoutsRef.current[taskId];
+  };
 
   const activeTheme = THEMES[state.activeTheme];
   const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
@@ -178,6 +198,9 @@ const Widget: React.FC<WidgetProps> = ({
       setDbUserId(null);
       setSharedPlatforms([]);
       setViralDayKey(getUtcDayRange().key);
+      setOnboardingInputs({});
+      setOnboardingFeedback({});
+      setOnboardingCheckStatus({});
     }
     projectScopeRef.current = projectScope;
   }, [projectScope]);
@@ -437,6 +460,12 @@ const Widget: React.FC<WidgetProps> = ({
     }
   }, [effectiveConnected, walletKey, state.tasks, state.userXP, state.currentStreak, state.dailyClaimed, sharedPlatforms]);
 
+  useEffect(() => () => {
+    Object.keys(onboardingCheckTimeoutsRef.current).forEach((taskId) => {
+      clearOnboardingCheckTimeouts(taskId);
+    });
+  }, []);
+
   // --- AUDIO ENGINE ---
   const initAudio = () => {
     if (!audioCtxRef.current) {
@@ -558,6 +587,11 @@ const Widget: React.FC<WidgetProps> = ({
   // --- REFACTORED STARTQUEST LOGIC ---
   const startQuest = (task: Task) => {
     initAudio();
+    if ((task.kind ?? 'link') !== 'link') return;
+    if (!task.link) {
+      console.warn('QuestLayer task missing link:', task);
+      return;
+    }
     window.open(task.link, '_blank');
     setLoadingId(task.id);
     setTimerValue(10);
@@ -637,6 +671,59 @@ const Widget: React.FC<WidgetProps> = ({
       };
       completeTaskInDb();
     }
+  };
+
+  const handleOnboardingSubmit = (task: Task) => {
+    if (completedTaskIds.has(task.id)) return;
+    if (onboardingCheckStatus[task.id] === 'checking') return;
+    const input = onboardingInputs[task.id] ?? '';
+    if (!input.trim()) {
+      setOnboardingFeedback(prev => ({
+        ...prev,
+        [task.id]: { type: 'error', message: 'Type your answer first.' }
+      }));
+      return;
+    }
+    if (!task.answer || !task.answer.trim()) {
+      setOnboardingFeedback(prev => ({
+        ...prev,
+        [task.id]: { type: 'error', message: 'Answer not configured yet.' }
+      }));
+      return;
+    }
+    clearOnboardingCheckTimeouts(task.id);
+    setOnboardingFeedback(prev => {
+      const next = { ...prev };
+      delete next[task.id];
+      return next;
+    });
+    setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: 'checking' }));
+    const checkTimeout = setTimeout(() => {
+      const isMatch = isAnswerMatch(input, task.answer ?? '');
+      setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: isMatch ? 'success' : 'error' }));
+      setOnboardingFeedback(prev => ({
+        ...prev,
+        [task.id]: { type: isMatch ? 'success' : 'error', message: isMatch ? 'Correct' : 'Wrong' }
+      }));
+      const resetTimeout = setTimeout(() => {
+        setOnboardingCheckStatus(prev => {
+          const next = { ...prev };
+          delete next[task.id];
+          return next;
+        });
+        setOnboardingFeedback(prev => {
+          const next = { ...prev };
+          delete next[task.id];
+          return next;
+        });
+        if (isMatch) {
+          setOnboardingInputs(prev => ({ ...prev, [task.id]: '' }));
+          completeQuest(task);
+        }
+      }, 900);
+      onboardingCheckTimeoutsRef.current[task.id] = { reset: resetTimeout };
+    }, 3000);
+    onboardingCheckTimeoutsRef.current[task.id] = { check: checkTimeout };
   };
 
   const handleShare = (platform: string) => {
@@ -918,6 +1005,279 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const projectIconUrl = state.projectLogo || (state.projectDomain ? getFaviconUrl(state.projectDomain) : '');
+  const resolveTaskSection = (task: Task) => task.section ?? 'missions';
+  const resolveTaskKind = (task: Task) => {
+    const rawKind = (task.kind ?? 'link') as string;
+    return rawKind === 'secret' ? 'quiz' : (rawKind as Task['kind']);
+  };
+  const sortTasksByCompletion = (tasks: Task[]) => [...tasks].sort((a, b) => {
+    const aCompleted = completedTaskIds.has(a.id);
+    const bCompleted = completedTaskIds.has(b.id);
+    if (aCompleted === bCompleted) return 0;
+    return aCompleted ? 1 : -1;
+  });
+  const renderTaskList = (tasks: Task[], options?: { variant?: 'default' | 'onboarding' }) => {
+    const isOnboardingVariant = options?.variant === 'onboarding';
+    const tasksSorted = sortTasksByCompletion(tasks);
+    return tasksSorted.map((task, index) => {
+      const resolvedKind = resolveTaskKind(task);
+      const isQuizTask = resolvedKind !== 'link';
+      const isCompleted = completedTaskIds.has(task.id);
+      const isLoading = loadingId === task.id;
+      const inputValue = onboardingInputs[task.id] ?? '';
+      const feedback = onboardingFeedback[task.id];
+      const checkStatus = onboardingCheckStatus[task.id];
+      const isChecking = checkStatus === 'checking';
+      const isSuccess = checkStatus === 'success';
+      const isError = checkStatus === 'error';
+      const isLocked = isChecking || isSuccess || isError;
+      const stepIndex = index + 1;
+      const isLastStep = index === tasksSorted.length - 1;
+      const showTypeTag = isOnboardingVariant || resolvedKind !== 'link';
+      const flashColor = isSuccess ? '#22c55e' : (isError ? '#ef4444' : null);
+      const flashClass = (isSuccess || isError) ? 'animate-pulse' : '';
+      const inputBorderClass = feedback?.type === 'error'
+        ? 'border-rose-500/60 focus:border-rose-400'
+        : 'border-white/10 focus:border-indigo-500';
+      const showFeedback = Boolean(feedback && (!checkStatus || checkStatus === 'error'));
+      return (
+        <div key={task.id} className={`relative ${isOnboardingVariant ? 'pl-7 md:pl-8' : ''}`}>
+          {isOnboardingVariant && (
+            <div className="absolute left-0 top-3 bottom-3 flex flex-col items-center">
+              <div
+                className={`w-5 h-5 md:w-6 md:h-6 rounded-full text-[9px] md:text-[10px] font-black flex items-center justify-center border ${isCompleted ? 'text-emerald-400' : (isLightTheme ? 'text-slate-700' : 'text-white')}`}
+                style={{
+                  backgroundColor: isCompleted ? `${state.accentColor}20` : (isLightTheme ? '#ffffff' : 'rgba(255,255,255,0.08)'),
+                  borderColor: isCompleted ? state.accentColor : (isLightTheme ? '#e2e8f0' : 'rgba(255,255,255,0.2)')
+                }}
+              >
+                {stepIndex}
+              </div>
+              {!isLastStep && (
+                <div
+                  className="flex-1 w-px mt-1"
+                  style={{ backgroundColor: isLightTheme ? '#e2e8f0' : 'rgba(255,255,255,0.15)' }}
+                />
+              )}
+            </div>
+          )}
+          <div
+            className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''} ${isOnboardingVariant ? 'backdrop-blur-xl' : ''}`}
+            style={{
+              borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
+              boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
+            }}
+          >
+            <div className="flex justify-between items-start mb-0.5 gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                {task.icon?.startsWith('icon:') ? (
+                  <div
+                    className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+                    style={{ background: `${state.accentColor}10` }}
+                  >
+                    {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
+                    {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
+                    {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
+                    {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
+                    {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+                    {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                    {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                    {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+                    {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                    {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                    {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                    {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+                  </div>
+                ) : task.icon ? (
+                  <div
+                    className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+                    style={{ background: `${state.accentColor}10` }}
+                  >
+                    <img
+                      src={task.icon}
+                      alt=""
+                      className="h-4 w-4 md:h-5 md:w-5 object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : null}
+                <h5 className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
+                  {task.title}
+                </h5>
+                {showTypeTag && (
+                  <span
+                    className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                    style={{
+                      backgroundColor: `${state.accentColor}10`,
+                      borderColor: `${state.accentColor}20`,
+                      color: state.accentColor
+                    }}
+                  >
+                    {resolvedKind === 'quiz' ? 'Quiz' : 'Link'}
+                  </span>
+                )}
+                {task.isSponsored && (
+                  <span
+                    className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                    style={{
+                      backgroundColor: `${state.accentColor}10`,
+                      borderColor: `${state.accentColor}20`,
+                      color: state.accentColor
+                    }}
+                  >
+                    Sponsored
+                  </span>
+                )}
+                {task.isDemo && (
+                  <span
+                    className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                    style={{
+                      backgroundColor: `${state.accentColor}10`,
+                      borderColor: `${state.accentColor}20`,
+                      color: state.accentColor
+                    }}
+                  >
+                    Demo
+                  </span>
+                )}
+              </div>
+              <span
+                className={`text-[10px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
+                style={{ background: `${state.accentColor}10`, color: state.accentColor }}
+              >
+                +{task.xp}
+              </span>
+            </div>
+            {isQuizTask && task.question && (
+              <p className={`text-[11px] md:text-[11px] mb-1 leading-relaxed ${isLightTheme ? 'text-slate-700' : 'opacity-80 text-white'}`}>
+                {task.question}
+              </p>
+            )}
+            <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
+              {task.desc}
+            </p>
+            {isQuizTask ? (
+              <div className="space-y-1.5">
+                <div className="flex flex-col md:flex-row gap-2">
+                  <input
+                    value={inputValue}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setOnboardingInputs(prev => ({ ...prev, [task.id]: value }));
+                      setOnboardingFeedback(prev => {
+                        if (!prev[task.id]) return prev;
+                        const next = { ...prev };
+                        delete next[task.id];
+                        return next;
+                      });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleOnboardingSubmit(task);
+                      }
+                    }}
+                    disabled={isCompleted || isLocked}
+                    placeholder="Type the answer..."
+                    className={`w-full h-7 md:h-9 px-2 md:px-3 rounded-lg bg-white/5 border text-[10px] md:text-[11px] ${inputBorderClass} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
+                  />
+                  <button
+                    onClick={() => handleOnboardingSubmit(task)}
+                    disabled={isCompleted || isLocked}
+                    style={{
+                      ...((!isLightTheme && !isTransparentTheme) ? {
+                        backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
+                        borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
+                        color: state.activeTheme === 'gaming' ? 'black' : 'white',
+                        cursor: isCompleted ? 'not-allowed' : 'pointer'
+                      } : (isTransparentTheme ? {
+                        borderColor: isCompleted ? '#94a3b8' : state.accentColor,
+                        backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
+                        color: isCompleted ? '#94a3b8' : 'white',
+                        cursor: isCompleted ? 'not-allowed' : 'pointer'
+                      } : {
+                        backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                        color: isCompleted ? '#94a3b8' : 'white',
+                        borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                        cursor: isCompleted ? 'not-allowed' : 'pointer'
+                      })),
+                      ...(flashColor ? {
+                        backgroundColor: flashColor,
+                        borderColor: flashColor,
+                        color: 'white'
+                      } : {})
+                    }}
+                    className={`w-full md:w-32 h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
+                  >
+                    {isCompleted ? (
+                      <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
+                    ) : isChecking ? (
+                      <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Checking</span>
+                    ) : isSuccess ? (
+                      <span className="flex items-center gap-1">Correct</span>
+                    ) : isError ? (
+                      <span className="flex items-center gap-1">Wrong</span>
+                    ) : (
+                      <span className="flex items-center gap-1">Check</span>
+                    )}
+                  </button>
+                </div>
+                {showFeedback && (
+                  <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {feedback.message}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => startQuest(task)}
+                disabled={isCompleted || (loadingId !== null && loadingId !== task.id)}
+                style={(!isLightTheme && !isTransparentTheme) ? {
+                  backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
+                  borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
+                  color: state.activeTheme === 'gaming' ? 'black' : 'white',
+                  cursor: isCompleted ? 'not-allowed' : 'pointer'
+                } : (isTransparentTheme ? {
+                  borderColor: isCompleted ? '#94a3b8' : state.accentColor,
+                  backgroundColor: isCompleted ? '#94a3b820' : (isLoading ? `${state.accentColor}10` : 'transparent'),
+                  color: isCompleted ? '#94a3b8' : 'white',
+                  cursor: isCompleted ? 'not-allowed' : 'pointer'
+                } : (isLoading ? {
+                  backgroundColor: '#f8fafc',
+                  color: '#1e293b',
+                  borderColor: '#cbd5e1'
+                } : {
+                  backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                  color: isCompleted ? '#94a3b8' : 'white',
+                  borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                  cursor: isCompleted ? 'not-allowed' : 'pointer'
+                }))}
+                className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
+              >
+                {isCompleted ? (
+                  <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
+                ) : !isLoading ? (
+                  <span className="flex items-center gap-1">Open <ExternalLink size={7} /></span>
+                ) : (
+                  <span className="flex items-center gap-1">Syncing <span className={`font-mono`} style={{ color: state.accentColor }}>{timerValue}s</span></span>
+                )}
+                {isLoading && (
+                  <div
+                    className="absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-1000 linear"
+                    style={{ width: `${((10 - timerValue) / 10) * 100}%`, backgroundColor: state.accentColor }}
+                  />
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    });
+  };
+  const onboardingTasks = state.tasks.filter(task => resolveTaskSection(task) === 'onboarding');
+  const missionTasks = state.tasks.filter(task => resolveTaskSection(task) !== 'onboarding');
+  const onboardingCompletedCount = onboardingTasks.filter(task => completedTaskIds.has(task.id)).length;
+  const onboardingXP = onboardingTasks.reduce((acc, task) => acc + (task.xp || 0), 0);
+  const onboardingAccent = state.activeTheme === 'gaming' ? '#fbbf24' : state.accentColor;
 
   const popupContent = (
     <div
@@ -1015,7 +1375,7 @@ const Widget: React.FC<WidgetProps> = ({
       </div>
 
       {/* Body */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-4 md:space-y-5 custom-scroll">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-5 md:space-y-6 custom-scroll">
         {!effectiveConnected ? (
           <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
             <div className="space-y-2">
@@ -1065,7 +1425,7 @@ const Widget: React.FC<WidgetProps> = ({
             </button>
           </div>
         ) : (
-          <div className="space-y-3.5 md:space-y-5">
+          <div className="space-y-5 md:space-y-7">
             {/* Progress Card */}
             <div className={`p-2.5 md:p-4 border border-opacity-20 shadow-sm ${activeTheme.itemCard}`}>
               <div className="flex justify-between items-start mb-2 md:mb-4">
@@ -1153,7 +1513,7 @@ const Widget: React.FC<WidgetProps> = ({
               </div>
 
               {/* Streak Section */}
-              <div className="space-y-1.5 md:space-y-3">
+              <div className="space-y-1.5 md:space-y-3 pt-3 md:pt-4">
                 <div className="flex justify-between items-center px-1">
                   <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                     Multipliers
@@ -1222,7 +1582,7 @@ const Widget: React.FC<WidgetProps> = ({
               </div>
 
               {/* Viral Boost Section */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-2 md:pt-3">
                 <div className="flex justify-between items-center px-1">
                   <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                     Viral Boost
@@ -1294,141 +1654,70 @@ const Widget: React.FC<WidgetProps> = ({
                 </div>
               </div>
 
+              {onboardingTasks.length > 0 && (
+                <div className="space-y-2 md:space-y-3 pt-2 md:pt-3">
+                  <div
+                    className={`relative overflow-hidden rounded-2xl border ${isLightTheme ? 'border-slate-200' : 'border-white/10'} ${isTransparentTheme ? 'bg-white/5' : ''}`}
+                    style={{
+                      background: isLightTheme
+                        ? `linear-gradient(135deg, ${onboardingAccent}0f, #ffffff 60%)`
+                        : `linear-gradient(135deg, ${onboardingAccent}1a, rgba(15,23,42,0.9) 65%)`
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0 opacity-60"
+                      style={{
+                        backgroundImage: `radial-gradient(circle at top right, ${onboardingAccent}40, transparent 60%)`
+                      }}
+                    />
+                    <div className="relative p-3 md:p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-8 h-8 md:w-9 md:h-9 rounded-2xl flex items-center justify-center border ${activeTheme.iconBox}`}
+                            style={{
+                              backgroundColor: `${onboardingAccent}20`,
+                              borderColor: `${onboardingAccent}40`
+                            }}
+                          >
+                            <Sparkles size={14} style={{ color: onboardingAccent }} />
+                          </div>
+                          <div>
+                            <p className={`text-[11px] md:text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-700' : 'text-white'}`}>
+                              Onboarding
+                            </p>
+                            <p className={`text-[10px] md:text-[10px] ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
+                              Quick steps to get started and earn XP.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-[12px] md:text-sm font-black ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+                            {onboardingCompletedCount}/{onboardingTasks.length}
+                          </p>
+                          <p className={`text-[9px] md:text-[9px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'text-white/50'}`}>
+                            Steps
+                          </p>
+                          <p className={`text-[9px] md:text-[9px] font-bold ${isLightTheme ? 'text-emerald-700' : 'text-emerald-300'}`}>
+                            +{onboardingXP} XP
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 md:space-y-3">
+                        {renderTaskList(onboardingTasks, { variant: 'onboarding' })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Missions Board */}
-              <div className="space-y-2 md:space-y-3">
+              <div className="space-y-2 md:space-y-3 pt-2 md:pt-3">
                 <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest px-1 ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                   Missions
                 </p>
                 <div className="space-y-2 md:space-y-3 pb-2">
-                  {[...state.tasks].sort((a, b) => {
-                    const aCompleted = completedTaskIds.has(a.id);
-                    const bCompleted = completedTaskIds.has(b.id);
-                    if (aCompleted === bCompleted) return 0;
-                    return aCompleted ? 1 : -1;
-                  }).map(task => {
-                    const isCompleted = completedTaskIds.has(task.id);
-                    return (
-                      <div
-                        key={task.id}
-                        className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''}`}
-                        style={{
-                          borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
-                          boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
-                        }}
-                      >
-                        <div className="flex justify-between items-start mb-0.5 gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            {task.icon?.startsWith('icon:') ? (
-                              <div
-                                className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
-                                style={{ background: `${state.accentColor}10` }}
-                              >
-                                {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
-                                {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
-                                {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
-                                {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
-                                {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
-                                {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-                                {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-                                {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
-                                {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-                                {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
-                                {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-                                {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
-                              </div>
-                            ) : task.icon ? (
-                              <div
-                                className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
-                                style={{ background: `${state.accentColor}10` }}
-                              >
-                                <img
-                                  src={task.icon}
-                                  alt=""
-                                  className="h-4 w-4 md:h-5 md:w-5 object-contain"
-                                  loading="lazy"
-                                />
-                              </div>
-                            ) : null}
-                            <h5 className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
-                              {task.title}
-                            </h5>
-                            {task.isSponsored && (
-                              <span
-                                className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                                style={{
-                                  backgroundColor: `${state.accentColor}10`,
-                                  borderColor: `${state.accentColor}20`,
-                                  color: state.accentColor
-                                }}
-                              >
-                                Sponsored
-                              </span>
-                            )}
-                            {task.isDemo && (
-                              <span
-                                className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                                style={{
-                                  backgroundColor: `${state.accentColor}10`,
-                                  borderColor: `${state.accentColor}20`,
-                                  color: state.accentColor
-                                }}
-                              >
-                                Demo
-                              </span>
-                            )}
-                          </div>
-                          <span
-                            className={`text-[10px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
-                            style={{ background: `${state.accentColor}10`, color: state.accentColor }}
-                          >
-                            +{task.xp}
-                          </span>
-                        </div>
-                        <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
-                          {task.desc}
-                        </p>
-                        <button
-                          onClick={() => startQuest(task)}
-                          disabled={isCompleted || (loadingId !== null && loadingId !== task.id)}
-                          style={(!isLightTheme && !isTransparentTheme) ? {
-                            backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
-                            borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
-                            color: state.activeTheme === 'gaming' ? 'black' : 'white',
-                            cursor: isCompleted ? 'not-allowed' : 'pointer'
-                          } : (isTransparentTheme ? {
-                            borderColor: isCompleted ? '#94a3b8' : state.accentColor,
-                            backgroundColor: isCompleted ? '#94a3b820' : (loadingId === task.id ? `${state.accentColor}10` : 'transparent'),
-                            color: isCompleted ? '#94a3b8' : 'white',
-                            cursor: isCompleted ? 'not-allowed' : 'pointer'
-                          } : (loadingId === task.id ? {
-                            backgroundColor: '#f8fafc',
-                            color: '#1e293b',
-                            borderColor: '#cbd5e1'
-                          } : {
-                            backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor,
-                            color: isCompleted ? '#94a3b8' : 'white',
-                            borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
-                            cursor: isCompleted ? 'not-allowed' : 'pointer'
-                          }))}
-                          className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
-                        >
-                          {isCompleted ? (
-                            <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
-                          ) : loadingId !== task.id ? (
-                            <span className="flex items-center gap-1">Launch <ExternalLink size={7} /></span>
-                          ) : (
-                            <span className="flex items-center gap-1">Syncing <span className={`font-mono`} style={{ color: state.accentColor }}>{timerValue}s</span></span>
-                          )}
-                          {loadingId === task.id && (
-                            <div
-                              className="absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-1000 linear"
-                              style={{ width: `${((10 - timerValue) / 10) * 100}%`, backgroundColor: state.accentColor }}
-                            />
-                          )}
-                        </button>
-                      </div>
-                    )
-                  })}
+                  {renderTaskList(missionTasks)}
                 </div>
               </div>
             </div>

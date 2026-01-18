@@ -17,7 +17,9 @@ const TASK_TEMPLATES = [
     link: 'https://x.com/',
     icon: 'icon:twitter',
     xp: 50,
-    category: 'Social'
+    category: 'Social',
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'tpl-twitter-repost',
@@ -26,7 +28,9 @@ const TASK_TEMPLATES = [
     link: 'https://x.com/',
     icon: 'icon:repost',
     xp: 100,
-    category: 'Social'
+    category: 'Social',
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'tpl-twitter-like',
@@ -35,7 +39,9 @@ const TASK_TEMPLATES = [
     link: 'https://x.com/',
     icon: 'icon:heart',
     xp: 25,
-    category: 'Social'
+    category: 'Social',
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'tpl-discord-join',
@@ -44,7 +50,9 @@ const TASK_TEMPLATES = [
     link: 'https://discord.gg/',
     icon: 'icon:discord',
     xp: 150,
-    category: 'Community'
+    category: 'Community',
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'tpl-telegram-join',
@@ -53,7 +61,9 @@ const TASK_TEMPLATES = [
     link: 'https://t.me/',
     icon: 'icon:telegram',
     xp: 50,
-    category: 'Community'
+    category: 'Community',
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'tpl-visit-web',
@@ -62,7 +72,9 @@ const TASK_TEMPLATES = [
     link: 'https://',
     icon: 'icon:globe',
     xp: 10,
-    category: 'General'
+    category: 'General',
+    section: 'missions',
+    kind: 'link'
   },
   {
     id: 'tpl-daily-checkin',
@@ -71,7 +83,9 @@ const TASK_TEMPLATES = [
     link: '',
     icon: 'icon:calendar',
     xp: 20,
-    category: 'Daily'
+    category: 'Daily',
+    section: 'missions',
+    kind: 'link'
   }
 ];
 
@@ -248,7 +262,11 @@ const Editor: React.FC<EditorProps> = ({
       desc: 'Enter mission details...',
       link: 'https://',
       icon: '',
-      xp: Math.min(100, remaining) // Auto-cap at remaining
+      xp: Math.min(100, remaining), // Auto-cap at remaining
+      section: 'missions',
+      kind: 'link',
+      question: '',
+      answer: ''
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -278,7 +296,11 @@ const Editor: React.FC<EditorProps> = ({
       desc: template.desc,
       link: template.link,
       icon: template.icon,
-      xp: Math.min(template.xp, remaining)
+      xp: Math.min(template.xp, remaining),
+      section: template.section,
+      kind: template.kind,
+      question: '',
+      answer: ''
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -358,17 +380,30 @@ const Editor: React.FC<EditorProps> = ({
 
   const startEdit = (task: Task) => {
     setEditingId(task.id);
-    setEditForm({ ...task });
+    setEditForm({
+      ...task,
+      section: task.section ?? 'missions',
+      kind: task.kind ?? 'link',
+      question: task.question ?? '',
+      answer: task.answer ?? '',
+      link: task.link ?? ''
+    });
   };
 
   const getRandomGameIcon = () => GAME_ICONS[Math.floor(Math.random() * GAME_ICONS.length)];
 
   const saveEdit = () => {
     if (editForm) {
+      const resolvedKind = editForm.kind ?? 'link';
       // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
       const nextTask = {
         ...editForm,
-        icon: editForm.icon || getFaviconUrl(editForm.link) || getRandomGameIcon()
+        link: editForm.link || '',
+        section: editForm.section ?? 'missions',
+        kind: resolvedKind,
+        question: editForm.question ?? '',
+        answer: editForm.answer ?? '',
+        icon: editForm.icon || (resolvedKind === 'link' ? getFaviconUrl(editForm.link) : '') || getRandomGameIcon()
       };
 
       // Validate XP Limit before saving
@@ -392,10 +427,11 @@ const Editor: React.FC<EditorProps> = ({
   useEffect(() => {
     if (!editForm) return;
     if (editForm.icon) return;
+    if ((editForm.kind ?? 'link') !== 'link') return;
 
     // Debounce favicon extraction to avoid partial URL parsing while typing
     const timeoutId = setTimeout(() => {
-      const faviconUrl = getFaviconUrl(editForm.link);
+      const faviconUrl = getFaviconUrl(editForm.link || '');
       if (!faviconUrl) return;
       setEditForm(prev => (prev ? { ...prev, icon: faviconUrl } : null));
     }, 800);
@@ -703,7 +739,10 @@ const Editor: React.FC<EditorProps> = ({
                 </div>
               </div>
             )}
-            {state.tasks.map((task) => (
+            {state.tasks.map((task) => {
+              const resolvedKind = task.kind ?? 'link';
+              const resolvedSection = task.section ?? 'missions';
+              return (
               <div key={task.id} className="bg-white/5 rounded-2xl border border-white/5 overflow-hidden transition-all group">
                 {editingId !== task.id ? (
                   <div className="p-4 flex items-center justify-between">
@@ -734,6 +773,16 @@ const Editor: React.FC<EditorProps> = ({
                       <div className="truncate">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-black text-white truncate uppercase">{task.title}</p>
+                          {resolvedSection === 'onboarding' && (
+                            <span className="text-[7px] font-black bg-emerald-500/10 text-emerald-300 px-1 rounded uppercase tracking-tighter border border-emerald-500/20">
+                              Onboarding
+                            </span>
+                          )}
+                          {resolvedKind !== 'link' && (
+                            <span className="text-[7px] font-black bg-sky-500/10 text-sky-300 px-1 rounded uppercase tracking-tighter border border-sky-500/20">
+                              Quiz
+                            </span>
+                          )}
                           {task.isSponsored && (
                             <span className="text-[7px] font-black bg-amber-500/10 text-amber-500 px-1 rounded uppercase tracking-tighter border border-amber-500/20">Sponsored</span>
                           )}
@@ -774,7 +823,7 @@ const Editor: React.FC<EditorProps> = ({
                 ) : (
                   <div className="p-5 bg-indigo-600/5 border-l-4 border-indigo-500 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase">Mission Title</label>
+                      <label className="text-[9px] font-bold text-slate-500 uppercase">Task Title</label>
                       <input
                         value={editForm?.title}
                         autoFocus
@@ -792,15 +841,65 @@ const Editor: React.FC<EditorProps> = ({
                         className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-16 text-white outline-none resize-none focus:border-indigo-500"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
-                      <input
-                        value={editForm?.link}
-                        onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
-                        placeholder="https://..."
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-slate-500 uppercase">Task Section</label>
+                        <select
+                          value={editForm?.section ?? 'missions'}
+                          onChange={(e) => setEditForm(prev => prev ? { ...prev, section: e.target.value as Task['section'] } : null)}
+                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                        >
+                          <option value="missions">Missions</option>
+                          <option value="onboarding">Onboarding</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-slate-500 uppercase">Task Type</label>
+                        <select
+                          value={editForm?.kind ?? 'link'}
+                          onChange={(e) => setEditForm(prev => prev ? { ...prev, kind: e.target.value as Task['kind'] } : null)}
+                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                        >
+                          <option value="link">Link</option>
+                          <option value="quiz">Quiz</option>
+                        </select>
+                      </div>
                     </div>
+                    {(editForm?.kind ?? 'link') === 'link' ? (
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
+                        <input
+                          value={editForm?.link ?? ''}
+                          onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
+                          placeholder="https://..."
+                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Question</label>
+                          <textarea
+                            value={editForm?.question ?? ''}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, question: e.target.value } : null)}
+                            placeholder="Ask a question or give a hint."
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-14 text-white outline-none resize-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Correct Answer</label>
+                          <input
+                            value={editForm?.answer ?? ''}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, answer: e.target.value } : null)}
+                            placeholder="e.g. hidden-badge"
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          />
+                          <p className="text-[9px] text-slate-500">
+                            Case-insensitive, ignores spaces; matches if the answer appears in the sentence.
+                          </p>
+                        </div>
+                      </>
+                    )}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-3 py-2">
                         <div>
@@ -855,7 +954,7 @@ const Editor: React.FC<EditorProps> = ({
                         onClick={saveEdit}
                         className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-black text-[10px] uppercase flex items-center justify-center gap-1 hover:bg-indigo-500 transition-colors"
                       >
-                        <Check size={14} /> Save Mission
+                        <Check size={14} /> Save Task
                       </button>
                       <button
                         onClick={handleCancel}
@@ -867,7 +966,8 @@ const Editor: React.FC<EditorProps> = ({
                   </div>
                 )}
               </div>
-            ))}
+            );
+            })}
           </div>
 
           <div className="pt-4 border-t border-white/5">

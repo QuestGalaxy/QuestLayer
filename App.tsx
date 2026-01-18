@@ -228,7 +228,11 @@ const App: React.FC = () => {
       link: task.link,
       icon: task.icon,
       xp: task.xp,
-      isSponsored: task.isSponsored ?? false
+      isSponsored: task.isSponsored ?? false,
+      section: task.section ?? 'missions',
+      kind: task.kind ?? 'link',
+      question: task.question ?? '',
+      answer: task.answer ?? ''
     }));
     return JSON.stringify({
       projectId: snapshotState.projectId ?? null,
@@ -357,7 +361,11 @@ const App: React.FC = () => {
                   link: t.link,
                   icon: t.icon_url,
                   xp: t.xp_reward,
-                  isSponsored: t.is_sponsored
+                  isSponsored: t.is_sponsored,
+                  section: t.task_section ?? 'missions',
+                  kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
+                  question: t.question ?? '',
+                  answer: t.answer ?? ''
                 })),
                 userXP: 0,
                 currentStreak: 1,
@@ -377,7 +385,11 @@ const App: React.FC = () => {
                   link: t.link,
                   icon: t.icon_url,
                   xp: t.xp_reward,
-                  isSponsored: t.is_sponsored
+                  isSponsored: t.is_sponsored,
+                  section: t.task_section ?? 'missions',
+                  kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
+                  question: t.question ?? '',
+                  answer: t.answer ?? ''
                 })),
                 userXP: 0,
                 currentStreak: 1,
