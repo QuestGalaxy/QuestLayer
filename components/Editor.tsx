@@ -2,11 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
-import { 
-  Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2, 
-  ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare, 
+import {
+  Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
+  ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
   Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info
 } from 'lucide-react';
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
 const TASK_TEMPLATES = [
   {
@@ -77,7 +78,7 @@ const TASK_TEMPLATES = [
 const XP_PRESETS = [10, 25, 50, 100, 250, 500];
 import EmbedModal from './EmbedModal.tsx';
 import GlobalFooter from './GlobalFooter';
-import { DEMO_TASKS, SPONSORED_TASKS } from '../constants';
+import { SPONSORED_TASKS } from '../constants';
 
 interface EditorProps {
   state: AppState;
@@ -112,6 +113,38 @@ const GAME_ICONS = [
   'icon:crown'
 ];
 
+const AnimatedNumber = ({ value }: { value: number }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    let startTimestamp: number;
+    const duration = 500; // ms
+    const startValue = displayValue;
+    const delta = value - startValue;
+
+    if (delta === 0) return;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+
+      // Ease out quart
+      const ease = 1 - Math.pow(1 - progress, 4);
+
+      setDisplayValue(Math.round(startValue + (delta * ease)));
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    window.requestAnimationFrame(step);
+  }, [value]);
+
+  return <>{displayValue}</>;
+};
+
+
 const Editor: React.FC<EditorProps> = ({
   state,
   setProjectName,
@@ -127,15 +160,15 @@ const Editor: React.FC<EditorProps> = ({
     try {
       if (!link || link.length < 4) return '';
       let validLink = link.trim();
-      
+
       // Remove trailing slashes or dots from the end of the string before parsing
       // This prevents "key2web3." from being treated as the hostname root
-      validLink = validLink.replace(/[\/.]+$/, ''); 
+      validLink = validLink.replace(/[\/.]+$/, '');
 
       if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
         validLink = `https://${validLink}`;
       }
-      
+
       const url = new URL(validLink);
       let hostname = url.hostname;
 
@@ -155,11 +188,19 @@ const Editor: React.FC<EditorProps> = ({
   };
 
   const [editingId, setEditingId] = useState<string | number | null>(null);
+  const [newlyCreatedTaskId, setNewlyCreatedTaskId] = useState<string | number | null>(null);
   const [editForm, setEditForm] = useState<Task | null>(null);
   const [isEmbedModalOpen, setIsEmbedModalOpen] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
+  const { open } = useAppKit();
+  const { isConnected } = useAppKitAccount();
+
   const handlePublishClick = async () => {
+    if (!isConnected) {
+      await open();
+      return;
+    }
     setIsPublishing(true);
     await onPublish();
     setIsPublishing(false);
@@ -170,13 +211,16 @@ const Editor: React.FC<EditorProps> = ({
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const getDynamicLimit = () => {
-    const sponsoredCount = state.tasks.filter(t => t.isSponsored).length;
-    const sponsoredBonus = sponsoredCount * 100;
+    const sponsoredBonus = state.tasks
+      .filter(t => t.isSponsored)
+      .reduce((acc, t) => acc + t.xp, 0);
     return 1000 + sponsoredBonus;
   };
 
   const calculateXPRemaining = () => {
-    const totalXP = state.tasks.reduce((acc, task) => acc + task.xp, 0);
+    const totalXP = state.tasks
+      .filter(t => !t.isSponsored)
+      .reduce((acc, task) => acc + task.xp, 0);
     return getDynamicLimit() - totalXP;
   };
 
@@ -189,19 +233,6 @@ const Editor: React.FC<EditorProps> = ({
     }
   };
 
-  const toggleDemoTask = (demoTask: Task) => {
-     const isActive = state.tasks.some(t => t.id === demoTask.id);
-     if (isActive) {
-       setTasks(state.tasks.filter(t => t.id !== demoTask.id));
-     } else {
-       const remaining = calculateXPRemaining();
-       if (remaining < demoTask.xp) {
-         setAlertMessage(`Not enough XP remaining to add this Demo Quest. Available: ${remaining} XP`);
-         return;
-       }
-       setTasks([...state.tasks, demoTask]);
-     }
-   };
 
   const addTask = () => {
     const remaining = calculateXPRemaining();
@@ -221,7 +252,17 @@ const Editor: React.FC<EditorProps> = ({
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
+    setNewlyCreatedTaskId(newTask.id);
     setEditForm(newTask);
+  };
+
+  const handleCancel = () => {
+    if (editingId && editingId === newlyCreatedTaskId) {
+      setTasks(state.tasks.filter(t => t.id !== editingId));
+    }
+    setEditingId(null);
+    setNewlyCreatedTaskId(null);
+    setEditForm(null);
   };
 
   const addTemplateTask = (template: typeof TASK_TEMPLATES[0]) => {
@@ -246,7 +287,7 @@ const Editor: React.FC<EditorProps> = ({
 
   const getTotalXPExcludingEditing = () =>
     state.tasks
-      .filter(t => t.id !== editingId)
+      .filter(t => t.id !== editingId && !t.isSponsored)
       .reduce((acc, t) => acc + t.xp, 0);
 
   const getEditMaxXP = () => Math.max(0, getDynamicLimit() - getTotalXPExcludingEditing());
@@ -332,9 +373,9 @@ const Editor: React.FC<EditorProps> = ({
 
       // Validate XP Limit before saving
       const currentTasksXP = state.tasks
-        .filter(t => t.id !== editingId)
+        .filter(t => t.id !== editingId && !t.isSponsored)
         .reduce((acc, t) => acc + t.xp, 0);
-      
+
       const dynamicLimit = getDynamicLimit();
       if (currentTasksXP + nextTask.xp > dynamicLimit) {
         setAlertMessage(`Cannot save: Total XP would exceed ${dynamicLimit}. Available: ${dynamicLimit - currentTasksXP}`);
@@ -343,6 +384,7 @@ const Editor: React.FC<EditorProps> = ({
 
       setTasks(state.tasks.map(t => t.id === editingId ? nextTask : t));
       setEditingId(null);
+      setNewlyCreatedTaskId(null);
       setEditForm(null);
     }
   };
@@ -366,7 +408,7 @@ const Editor: React.FC<EditorProps> = ({
       {/* Fixed Header */}
       <div className="p-6 border-b border-white/5 bg-slate-900 shrink-0 z-30 shadow-xl flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <button 
+          <button
             onClick={onBack}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
             title="Back to Dashboard"
@@ -377,12 +419,12 @@ const Editor: React.FC<EditorProps> = ({
             QuestLayer <span className="text-indigo-500 not-italic font-mono text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded tracking-normal">BUILDER</span>
           </h1>
         </div>
-        <button 
+        <button
           onClick={handlePublishClick}
           disabled={isPublishing}
           className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />} 
+          {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
           {isPublishing ? 'Saving...' : 'Save & Publish'}
         </button>
       </div>
@@ -407,13 +449,11 @@ const Editor: React.FC<EditorProps> = ({
                       <button
                         key={t}
                         onClick={() => setActiveTheme(t)}
-                        className={`min-w-[calc((100%-24px)/4)] p-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${
-                          themeButtonStyles[t].base
-                        } ${
-                          state.activeTheme === t
+                        className={`min-w-[calc((100%-24px)/4)] p-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${themeButtonStyles[t].base
+                          } ${state.activeTheme === t
                             ? themeButtonStyles[t].active
                             : themeButtonStyles[t].inactive
-                        }`}
+                          }`}
                       >
                         {t}
                       </button>
@@ -436,18 +476,17 @@ const Editor: React.FC<EditorProps> = ({
                     <button
                       key={color}
                       onClick={() => setAccentColor(color)}
-                      className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 ${
-                        state.accentColor.toLowerCase() === color.toLowerCase() 
-                          ? 'border-white ring-2 ring-indigo-500/50 scale-110' 
-                          : 'border-transparent'
-                      }`}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 ${state.accentColor.toLowerCase() === color.toLowerCase()
+                        ? 'border-white ring-2 ring-indigo-500/50 scale-110'
+                        : 'border-transparent'
+                        }`}
                       style={{ backgroundColor: color }}
                       title={color}
                     />
                   ))}
                   <div className="relative group flex items-center justify-center w-7 h-7 rounded-full border-2 border-white/10 overflow-hidden bg-slate-800">
-                    <input 
-                      type="color" 
+                    <input
+                      type="color"
                       value={state.accentColor}
                       onChange={(e) => setAccentColor(e.target.value)}
                       className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
@@ -460,7 +499,7 @@ const Editor: React.FC<EditorProps> = ({
                 <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
                   <Layout size={10} /> Position
                 </label>
-                <select 
+                <select
                   value={state.position}
                   onChange={(e) => setPosition(e.target.value as Position)}
                   className="w-full h-[38px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
@@ -477,8 +516,9 @@ const Editor: React.FC<EditorProps> = ({
             <div className="grid grid-cols-1 gap-3">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-500 uppercase">Project Name</label>
-                <input 
+                <input
                   value={state.projectName}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setProjectName(e.target.value)}
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
@@ -486,8 +526,9 @@ const Editor: React.FC<EditorProps> = ({
 
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-500 uppercase">Website Domain</label>
-                <input 
+                <input
                   value={state.projectDomain || ''}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setProjectDomain(e.target.value)}
                   placeholder="e.g. my-awesome-app.com"
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
@@ -551,18 +592,16 @@ const Editor: React.FC<EditorProps> = ({
             {SPONSORED_TASKS.map((task) => {
               const isActive = state.tasks.some(t => t.id === task.id);
               return (
-                <div 
+                <div
                   key={task.id}
-                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                    isActive 
-                      ? 'bg-amber-500/5 border-amber-500/20' 
-                      : 'bg-white/5 border-white/5'
-                  }`}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isActive
+                    ? 'bg-amber-500/5 border-amber-500/20'
+                    : 'bg-white/5 border-white/5'
+                    }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${
-                      isActive ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-900 border-white/10'
-                    }`}>
+                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${isActive ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-900 border-white/10'
+                      }`}>
                       {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
                       {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
                       {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
@@ -575,14 +614,12 @@ const Editor: React.FC<EditorProps> = ({
                   </div>
                   <button
                     onClick={() => toggleSponsoredTask(task)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                      isActive ? 'bg-amber-500' : 'bg-slate-700'
-                    }`}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-amber-500' : 'bg-slate-700'
+                      }`}
                   >
                     <span
-                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                        isActive ? 'translate-x-5' : 'translate-x-1'
-                      }`}
+                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isActive ? 'translate-x-5' : 'translate-x-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -591,69 +628,43 @@ const Editor: React.FC<EditorProps> = ({
           </div>
         </section>
 
-        {/* Demo Quests Section */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Layout size={12} className="text-indigo-500" />
-            <h3>Demo Quests</h3>
-            <span className="ml-auto text-[8px] font-bold text-indigo-500/80 bg-indigo-500/10 px-1.5 py-0.5 rounded uppercase">Predefined</span>
-          </div>
-          <div className="grid grid-cols-1 gap-2">
-            {DEMO_TASKS.map((task) => {
-              const isActive = state.tasks.some(t => t.id === task.id);
-              return (
-                <div 
-                  key={task.id}
-                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                    isActive 
-                      ? 'bg-indigo-500/5 border-indigo-500/20' 
-                      : 'bg-white/5 border-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${
-                      isActive ? 'bg-indigo-500/10 border-indigo-500/20' : 'bg-slate-900 border-white/10'
-                    }`}>
-                      {task.icon && task.icon.startsWith('http') ? (
-                        <img src={task.icon} alt="" className="w-4 h-4 rounded-full" />
-                      ) : (
-                        <Globe size={14} className="text-slate-400" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-white uppercase">{task.title}</p>
-                      <p className="text-[9px] text-slate-500 font-medium">{task.desc}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleDemoTask(task)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                      isActive ? 'bg-indigo-500' : 'bg-slate-700'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                        isActive ? 'translate-x-5' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
 
         {/* Missions Section */}
         <section className="space-y-6">
+
           <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-2 z-20">
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
               <Target size={12} />
               <h3>Missions List</h3>
-              <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] ${calculateXPRemaining() < 0 ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-slate-400'}`}>
-                {getDynamicLimit() - calculateXPRemaining()}/{getDynamicLimit()} XP
-              </span>
+              {(() => {
+                // Calculate Live Usage
+                const dynamicLimit = getDynamicLimit();
+                const usedFromOthers = state.tasks
+                  .filter(t => t.id !== editingId && !t.isSponsored)
+                  .reduce((acc, t) => acc + t.xp, 0);
+
+                const currentEditXP = editForm ? (editForm.xp || 0) : 0;
+
+                // If we are NOT editing, we should just use the standard calc
+                // But wait, if we are editing, 'editingId' is set. 
+                // If we are adding new task, 'editingId' is set.
+
+                // If editingId is null, currentEditXP is 0 (correct).
+                // But we need to make sure we don't double count if the task is in state.tasks
+                // My logic above: .filter(t => t.id !== editingId ...) handles this. 
+                // If editingId is null, it filters nothing (correct).
+
+                const liveUsedXP = usedFromOthers + currentEditXP;
+                const isOverLimit = liveUsedXP > dynamicLimit;
+
+                return (
+                  <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] min-w-[60px] text-center transition-colors duration-300 ${isOverLimit ? 'bg-red-500/20 text-red-400' : 'bg-indigo-500/10 text-indigo-400'}`}>
+                    <AnimatedNumber value={liveUsedXP} />/<AnimatedNumber value={dynamicLimit} /> XP
+                  </span>
+                );
+              })()}
             </div>
-            <button 
+            <button
               onClick={addTask}
               disabled={calculateXPRemaining() <= 0}
               className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-black text-[9px] uppercase hover:bg-indigo-500 transition-all flex items-center gap-1 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -736,13 +747,13 @@ const Editor: React.FC<EditorProps> = ({
                     <div className="flex gap-1 shrink-0">
                       {!task.isSponsored ? (
                         <>
-                          <button 
+                          <button
                             onClick={() => startEdit(task)}
                             className="p-2 text-slate-400 hover:text-white transition-colors"
                           >
                             <Edit2 size={16} />
                           </button>
-                          <button 
+                          <button
                             onClick={() => removeTask(task.id)}
                             className="p-2 text-slate-600 hover:text-red-400 transition-colors"
                           >
@@ -750,7 +761,7 @@ const Editor: React.FC<EditorProps> = ({
                           </button>
                         </>
                       ) : (
-                        <button 
+                        <button
                           onClick={() => removeTask(task.id)}
                           className="p-2 text-slate-600 hover:text-red-400 transition-colors"
                           title="Remove from list"
@@ -764,7 +775,7 @@ const Editor: React.FC<EditorProps> = ({
                   <div className="p-5 bg-indigo-600/5 border-l-4 border-indigo-500 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold text-slate-500 uppercase">Mission Title</label>
-                      <input 
+                      <input
                         value={editForm?.title}
                         autoFocus
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, title: e.target.value } : null)}
@@ -774,7 +785,7 @@ const Editor: React.FC<EditorProps> = ({
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold text-slate-500 uppercase">Instructions</label>
-                      <textarea 
+                      <textarea
                         value={editForm?.desc}
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, desc: e.target.value } : null)}
                         placeholder="What should the user do?"
@@ -783,7 +794,7 @@ const Editor: React.FC<EditorProps> = ({
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
-                      <input 
+                      <input
                         value={editForm?.link}
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
                         placeholder="https://..."
@@ -819,11 +830,10 @@ const Editor: React.FC<EditorProps> = ({
                                 )
                               }
                               disabled={isDisabled}
-                              className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
-                                isActive
-                                  ? 'bg-indigo-500/20 text-indigo-200 border-indigo-500/40 shadow-lg shadow-indigo-500/20'
-                                  : 'bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/20 hover:bg-white/10'
-                              } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                              className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${isActive
+                                ? 'bg-indigo-500/20 text-indigo-200 border-indigo-500/40 shadow-lg shadow-indigo-500/20'
+                                : 'bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/20 hover:bg-white/10'
+                                } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                               {preset}
                             </button>
@@ -833,7 +843,7 @@ const Editor: React.FC<EditorProps> = ({
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold text-slate-500 uppercase">Icon URL</label>
-                      <input 
+                      <input
                         value={editForm?.icon || ''}
                         onChange={(e) => setEditForm(prev => prev ? { ...prev, icon: e.target.value } : null)}
                         placeholder="https://..."
@@ -841,14 +851,14 @@ const Editor: React.FC<EditorProps> = ({
                       />
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <button 
+                      <button
                         onClick={saveEdit}
                         className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-black text-[10px] uppercase flex items-center justify-center gap-1 hover:bg-indigo-500 transition-colors"
                       >
                         <Check size={14} /> Save Mission
                       </button>
-                      <button 
-                        onClick={() => setEditingId(null)}
+                      <button
+                        onClick={handleCancel}
                         className="px-4 bg-slate-800 text-slate-400 py-2 rounded-lg font-black text-[10px] uppercase hover:text-white transition-colors"
                       >
                         Cancel
@@ -861,12 +871,12 @@ const Editor: React.FC<EditorProps> = ({
           </div>
 
           <div className="pt-4 border-t border-white/5">
-            <button 
+            <button
               onClick={handlePublishClick}
               disabled={isPublishing}
               className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl text-xs font-black uppercase transition-all shadow-lg shadow-indigo-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPublishing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />} 
+              {isPublishing ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
               {isPublishing ? 'Saving Project...' : 'Save & Publish Widget'}
             </button>
             <div className="mt-16">
@@ -876,10 +886,10 @@ const Editor: React.FC<EditorProps> = ({
         </section>
       </div>
 
-      <EmbedModal 
-        isOpen={isEmbedModalOpen} 
-        onClose={() => setIsEmbedModalOpen(false)} 
-        state={state} 
+      <EmbedModal
+        isOpen={isEmbedModalOpen}
+        onClose={() => setIsEmbedModalOpen(false)}
+        state={state}
       />
 
       {/* Alert Modal */}
@@ -904,7 +914,7 @@ const Editor: React.FC<EditorProps> = ({
             {alertMessage && (
               <p className="relative text-slate-500 text-xs leading-relaxed">{alertMessage}</p>
             )}
-            <button 
+            <button
               onClick={() => setAlertMessage(null)}
               className="relative mt-2 w-full py-3 bg-white text-black font-black uppercase text-xs rounded-xl hover:bg-slate-200 transition-colors"
             >

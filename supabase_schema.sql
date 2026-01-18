@@ -25,7 +25,8 @@ create table if not exists tasks (
   link text,
   icon_url text,
   xp_reward integer default 100,
-  order_index integer default 0
+  order_index integer default 0,
+  is_sponsored boolean default false
 );
 
 -- 3. End Users (People using the widget)

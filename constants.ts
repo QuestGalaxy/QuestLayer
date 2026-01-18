@@ -30,14 +30,14 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   gaming: {
-      card: 'bg-indigo-950 rounded-t-2xl md:rounded-3xl border-2 border-[#fbbf24]',
-      trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic',
-      header: 'bg-black/40 border-b-2 border-[#fbbf24]',
-      button: 'rounded-lg border-b-4 border-amber-800 bg-amber-500 text-black active:border-b-0 active:translate-y-1',
-      itemCard: 'bg-indigo-900 rounded-lg md:rounded-xl border-indigo-400/20',
-      iconBox: 'rounded-lg',
-      font: 'font-["Plus_Jakarta_Sans"]'
-    },
+    card: 'bg-indigo-950 rounded-t-2xl md:rounded-3xl border-2 border-[#fbbf24]',
+    trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic',
+    header: 'bg-black/40 border-b-2 border-[#fbbf24]',
+    button: 'rounded-lg border-b-4 border-amber-800 bg-amber-500 text-black active:border-b-0 active:translate-y-1',
+    itemCard: 'bg-indigo-900 rounded-lg md:rounded-xl border-indigo-400/20',
+    iconBox: 'rounded-lg',
+    font: 'font-["Plus_Jakarta_Sans"]'
+  },
   brutal: {
     card: 'bg-white rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]',
     trigger: 'rounded-none border-4 border-black bg-white text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
@@ -94,44 +94,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
   }
 };
 
-export const DEMO_TASKS: Task[] = [
-  {
-    id: 'demo-1',
-    title: 'Visit Website',
-    desc: 'Explore QuestGalaxy and discover the latest quests and galaxy rewards.',
-    link: 'https://questgalaxy.com/',
-    icon: 'https://www.google.com/s2/favicons?domain=questgalaxy.com&sz=128',
-    xp: 200,
-    isDemo: true
-  },
-  {
-    id: 'demo-2',
-    title: 'Follow X',
-    desc: 'Follow @questgalaxycom for launches, raids, and drops.',
-    link: 'https://x.com/questgalaxycom',
-    icon: 'https://www.google.com/s2/favicons?domain=x.com&sz=128',
-    xp: 200,
-    isDemo: true
-  },
-  {
-    id: 'demo-3',
-    title: 'Join Telegram',
-    desc: 'Join the QuestGalaxy Telegram to meet the community and mods.',
-    link: 'https://t.me/questgalaxy',
-    icon: 'https://www.google.com/s2/favicons?domain=t.me&sz=128',
-    xp: 200,
-    isDemo: true
-  },
-  {
-    id: 'demo-4',
-    title: 'Follow Medium',
-    desc: 'Read the QuestGalaxy Medium for updates and deep dives.',
-    link: 'https://medium.com/questgalaxy',
-    icon: 'https://www.google.com/s2/favicons?domain=medium.com&sz=128',
-    xp: 200,
-    isDemo: true
-  }
-];
+
 
 export const SPONSORED_TASKS: Task[] = [
   {

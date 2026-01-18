@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Task, Position, ThemeType, AppState } from '../types.ts';
 import { THEMES } from '../constants.ts';
-import { 
-  LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2, 
-  ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown, 
+import {
+  LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2,
+  ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown,
   MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart, User
 } from 'lucide-react';
 import { supabase, logProjectView } from '../lib/supabase';
@@ -200,6 +200,10 @@ const Widget: React.FC<WidgetProps> = ({
       try {
         let projectId = state.projectId;
 
+        if (projectId && projectId.startsWith('temp-')) {
+          projectId = undefined;
+        }
+
         // Fallback: Try to find project by name if ID is missing (legacy/unsynced state)
         // ONLY if not in preview mode. In preview, we rely on state.projectId being explicitly set.
         if (!projectId && state.projectName && !isPreview) {
@@ -225,21 +229,21 @@ const Widget: React.FC<WidgetProps> = ({
         // We only map tasks that exist in the DB. New unsaved tasks won't have IDs.
         const taskMapping: Record<string | number, string> = {};
         if (state.tasks.length > 0) {
-           const { data: dbTasks } = await supabase
-             .from('tasks')
-             .select('id, title')
-             .eq('project_id', projectId);
-            
-           if (dbTasks) {
-             // Map by title (assuming titles are unique per project for simplicity)
-             // or ideally we would have a stable ID.
-             state.tasks.forEach(localTask => {
-               const match = dbTasks.find(d => d.title === localTask.title);
-               if (match) {
-                 taskMapping[localTask.id] = match.id;
-               }
-             });
-           }
+          const { data: dbTasks } = await supabase
+            .from('tasks')
+            .select('id, title')
+            .eq('project_id', projectId);
+
+          if (dbTasks) {
+            // Map by title (assuming titles are unique per project for simplicity)
+            // or ideally we would have a stable ID.
+            state.tasks.forEach(localTask => {
+              const match = dbTasks.find(d => d.title === localTask.title);
+              if (match) {
+                taskMapping[localTask.id] = match.id;
+              }
+            });
+          }
         }
         setTaskMap(taskMapping);
 
@@ -248,10 +252,10 @@ const Widget: React.FC<WidgetProps> = ({
         const { data: user, error: userError } = await supabase
           .from('end_users')
           .upsert(
-            { 
-              project_id: projectId, 
-              wallet_address: address 
-            }, 
+            {
+              project_id: projectId,
+              wallet_address: address
+            },
             { onConflict: 'project_id,wallet_address' }
           )
           .select('id')
@@ -275,8 +279,8 @@ const Widget: React.FC<WidgetProps> = ({
             const lastClaim = new Date(progress.last_claim_date);
             const now = new Date();
             isClaimedToday = lastClaim.getUTCFullYear() === now.getUTCFullYear() &&
-                             lastClaim.getUTCMonth() === now.getUTCMonth() &&
-                             lastClaim.getUTCDate() === now.getUTCDate();
+              lastClaim.getUTCMonth() === now.getUTCMonth() &&
+              lastClaim.getUTCDate() === now.getUTCDate();
           }
 
           // Sync DB state to Local State
@@ -312,7 +316,7 @@ const Widget: React.FC<WidgetProps> = ({
               localCompletedIds.add(t.id);
             }
           });
-          
+
           setCompletedTaskIds(localCompletedIds);
         }
 
@@ -326,7 +330,7 @@ const Widget: React.FC<WidgetProps> = ({
           .eq('project_id', projectId)
           .gte('created_at', start.toISOString())
           .lt('created_at', end.toISOString());
-        
+
         if (viralBoosts) {
           setSharedPlatforms(viralBoosts.map(v => v.platform));
         }
@@ -408,7 +412,7 @@ const Widget: React.FC<WidgetProps> = ({
         // We do NOT load sharedPlatforms from cache if connected, as DB is source of truth.
         // But if unconnected (preview mode), we can respect it or just default to empty.
         if (!dbUserId) {
-             setSharedPlatforms(parsed.sharedPlatforms ?? []);
+          setSharedPlatforms(parsed.sharedPlatforms ?? []);
         }
       }
     } catch {
@@ -448,7 +452,7 @@ const Widget: React.FC<WidgetProps> = ({
     const ctx = audioCtxRef.current!;
     const masterGain = ctx.createGain();
     masterGain.connect(ctx.destination);
-    masterGain.gain.value = 0.08; 
+    masterGain.gain.value = 0.08;
     const now = ctx.currentTime;
     if (type === 'connect') {
       const osc = ctx.createOscillator();
@@ -492,13 +496,13 @@ const Widget: React.FC<WidgetProps> = ({
   const calculateLevel = (xp: number) => {
     // Use Global XP if available (connected), otherwise local XP (preview/unconnected)
     const effectiveXP = effectiveConnected ? (globalXP > xp ? globalXP : xp) : xp;
-    
+
     const xpPerLevel = 3000;
     const lvl = Math.floor(effectiveXP / xpPerLevel) + 1;
     const progress = ((effectiveXP % xpPerLevel) / xpPerLevel) * 100;
     const nextLevelXP = lvl * xpPerLevel;
     const xpNeeded = nextLevelXP - effectiveXP;
-    
+
     return { lvl, progress: Math.floor(progress), xpNeeded, effectiveXP };
   };
 
@@ -511,17 +515,17 @@ const Widget: React.FC<WidgetProps> = ({
 
   const claimDaily = async () => {
     if (state.dailyClaimed) return;
-    
+
     // DB Update & Calculation via RPC
     if (dbUserId) {
       try {
         const { data, error } = await supabase.rpc('claim_daily_bonus', { u_id: dbUserId });
-        
+
         if (error) throw error;
-        
+
         if (data && data.success) {
           playSound('fanfare');
-          
+
           // Update Local State with Server Response
           setState(prev => ({
             ...prev,
@@ -551,73 +555,88 @@ const Widget: React.FC<WidgetProps> = ({
     }
   };
 
+  // --- REFACTORED STARTQUEST LOGIC ---
   const startQuest = (task: Task) => {
-    initAudio(); 
+    initAudio();
     window.open(task.link, '_blank');
     setLoadingId(task.id);
     setTimerValue(10);
+  };
+
+  useEffect(() => {
+    if (loadingId !== null && timerValue > 0) {
+      timerIntervalRef.current = setInterval(() => {
+        setTimerValue(prev => prev - 1);
+      }, 1000);
+      return () => {
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      };
+    } else if (loadingId !== null && timerValue <= 0) {
+      // Timer Finished - Execute Completion Logic Once
+      const task = state.tasks.find(t => t.id === loadingId);
+      if (task) {
+        completeQuest(task);
+      }
+    }
+  }, [loadingId, timerValue]);
+
+  const completeQuest = (task: Task) => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    timerIntervalRef.current = setInterval(() => {
-      setTimerValue(prev => {
-        if (prev <= 1) {
-          if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-          playSound('reward');
-          
-          // Optimistic Update
-          setState(prev => ({
-            ...prev,
-            userXP: prev.userXP + task.xp
-          }));
-          setCompletedTaskIds(prev => new Set(prev).add(task.id));
-          setLoadingId(null);
+    // Prevent multiple triggers if already completing
+    if (completedTaskIds.has(task.id)) return;
 
-          // DB Update
-          if (dbUserId) {
-            const completeTaskInDb = async () => {
-              let dbTaskId = taskMap[task.id];
+    playSound('reward');
 
-              // Fallback: If not in map, try to find it by title in the DB right now
-              if (!dbTaskId && dbProjectId) {
-                const { data: foundTask } = await supabase
-                  .from('tasks')
-                  .select('id')
-                  .eq('project_id', dbProjectId)
-                  .eq('title', task.title)
-                  .single();
-                if (foundTask) dbTaskId = foundTask.id;
-              }
+    // Optimistic Update
+    setState(prev => ({
+      ...prev,
+      userXP: prev.userXP + task.xp
+    }));
+    setCompletedTaskIds(prev => new Set(prev).add(task.id));
+    setLoadingId(null);
 
-              if (dbTaskId) {
-                 await supabase.from('task_completions').insert({
-                   user_id: dbUserId,
-                   task_id: dbTaskId
-                 });
-                 
-                 // Fetch latest XP to be safe (race conditions)
-                 const { data: userProgress } = await supabase
-                   .from('user_progress')
-                   .select('xp')
-                   .eq('user_id', dbUserId)
-                   .single();
-                 
-                 const currentDbXP = userProgress?.xp || state.userXP;
+    // DB Update
+    if (dbUserId) {
+      const completeTaskInDb = async () => {
+        let dbTaskId = taskMap[task.id];
 
-                 await supabase.from('user_progress')
-                   .update({ xp: currentDbXP + task.xp }) 
-                   .eq('user_id', dbUserId);
-                   
-                 setGlobalXP(prev => prev + task.xp);
-              } else {
-                console.error("Task ID not found for completion", task);
-              }
-            };
-            completeTaskInDb();
-          }
-          return 0;
+        // Fallback: If not in map, try to find it by title in the DB right now
+        if (!dbTaskId && dbProjectId) {
+          const { data: foundTask } = await supabase
+            .from('tasks')
+            .select('id')
+            .eq('project_id', dbProjectId)
+            .eq('title', task.title)
+            .single();
+          if (foundTask) dbTaskId = foundTask.id;
         }
-        return prev - 1;
-      });
-    }, 1000);
+
+        if (dbTaskId) {
+          await supabase.from('task_completions').insert({
+            user_id: dbUserId,
+            task_id: dbTaskId
+          });
+
+          // Fetch latest XP to be safe (race conditions)
+          const { data: userProgress } = await supabase
+            .from('user_progress')
+            .select('xp')
+            .eq('user_id', dbUserId)
+            .single();
+
+          const currentDbXP = userProgress?.xp || state.userXP;
+
+          await supabase.from('user_progress')
+            .update({ xp: currentDbXP + task.xp })
+            .eq('user_id', dbUserId);
+
+          setGlobalXP(prev => prev + task.xp);
+        } else {
+          console.error("Task ID not found for completion", task);
+        }
+      };
+      completeTaskInDb();
+    }
   };
 
   const handleShare = (platform: string) => {
@@ -629,22 +648,22 @@ const Widget: React.FC<WidgetProps> = ({
     }
     if (sharedPlatforms.includes(platform) || verifyingPlatforms.includes(platform)) return;
     const shareUrl = window.location.origin;
-    
+
     // Platform-specific marketing copy
     let shareText = '';
     const projectHashtag = `#${state.projectName.replace(/\s+/g, '')}`;
-    
-    switch(platform) {
-      case 'x': 
+
+    switch (platform) {
+      case 'x':
         shareText = `🚀 Just started my journey on ${state.projectName}! \n\nCompleting quests and earning XP. Join me and level up! ⚡️\n\n${projectHashtag} #QuestLayer #Web3`;
         break;
-      case 'tg': 
+      case 'tg':
         shareText = `Check out ${state.projectName} on QuestLayer! 🎮 I'm earning rewards by completing quests. Come join the leaderboard! 🚀`;
         break;
-      case 'wa': 
+      case 'wa':
         shareText = `Hey! I'm using QuestLayer to earn rewards on ${state.projectName}. It's actually pretty cool, check it out here:`;
         break;
-      case 'li': 
+      case 'li':
         shareText = `Excited to be engaging with ${state.projectName} through their new QuestLayer integration. Gamifying the experience and earning rewards! 🚀 #Web3 #Community #Growth`;
         break;
       default: // fb and others
@@ -654,7 +673,7 @@ const Widget: React.FC<WidgetProps> = ({
 
     let url = '';
 
-    switch(platform) {
+    switch (platform) {
       case 'x': url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`; break;
       case 'tg': url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`; break;
       case 'wa': url = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`; break;
@@ -674,23 +693,23 @@ const Widget: React.FC<WidgetProps> = ({
           setSharedPlatforms(prev => [...prev, platform]);
           playSound('reward');
           setState(prev => ({ ...prev, userXP: prev.userXP + 100 }));
-          
+
           // DB Update
           if (dbUserId && dbProjectId) {
-             // 1. Log completion in DB
-             supabase.from('viral_boost_completions').insert({
-               user_id: dbUserId,
-               project_id: dbProjectId,
-               platform: platform
-             }).then(() => {
-               // 2. Update User XP
-               supabase.from('user_progress')
-                 .update({ xp: state.userXP + 100 })
-                 .eq('user_id', dbUserId)
-                 .then(() => {
-                    setGlobalXP(prev => prev + 100);
-                 });
-             });
+            // 1. Log completion in DB
+            supabase.from('viral_boost_completions').insert({
+              user_id: dbUserId,
+              project_id: dbProjectId,
+              platform: platform
+            }).then(() => {
+              // 2. Update User XP
+              supabase.from('user_progress')
+                .update({ xp: state.userXP + 100 })
+                .eq('user_id', dbUserId)
+                .then(() => {
+                  setGlobalXP(prev => prev + 100);
+                });
+            });
           }
         }
       }, 10000);
@@ -701,46 +720,46 @@ const Widget: React.FC<WidgetProps> = ({
     if (isConnecting) return;
     initAudio();
     if (isConnected) {
-        setIsWidgetActive(true);
-        playSound('connect');
+      setIsWidgetActive(true);
+      playSound('connect');
     } else {
-        if (!isPreview && isEmbedded) {
-          const trackConnect = async () => {
-            let projectId = state.projectId;
+      if (!isPreview && isEmbedded) {
+        const trackConnect = async () => {
+          let projectId = state.projectId;
 
-            if (!projectId && state.projectName) {
-              const { data: projects } = await supabase
-                .from('projects')
-                .select('id')
-                .eq('name', state.projectName)
-                .limit(1);
-              projectId = projects?.[0]?.id;
-            }
+          if (!projectId && state.projectName) {
+            const { data: projects } = await supabase
+              .from('projects')
+              .select('id')
+              .eq('name', state.projectName)
+              .limit(1);
+            projectId = projects?.[0]?.id;
+          }
 
-            if (!projectId) return;
+          if (!projectId) return;
 
-            const host = normalizeHost(window.location.hostname || '');
-            const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
-            
-            console.log('[QuestLayer] Tracking Connect:', { 
-              host, 
-              projectHost, 
-              projectId, 
-              match: host === projectHost 
-            });
+          const host = normalizeHost(window.location.hostname || '');
+          const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
 
-            if (!host || !projectHost || host !== projectHost) {
-              console.warn('[QuestLayer] Domain mismatch or missing configuration. Tracking skipped.');
-              return;
-            }
+          console.log('[QuestLayer] Tracking Connect:', {
+            host,
+            projectHost,
+            projectId,
+            match: host === projectHost
+          });
 
-            await logProjectView(projectId);
-          };
+          if (!host || !projectHost || host !== projectHost) {
+            console.warn('[QuestLayer] Domain mismatch or missing configuration. Tracking skipped.');
+            return;
+          }
 
-          void trackConnect();
-        }
-        setIsWidgetActive(true);
-        open();
+          await logProjectView(projectId);
+        };
+
+        void trackConnect();
+      }
+      setIsWidgetActive(true);
+      open();
     }
   };
 
@@ -883,7 +902,7 @@ const Widget: React.FC<WidgetProps> = ({
     try {
       if (!link || link.length < 4) return '';
       let validLink = link.trim();
-      validLink = validLink.replace(/[\/.]+$/, ''); 
+      validLink = validLink.replace(/[\/.]+$/, '');
       if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
         validLink = `https://${validLink}`;
       }
@@ -919,21 +938,21 @@ const Widget: React.FC<WidgetProps> = ({
       }}
     >
       {/* Header */}
-      <div 
+      <div
         className={`px-4 py-3 md:px-5 md:py-4 flex items-center justify-between shrink-0 ${activeTheme.header}`}
         style={{ borderColor: state.activeTheme === 'gaming' ? '#fbbf24' : undefined }}
       >
         <div className="flex items-center gap-2 md:gap-3 truncate">
           <div
-            style={{ 
-              backgroundColor: projectIconUrl 
-                ? 'transparent' 
-                : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor)) 
+            style={{
+              backgroundColor: projectIconUrl
+                ? 'transparent'
+                : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}30` : state.accentColor))
             }}
             className={`w-8 h-8 md:w-9 md:h-9 shadow-lg shrink-0 overflow-hidden flex items-center justify-center ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
           >
             {projectIconUrl ? (
-              <img 
+              <img
                 src={projectIconUrl}
                 alt={state.projectName}
                 className="w-full h-full object-cover"
@@ -966,14 +985,14 @@ const Widget: React.FC<WidgetProps> = ({
                 }}
               />
             ) : null}
-            <div 
+            <div
               style={{ display: projectIconUrl ? 'none' : 'flex' }}
               className="w-full h-full items-center justify-center"
             >
               <Zap className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" />
             </div>
           </div>
-          <span 
+          <span
             className={`font-black text-sm md:text-sm uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'}`}
             style={isTransparentTheme ? { color: state.accentColor } : {}}
           >
@@ -983,7 +1002,7 @@ const Widget: React.FC<WidgetProps> = ({
         <div className="flex items-center gap-2 md:gap-2 shrink-0 ml-2">
           {effectiveConnected && (
             <button onClick={handleDisconnect} className="p-2 md:p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors">
-            <LogOut className="w-[12px] h-[12px] md:w-[12px] md:h-[12px]" />
+              <LogOut className="w-[12px] h-[12px] md:w-[12px] md:h-[12px]" />
             </button>
           )}
           <button
@@ -1000,14 +1019,14 @@ const Widget: React.FC<WidgetProps> = ({
         {!effectiveConnected ? (
           <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
             <div className="space-y-2">
-              <div 
+              <div
                 className="mx-auto w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1"
                 style={{ backgroundColor: `${state.accentColor}15`, color: state.accentColor }}
               >
                 <ShieldCheck className="w-[26px] h-[26px] md:w-[32px] md:h-[32px]" />
               </div>
               <h3 className={`text-[13px] md:text-lg font-black uppercase tracking-tighter ${isLightTheme ? 'text-black' : 'text-white'}`}>
-                Connect to unlock <br/><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
+                Connect to unlock <br /><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
               </h3>
             </div>
             <div className={`w-full space-y-3 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
@@ -1032,10 +1051,10 @@ const Widget: React.FC<WidgetProps> = ({
                 </div>
               </div>
             </div>
-            <button 
-              onClick={handleConnect} 
+            <button
+              onClick={handleConnect}
               disabled={isConnecting}
-              style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})} 
+              style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})}
               className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isConnecting ? (
@@ -1052,7 +1071,7 @@ const Widget: React.FC<WidgetProps> = ({
               <div className="flex justify-between items-start mb-2 md:mb-4">
                 <div className="flex items-center gap-2 md:gap-3">
                   <button
-                  onClick={() => handleQuestLayerNav('/browse')}
+                    onClick={() => handleQuestLayerNav('/browse')}
                     title="Open profile"
                     className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-transform hover:scale-105`}
                     style={{ backgroundColor: isLightTheme ? '#000' : state.accentColor }}
@@ -1087,13 +1106,13 @@ const Widget: React.FC<WidgetProps> = ({
                 </button>
               </div>
               <div className={`h-1 md:h-2 w-full overflow-hidden border relative mb-1 ${isLightTheme ? 'bg-slate-100 border-slate-200' : 'bg-slate-200/10 border-white/5'} ${activeTheme.iconBox}`}>
-                <div 
-                  className={`h-full transition-all duration-300 ease-out relative`} 
+                <div
+                  className={`h-full transition-all duration-300 ease-out relative`}
                   style={{ width: `${currentLevelData.progress}%`, backgroundColor: state.accentColor }}
                 >
-                   {visualXP < state.userXP && (
-                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1s_infinite]" />
-                   )}
+                  {visualXP < state.userXP && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1s_infinite]" />
+                  )}
                 </div>
               </div>
               <div className="flex justify-between items-center">
@@ -1107,9 +1126,8 @@ const Widget: React.FC<WidgetProps> = ({
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => handleQuestLayerNav('/browse')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-                    isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                    }`}
                   style={{
                     borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
                     backgroundColor: `${state.accentColor}12`,
@@ -1121,9 +1139,8 @@ const Widget: React.FC<WidgetProps> = ({
                 </button>
                 <button
                   onClick={() => handleQuestLayerNav('/leaderboard')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-                    isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${isLightTheme ? 'border-slate-200 text-slate-700 hover:text-black hover:border-slate-300' : 'border-white/10 text-white/70 hover:text-white hover:border-white/20'
+                    }`}
                   style={{
                     borderColor: isTransparentTheme ? `${state.accentColor}50` : undefined,
                     backgroundColor: `${state.accentColor}12`,
@@ -1150,13 +1167,12 @@ const Widget: React.FC<WidgetProps> = ({
                     const isActive = day <= state.currentStreak;
                     const isCurrent = day === state.currentStreak;
                     return (
-                      <div 
+                      <div
                         key={day}
-                        className={`flex-1 h-8 md:h-12 border flex flex-col items-center justify-center transition-all duration-500 relative ${activeTheme.iconBox} ${
-                          isActive 
-                            ? (isLightTheme ? 'border-transparent shadow-sm' : 'border-transparent shadow-md') 
-                            : (isLightTheme ? 'border-slate-200 opacity-20' : 'border-white/5 opacity-10')
-                        } ${isCurrent ? 'ring-1 md:ring-2 ring-offset-1 md:ring-offset-2' : ''}`}
+                        className={`flex-1 h-8 md:h-12 border flex flex-col items-center justify-center transition-all duration-500 relative ${activeTheme.iconBox} ${isActive
+                          ? (isLightTheme ? 'border-transparent shadow-sm' : 'border-transparent shadow-md')
+                          : (isLightTheme ? 'border-slate-200 opacity-20' : 'border-white/5 opacity-10')
+                          } ${isCurrent ? 'ring-1 md:ring-2 ring-offset-1 md:ring-offset-2' : ''}`}
                         style={{
                           borderColor: isActive ? state.accentColor : undefined,
                           backgroundColor: isActive ? `${state.accentColor}${isLightTheme ? '10' : '20'}` : undefined,
@@ -1166,34 +1182,34 @@ const Widget: React.FC<WidgetProps> = ({
                         } as React.CSSProperties}
                       >
                         <span className={`text-[8px] md:text-[9px] font-black uppercase ${isActive ? (isLightTheme ? 'text-slate-900' : 'text-white') : (isLightTheme ? 'text-black' : 'text-white')}`}>D{day}</span>
-                        <span 
+                        <span
                           className={`text-[11px] md:text-[11px] font-mono font-bold transition-colors`}
                           style={{ color: isActive ? state.accentColor : (isLightTheme ? '#64748b' : 'rgba(255,255,255,0.4)') }}
                         >
                           {formatXP(100 * Math.pow(2, day - 1))}
                         </span>
                         {isActive && (
-                           <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
-                             <CheckCircle2 size={6} style={{ color: state.accentColor }} />
-                           </div>
+                          <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
+                            <CheckCircle2 size={6} style={{ color: state.accentColor }} />
+                          </div>
                         )}
                       </div>
                     );
                   })}
                 </div>
                 {!state.dailyClaimed ? (
-                  <button 
-                    onClick={claimDaily} 
-                    style={(!isLightTheme && !isTransparentTheme) ? { 
+                  <button
+                    onClick={claimDaily}
+                    style={(!isLightTheme && !isTransparentTheme) ? {
                       backgroundColor: state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor,
-                      borderColor: state.activeTheme === 'gaming' ? '#b45309' : state.accentColor 
-                    } : (isTransparentTheme ? { 
-                      border: `2px solid ${state.accentColor}`, 
-                      backgroundColor: `${state.accentColor}20` 
-                    } : (isLightTheme ? { 
-                      backgroundColor: state.accentColor, 
-                      color: 'white' 
-                    } : {}))} 
+                      borderColor: state.activeTheme === 'gaming' ? '#b45309' : state.accentColor
+                    } : (isTransparentTheme ? {
+                      border: `2px solid ${state.accentColor}`,
+                      backgroundColor: `${state.accentColor}20`
+                    } : (isLightTheme ? {
+                      backgroundColor: state.accentColor,
+                      color: 'white'
+                    } : {}))}
                     className={`w-full py-1.5 md:py-3 font-black text-[11px] md:text-[11px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
                   >
                     Claim Daily Bonus
@@ -1211,13 +1227,13 @@ const Widget: React.FC<WidgetProps> = ({
                   <p className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>
                     Viral Boost
                   </p>
-                <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                  <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-emerald-700' : 'text-emerald-400'}`}>
                     +100 XP EACH / DAY
                   </p>
                 </div>
-                <div 
+                <div
                   className={`p-2 md:p-4 border border-opacity-10 shadow-sm flex flex-col items-center gap-2 ${activeTheme.itemCard}`}
-                  style={{ 
+                  style={{
                     borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
                     boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
                   }}
@@ -1233,7 +1249,7 @@ const Widget: React.FC<WidgetProps> = ({
                       const isShared = sharedPlatforms.includes(platform.id);
                       const isVerifying = verifyingPlatforms.includes(platform.id);
                       return (
-                        <button 
+                        <button
                           key={platform.id}
                           onClick={() => handleShare(platform.id)}
                           className={`relative w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white transition-all shadow-md active:scale-90 hover:scale-105 ${isShared ? 'grayscale opacity-10 pointer-events-none' : ''} ${isVerifying ? 'pointer-events-none' : ''}`}
@@ -1268,7 +1284,7 @@ const Widget: React.FC<WidgetProps> = ({
                           )}
                           {isShared && (
                             <div className="absolute -top-0.5 -right-0.5 bg-white rounded-full p-0.5 border border-slate-100 shadow-sm">
-                               <CheckCircle2 size={6} className="text-emerald-500" />
+                              <CheckCircle2 size={6} className="text-emerald-500" />
                             </div>
                           )}
                         </button>
@@ -1292,149 +1308,150 @@ const Widget: React.FC<WidgetProps> = ({
                   }).map(task => {
                     const isCompleted = completedTaskIds.has(task.id);
                     return (
-                    <div 
-                        key={task.id} 
+                      <div
+                        key={task.id}
                         className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''}`}
-                        style={{ 
+                        style={{
                           borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
                           boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
                         }}
                       >
-                      <div className="flex justify-between items-start mb-0.5 gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          {task.icon?.startsWith('icon:') ? (
-                            <div 
-                              className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
-                              style={{ background: `${state.accentColor}10` }}
-                            >
-                              {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
-                              {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
-                              {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
-                              {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
-                              {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
-                              {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-                              {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-                              {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
-                              {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-                              {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
-                              {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-                              {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
-                            </div>
-                          ) : task.icon ? (
-                            <div 
-                              className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
-                              style={{ background: `${state.accentColor}10` }}
-                            >
-                              <img
-                                src={task.icon}
-                                alt=""
-                                className="h-4 w-4 md:h-5 md:w-5 object-contain"
-                                loading="lazy"
-                              />
-                            </div>
-                          ) : null}
-                          <h5 className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
-                            {task.title}
-                          </h5>
-                          {task.isSponsored && (
-                            <span 
-                              className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                              style={{ 
-                                backgroundColor: `${state.accentColor}10`, 
-                                borderColor: `${state.accentColor}20`,
-                                color: state.accentColor 
-                              }}
-                            >
-                              Sponsored
-                            </span>
-                          )}
-                          {task.isDemo && (
-                            <span 
-                              className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                              style={{ 
-                                backgroundColor: `${state.accentColor}10`, 
-                                borderColor: `${state.accentColor}20`,
-                                color: state.accentColor 
-                              }}
-                            >
-                              Demo
-                            </span>
-                          )}
+                        <div className="flex justify-between items-start mb-0.5 gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {task.icon?.startsWith('icon:') ? (
+                              <div
+                                className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+                                style={{ background: `${state.accentColor}10` }}
+                              >
+                                {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
+                                {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
+                                {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
+                                {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
+                                {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+                                {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                                {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                                {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+                                {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                                {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                                {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                                {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+                              </div>
+                            ) : task.icon ? (
+                              <div
+                                className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+                                style={{ background: `${state.accentColor}10` }}
+                              >
+                                <img
+                                  src={task.icon}
+                                  alt=""
+                                  className="h-4 w-4 md:h-5 md:w-5 object-contain"
+                                  loading="lazy"
+                                />
+                              </div>
+                            ) : null}
+                            <h5 className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
+                              {task.title}
+                            </h5>
+                            {task.isSponsored && (
+                              <span
+                                className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                                style={{
+                                  backgroundColor: `${state.accentColor}10`,
+                                  borderColor: `${state.accentColor}20`,
+                                  color: state.accentColor
+                                }}
+                              >
+                                Sponsored
+                              </span>
+                            )}
+                            {task.isDemo && (
+                              <span
+                                className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                                style={{
+                                  backgroundColor: `${state.accentColor}10`,
+                                  borderColor: `${state.accentColor}20`,
+                                  color: state.accentColor
+                                }}
+                              >
+                                Demo
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            className={`text-[10px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
+                            style={{ background: `${state.accentColor}10`, color: state.accentColor }}
+                          >
+                            +{task.xp}
+                          </span>
                         </div>
-                        <span 
-                          className={`text-[10px] md:text-[10px] font-black px-1 py-0.5 shrink-0 ${activeTheme.iconBox}`}
-                          style={{ background: `${state.accentColor}10`, color: state.accentColor }}
+                        <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
+                          {task.desc}
+                        </p>
+                        <button
+                          onClick={() => startQuest(task)}
+                          disabled={isCompleted || (loadingId !== null && loadingId !== task.id)}
+                          style={(!isLightTheme && !isTransparentTheme) ? {
+                            backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
+                            borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
+                            color: state.activeTheme === 'gaming' ? 'black' : 'white',
+                            cursor: isCompleted ? 'not-allowed' : 'pointer'
+                          } : (isTransparentTheme ? {
+                            borderColor: isCompleted ? '#94a3b8' : state.accentColor,
+                            backgroundColor: isCompleted ? '#94a3b820' : (loadingId === task.id ? `${state.accentColor}10` : 'transparent'),
+                            color: isCompleted ? '#94a3b8' : 'white',
+                            cursor: isCompleted ? 'not-allowed' : 'pointer'
+                          } : (loadingId === task.id ? {
+                            backgroundColor: '#f8fafc',
+                            color: '#1e293b',
+                            borderColor: '#cbd5e1'
+                          } : {
+                            backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                            color: isCompleted ? '#94a3b8' : 'white',
+                            borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                            cursor: isCompleted ? 'not-allowed' : 'pointer'
+                          }))}
+                          className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
                         >
-                          +{task.xp}
-                        </span>
+                          {isCompleted ? (
+                            <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
+                          ) : loadingId !== task.id ? (
+                            <span className="flex items-center gap-1">Launch <ExternalLink size={7} /></span>
+                          ) : (
+                            <span className="flex items-center gap-1">Syncing <span className={`font-mono`} style={{ color: state.accentColor }}>{timerValue}s</span></span>
+                          )}
+                          {loadingId === task.id && (
+                            <div
+                              className="absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-1000 linear"
+                              style={{ width: `${((10 - timerValue) / 10) * 100}%`, backgroundColor: state.accentColor }}
+                            />
+                          )}
+                        </button>
                       </div>
-                      <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
-                        {task.desc}
-                      </p>
-                      <button 
-                        onClick={() => startQuest(task)} 
-                        disabled={isCompleted || (loadingId !== null && loadingId !== task.id)}
-                        style={(!isLightTheme && !isTransparentTheme) ? { 
-                          backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
-                          borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
-                          color: state.activeTheme === 'gaming' ? 'black' : 'white',
-                          cursor: isCompleted ? 'not-allowed' : 'pointer'
-                        } : (isTransparentTheme ? { 
-                          borderColor: isCompleted ? '#94a3b8' : state.accentColor, 
-                          backgroundColor: isCompleted ? '#94a3b820' : (loadingId === task.id ? `${state.accentColor}10` : 'transparent'),
-                          color: isCompleted ? '#94a3b8' : 'white',
-                          cursor: isCompleted ? 'not-allowed' : 'pointer'
-                        } : (loadingId === task.id ? { 
-                          backgroundColor: '#f8fafc', 
-                          color: '#1e293b', 
-                          borderColor: '#cbd5e1' 
-                        } : { 
-                          backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor, 
-                          color: isCompleted ? '#94a3b8' : 'white', 
-                          borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
-                          cursor: isCompleted ? 'not-allowed' : 'pointer'
-                        }))} 
-                        className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
-                      >
-                        {isCompleted ? (
-                           <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
-                        ) : loadingId !== task.id ? (
-                          <span className="flex items-center gap-1">Launch <ExternalLink size={7} /></span>
-                        ) : (
-                          <span className="flex items-center gap-1">Syncing <span className={`font-mono`} style={{ color: state.accentColor }}>{timerValue}s</span></span>
-                        )}
-                        {loadingId === task.id && (
-                          <div 
-                            className="absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-1000 linear" 
-                            style={{ width: `${((10 - timerValue) / 10) * 100}%`, backgroundColor: state.accentColor }} 
-                          />
-                        )}
-                      </button>
-                    </div>
-                  )})}
+                    )
+                  })}
                 </div>
               </div>
             </div>
           </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div 
-          className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.header}`}
-          style={{ borderColor: state.activeTheme === 'gaming' ? state.accentColor : undefined }}
-        >
-          <Zap className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current w-[8px] h-[8px] md:w-[10px] md:h-[10px]`} style={!isLightTheme ? { color: state.accentColor } : {}} />
-          <a
-            href="https://questlayer.app/"
-            target="_blank"
-            rel="noreferrer"
-            className={`text-[9px] md:text-[9px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'} hover:opacity-80 transition-opacity`}
-          >
-            QuestLayer Engine v2.5
-          </a>
-        </div>
+        )}
       </div>
+
+      {/* Footer */}
+      <div
+        className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.header}`}
+        style={{ borderColor: state.activeTheme === 'gaming' ? state.accentColor : undefined }}
+      >
+        <Zap className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current w-[8px] h-[8px] md:w-[10px] md:h-[10px]`} style={!isLightTheme ? { color: state.accentColor } : {}} />
+        <a
+          href="https://questlayer.app/"
+          target="_blank"
+          rel="noreferrer"
+          className={`text-[9px] md:text-[9px] font-black uppercase tracking-[0.4em] ${isLightTheme ? 'text-slate-500' : 'opacity-30 text-white'} hover:opacity-80 transition-opacity`}
+        >
+          QuestLayer Engine v2.5
+        </a>
+      </div>
+    </div>
   );
 
   const shouldShowTrigger = !(isPreviewStatePosition && isFreeForm && isOpen);

@@ -7,10 +7,11 @@ import GlobalFooter from './GlobalFooter';
 interface LandingPageProps {
   onLaunch: () => void;
   onBrowse: () => void;
+  onTryBuilder: () => void;
   allowAutoLaunch?: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAutoLaunch = true }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuilder, allowAutoLaunch = true }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [bgVideoLoaded, setBgVideoLoaded] = useState(false);
@@ -57,13 +58,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
 
   return (
     <div className="relative min-h-screen w-full bg-[#05010d] overflow-x-hidden overflow-y-auto custom-scroll selection:bg-orange-500/30 font-['Inter']">
-      
+
       {/* --- VIDEO BACKGROUND LAYER --- */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <video 
+        <video
           ref={videoRef}
-          muted 
-          loop 
+          muted
+          loop
           playsInline
           preload="none"
           poster="/qlayer.jpeg"
@@ -74,15 +75,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-[#05010d]/50 via-transparent to-[#05010d]" />
       </div>
-      
+
       {/* --- COSMIC BACKGROUND LAYER --- */}
       <div className="fixed inset-0 pointer-events-none z-[1]">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/15 blur-[150px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-900/15 blur-[150px] rounded-full" />
-        
+
         {/* Animated Stars */}
         {[...Array(40)].map((_, i) => (
-          <div 
+          <div
             key={i}
             className="absolute rounded-full bg-white opacity-40 animate-pulse"
             style={{
@@ -98,7 +99,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
 
         {/* Floating Particles */}
         {[...Array(25)].map((_, i) => (
-          <div 
+          <div
             key={`p-${i}`}
             className="absolute bg-indigo-500/30 rounded-full animate-float-slow"
             style={{
@@ -115,7 +116,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
 
         {/* Pixel Blocks */}
         {[...Array(20)].map((_, i) => (
-          <div 
+          <div
             key={`px-${i}`}
             className="absolute bg-orange-500/20 border border-orange-500/30 animate-pulse"
             style={{
@@ -132,60 +133,67 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
       </div>
 
       <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col items-center z-10">
-        
+
         {/* --- HERO SECTION --- */}
         <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000 w-full">
-           <div className="flex flex-col items-center">
-             <div className="flex flex-row items-center gap-2 sm:gap-4 mb-6">
-                <video
-                   src="/questLogo.webm"
-                   autoPlay
-                   loop
-                   muted
-                   playsInline
-                   poster="/logoLayer.webp"
-                   className="h-16 w-16 sm:h-24 sm:w-24 object-contain"
-                 />
-                <h1 className="pixel-text text-3xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-                  QUESTLAYER
-                </h1>
-             </div>
-             <p className="text-lg sm:text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.2] tracking-tight px-4">
-               Turn Any Website Into an Interactive <br className="hidden sm:block" />
-               <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
-             </p>
-             <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full max-w-[90vw]">
-                <Sparkles size={14} className="text-orange-400 animate-spin-slow shrink-0" />
-                <p className="text-slate-400 text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] truncate">
-                  One embed • No redirects • Instant Web3
-                </p>
-             </div>
-             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
-               <button
-                 onClick={handleStartBuilding}
-                 disabled={isConnecting}
-                 className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-               >
-                 {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building' : 'Connect to Build')}
-                 {!isConnected && !isConnecting && <Wallet size={14} />}
+          <div className="flex flex-col items-center">
+            <div className="flex flex-row items-center gap-2 sm:gap-4 mb-6">
+              <video
+                src="/questLogo.webm"
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster="/logoLayer.webp"
+                className="h-16 w-16 sm:h-24 sm:w-24 object-contain"
+              />
+              <h1 className="pixel-text text-3xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                QUESTLAYER
+              </h1>
+            </div>
+            <p className="text-lg sm:text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.2] tracking-tight px-4">
+              Turn Any Website Into an Interactive <br className="hidden sm:block" />
+              <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
+            </p>
+            <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full max-w-[90vw]">
+              <Sparkles size={14} className="text-orange-400 animate-spin-slow shrink-0" />
+              <p className="text-slate-400 text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] truncate">
+                One embed • No redirects • Instant Web3
+              </p>
+            </div>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
+              <button
+                onClick={handleStartBuilding}
+                disabled={isConnecting}
+                className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building' : 'Connect to Build')}
+                {!isConnected && !isConnecting && <Wallet size={14} />}
               </button>
-              
+
               <div className="flex gap-4 w-full sm:w-auto">
-                <button 
+                <button
                   onClick={onBrowse}
                   className="flex-1 sm:flex-none px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
                 >
                   <LogIn size={14} className="group-hover:text-indigo-400 transition-colors" />
                   Browse
                 </button>
+                <button
+                  onClick={onTryBuilder}
+                  className="flex-1 sm:flex-none px-6 py-3.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-indigo-500/20 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <Sparkles size={14} className="group-hover:text-white transition-colors" />
+                  Try Demo
+                </button>
               </div>
             </div>
-           </div>
+          </div>
         </div>
 
         {/* --- THE OCTOPUS ENGINE (Interactive Feature Map) --- */}
         <div className="relative w-full min-h-[500px] flex items-center justify-center pb-20 pt-4">
-          
+
           {/* SVG Tentacle Layer */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
@@ -205,19 +213,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
           {/* Central Animated Hub */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
             <div className={`w-32 h-32 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-400/20 p-1.5 animate-float transition-all duration-700 border-4 ${getHubGlow()}`}>
-               <div className="w-full h-full rounded-full bg-slate-950/90 flex flex-col items-center justify-center backdrop-blur-3xl overflow-hidden relative">
-                  <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
-                  <video
-                    src="/questLogo.webm"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    poster="/logoLayer.webp"
-                    className="h-20 w-20 md:h-24 md:w-24 object-contain mb-2 relative z-10"
-                  />
-                  <span className="pixel-text text-[10px] text-white/40 tracking-[0.4em] relative z-10">CORE</span>
-               </div>
+              <div className="w-full h-full rounded-full bg-slate-950/90 flex flex-col items-center justify-center backdrop-blur-3xl overflow-hidden relative">
+                <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
+                <video
+                  src="/questLogo.webm"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  poster="/logoLayer.webp"
+                  className="h-20 w-20 md:h-24 md:w-24 object-contain mb-2 relative z-10"
+                />
+                <span className="pixel-text text-[10px] text-white/40 tracking-[0.4em] relative z-10">CORE</span>
+              </div>
             </div>
             {/* Ambient Pulsing Rings */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-indigo-500/10 scale-125 animate-ping opacity-10" />
@@ -226,10 +234,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
 
           {/* Responsive Feature Grid */}
           <div className="grid w-full max-w-5xl grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 relative z-40">
-            
+
             {/* Card 1: Embed */}
-            <div 
-              onMouseEnter={() => setHoveredCard(1)} 
+            <div
+              onMouseEnter={() => setHoveredCard(1)}
               onMouseLeave={() => setHoveredCard(null)}
               onClick={() => setActiveVideo('/EmbedCode.webm')}
               className="group cursor-pointer"
@@ -248,16 +256,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
                     <h4 className="text-white font-black uppercase text-xs tracking-widest">Embed Once</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-orange-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(251,146,60,0.25),transparent_65%)] pointer-events-none" />
-                     <video
-                        src="/EmbedCode.webm"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        poster="/logoLayer.webp"
-                        className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
-                     />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(251,146,60,0.25),transparent_65%)] pointer-events-none" />
+                    <video
+                      src="/EmbedCode.webm"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      poster="/logoLayer.webp"
+                      className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
+                    />
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Inject QuestLayer Snippet</p>
                 </div>
@@ -265,8 +273,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
             </div>
 
             {/* Card 2: Wallet */}
-            <div 
-              onMouseEnter={() => setHoveredCard(2)} 
+            <div
+              onMouseEnter={() => setHoveredCard(2)}
               onMouseLeave={() => setHoveredCard(null)}
               onClick={() => setActiveVideo('/ConnectWallet.webm')}
               className="group cursor-pointer"
@@ -285,19 +293,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
                     <h4 className="text-white font-black uppercase text-xs tracking-widest">Connect Wallet</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(129,140,248,0.25),transparent_65%)] pointer-events-none" />
-                     <video
-                        src="/ConnectWallet.webm"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        poster="/logoLayer.webp"
-                        className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
-                     />
-                     <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-500">
-                        <Wallet size={48} className="text-indigo-500/50" />
-                     </div>
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(129,140,248,0.25),transparent_65%)] pointer-events-none" />
+                    <video
+                      src="/ConnectWallet.webm"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      poster="/logoLayer.webp"
+                      className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-500">
+                      <Wallet size={48} className="text-indigo-500/50" />
+                    </div>
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Floating Wallet Button</p>
                 </div>
@@ -305,8 +313,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
             </div>
 
             {/* Card 3: Tasks */}
-            <div 
-              onMouseEnter={() => setHoveredCard(3)} 
+            <div
+              onMouseEnter={() => setHoveredCard(3)}
               onMouseLeave={() => setHoveredCard(null)}
               className="group cursor-pointer"
             >
@@ -324,8 +332,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
                     <h4 className="text-white font-black uppercase text-xs tracking-widest">Complete Tasks</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-purple-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(216,180,254,0.25),transparent_65%)] pointer-events-none" />
-                     <Target size={48} className="text-purple-500/50 group-hover:text-purple-200 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(216,180,254,0.25),transparent_65%)] pointer-events-none" />
+                    <Target size={48} className="text-purple-500/50 group-hover:text-purple-200 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
                   </div>
                   <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Gamified Mission Completion</p>
                 </div>
@@ -333,8 +341,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
             </div>
 
             {/* Card 4: Rewards */}
-            <div 
-              onMouseEnter={() => setHoveredCard(4)} 
+            <div
+              onMouseEnter={() => setHoveredCard(4)}
               onMouseLeave={() => setHoveredCard(null)}
               className="group cursor-pointer"
             >
@@ -352,10 +360,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
                     <h4 className="text-white font-black uppercase text-sm tracking-widest">Earn Rewards</h4>
                   </div>
                   <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-around group-hover:bg-yellow-500/10 transition-all overflow-hidden">
-                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(253,230,138,0.3),transparent_65%)] pointer-events-none" />
-                     <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-200 reward-hop" style={{ animationDelay: '0.2s' }} />
-                     <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs reward-smash" style={{ animationDelay: '0.6s' }}>XP</div>
-                     <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px] reward-splash" style={{ animationDelay: '1s' }}>NFT</div>
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(253,230,138,0.3),transparent_65%)] pointer-events-none" />
+                    <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-200 reward-hop" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs reward-smash" style={{ animationDelay: '0.6s' }}>XP</div>
+                    <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px] reward-splash" style={{ animationDelay: '1s' }}>NFT</div>
                   </div>
                   <p className="relative z-10 text-[11px] text-slate-400 font-bold uppercase tracking-tight text-center">Gain XP, Tokens, & Digital Assets</p>
                 </div>
@@ -367,71 +375,78 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
 
         {/* --- BOTTOM CTA --- */}
         <div className="mt-20 md:mt-40 w-full max-w-3xl text-center space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-           <div className="space-y-4">
-             <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight drop-shadow-2xl">
-                QuestLayer turns traffic <br/>
-                <span className="text-indigo-500">into engagement</span> <br/>
-                <span className="opacity-20">& engagement into ownership.</span>
-             </h2>
-           </div>
+          <div className="space-y-4">
+            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight drop-shadow-2xl">
+              QuestLayer turns traffic <br />
+              <span className="text-indigo-500">into engagement</span> <br />
+              <span className="opacity-20">& engagement into ownership.</span>
+            </h2>
+          </div>
 
-           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-              <button 
-                onClick={handleStartBuilding}
-                disabled={isConnecting}
-                className="group relative w-full md:w-auto px-12 py-6 bg-orange-500 text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all active:scale-95 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {/* Shimmer Effect */}
-                <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                <span className="relative flex items-center justify-center gap-3">
-                  {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building Now' : 'Connect Wallet to Build')} <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                </span>
-              </button>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            <button
+              onClick={handleStartBuilding}
+              disabled={isConnecting}
+              className="group relative w-full md:w-auto px-12 py-6 bg-orange-500 text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all active:scale-95 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {/* Shimmer Effect */}
+              <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+              <span className="relative flex items-center justify-center gap-3">
+                {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building Now' : 'Connect Wallet to Build')} <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </span>
+            </button>
 
-              <button 
-                onClick={onBrowse}
-                className="w-full md:w-auto px-10 py-5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3"
-              >
-                <LogIn size={16} /> Browse
-              </button>
-              
-           </div>
+            <button
+              onClick={onBrowse}
+              className="w-full md:w-auto px-10 py-5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3"
+            >
+              <LogIn size={16} /> Browse
+            </button>
 
-           {/* Chain Marquee */}
-           <div className="pt-16 border-t border-white/5 overflow-hidden">
-             <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em] mb-8">Ecosystem Support</p>
-             <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-10 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-                <div className="flex flex-col items-center gap-3 group cursor-default">
-                  <svg width="32" height="32" viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" className="group-hover:scale-110 transition-transform" aria-label="Ethereum"><path d="M127.961 0l-2.795 9.5v275.668l2.795 2.79 127.962-75.638z" fill="#343434"/><path d="M127.962 0L0 212.32l127.962 75.639V154.158z" fill="#8C8C8C"/><path d="M127.961 312.187l-1.575 1.92V414.41l1.575 4.59 128.038-180.32z" fill="#3C3C3B"/><path d="M127.962 419V312.187L0 238.68z" fill="#8C8C8C"/><path d="M127.961 287.958l127.96-75.637-127.96-58.162z" fill="#141414"/><path d="M0 212.32l127.962 75.638V154.158z" fill="#393939"/></svg>
-                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">ETHEREUM</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-3 group cursor-default">
-                  <svg width="32" height="32" viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Solana"><path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H4.6c-5.8 0-8.7-7-4.6-11.1l64.6-62.7z" fill="#9945FF"/><path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H4.6c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" fill="#14F195"/><path d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" fill="#9945FF"/></svg>
-                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">SOLANA</span>
-                </div>
+            <button
+              onClick={onTryBuilder}
+              className="w-full md:w-auto px-10 py-5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 font-black uppercase text-xs tracking-[0.2em] rounded-2xl border border-indigo-500/20 transition-all backdrop-blur-md flex items-center justify-center gap-3"
+            >
+              <Sparkles size={16} /> Try Demo
+            </button>
 
-                <div className="flex flex-col items-center gap-3 group cursor-default">
-                  <svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Polygon"><path d="M12 0.75L14.6515 8.91031H23.2307L16.2896 13.9544L18.9411 22.1147L12 17.0706L5.05887 22.1147L7.71039 13.9544L0.769264 8.91031H9.34848L12 0.75Z" fill="#8247E5"/></svg>
-                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">POLYGON</span>
-                </div>
+          </div>
 
-                <div className="flex flex-col items-center gap-3 group cursor-default">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Base"><circle cx="12" cy="12" r="12" fill="#0052FF"/><path d="M12 18.5V5.5C15.5899 5.5 18.5 8.41015 18.5 12C18.5 15.5899 15.5899 18.5 12 18.5Z" fill="white"/></svg>
-                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">BASE</span>
-                </div>
+          {/* Chain Marquee */}
+          <div className="pt-16 border-t border-white/5 overflow-hidden">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.5em] mb-8">Ecosystem Support</p>
+            <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-10 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+              <div className="flex flex-col items-center gap-3 group cursor-default">
+                <svg width="32" height="32" viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" className="group-hover:scale-110 transition-transform" aria-label="Ethereum"><path d="M127.961 0l-2.795 9.5v275.668l2.795 2.79 127.962-75.638z" fill="#343434" /><path d="M127.962 0L0 212.32l127.962 75.639V154.158z" fill="#8C8C8C" /><path d="M127.961 312.187l-1.575 1.92V414.41l1.575 4.59 128.038-180.32z" fill="#3C3C3B" /><path d="M127.962 419V312.187L0 238.68z" fill="#8C8C8C" /><path d="M127.961 287.958l127.96-75.637-127.96-58.162z" fill="#141414" /><path d="M0 212.32l127.962 75.638V154.158z" fill="#393939" /></svg>
+                <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">ETHEREUM</span>
+              </div>
 
-                <div className="flex flex-col items-center gap-3 group cursor-default">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Arbitrum"><path d="M12 16.5L16.5 12L12 7.5L7.5 12L12 16.5Z" fill="white"/></svg>
-                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">ARBITRUM</span>
-                </div>
+              <div className="flex flex-col items-center gap-3 group cursor-default">
+                <svg width="32" height="32" viewBox="0 0 397 311" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Solana"><path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H4.6c-5.8 0-8.7-7-4.6-11.1l64.6-62.7z" fill="#9945FF" /><path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H4.6c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" fill="#14F195" /><path d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" fill="#9945FF" /></svg>
+                <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">SOLANA</span>
+              </div>
 
-                <div className="flex flex-col items-center gap-3 group cursor-default">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Optimism"><path d="M8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12Z" fill="white"/></svg>
-                  <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">OPTIMISM</span>
-                </div>
-             </div>
-           </div>
+              <div className="flex flex-col items-center gap-3 group cursor-default">
+                <svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Polygon"><path d="M12 0.75L14.6515 8.91031H23.2307L16.2896 13.9544L18.9411 22.1147L12 17.0706L5.05887 22.1147L7.71039 13.9544L0.769264 8.91031H9.34848L12 0.75Z" fill="#8247E5" /></svg>
+                <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">POLYGON</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-3 group cursor-default">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Base"><circle cx="12" cy="12" r="12" fill="#0052FF" /><path d="M12 18.5V5.5C15.5899 5.5 18.5 8.41015 18.5 12C18.5 15.5899 15.5899 18.5 12 18.5Z" fill="white" /></svg>
+                <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">BASE</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-3 group cursor-default">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Arbitrum"><path d="M12 16.5L16.5 12L12 7.5L7.5 12L12 16.5Z" fill="white" /></svg>
+                <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">ARBITRUM</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-3 group cursor-default">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform" aria-label="Optimism"><path d="M8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12Z" fill="white" /></svg>
+                <span className="text-[9px] font-bold text-white tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">OPTIMISM</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -440,38 +455,38 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, allowAuto
       </div>
 
       {/* Video Lightbox Modal */}
-       {activeVideo && (
-         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-           <div 
-             className="absolute inset-0 bg-[#05010d]/90 backdrop-blur-2xl cursor-pointer"
-             onClick={() => setActiveVideo(null)}
-           />
-           
-           <div className="relative w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(249,115,22,0.2)] animate-in zoom-in-95 duration-300">
-             {/* Close Button */}
-             <button 
-               onClick={() => setActiveVideo(null)}
-               className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-white/10 text-white rounded-full backdrop-blur-md transition-all border border-white/10 group"
-             >
-               <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
-             </button>
- 
-             {/* Modal Video */}
-             <video
-               key={activeVideo}
-               src={activeVideo}
-               autoPlay
-               controls
-               loop
-               className="w-full h-full object-contain"
-             />
- 
-             {/* Decorative Glows */}
-             <div className="absolute -top-24 -left-24 w-64 h-64 bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
-             <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
-           </div>
-         </div>
-       )}
+      {activeVideo && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+          <div
+            className="absolute inset-0 bg-[#05010d]/90 backdrop-blur-2xl cursor-pointer"
+            onClick={() => setActiveVideo(null)}
+          />
+
+          <div className="relative w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(249,115,22,0.2)] animate-in zoom-in-95 duration-300">
+            {/* Close Button */}
+            <button
+              onClick={() => setActiveVideo(null)}
+              className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-white/10 text-white rounded-full backdrop-blur-md transition-all border border-white/10 group"
+            >
+              <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+            </button>
+
+            {/* Modal Video */}
+            <video
+              key={activeVideo}
+              src={activeVideo}
+              autoPlay
+              controls
+              loop
+              className="w-full h-full object-contain"
+            />
+
+            {/* Decorative Glows */}
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

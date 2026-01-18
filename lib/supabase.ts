@@ -22,7 +22,7 @@ export const fetchProjects = async (ownerAddress: string) => {
     .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
     .eq('owner_wallet', ownerAddress)
     .order('created_at', { ascending: false });
-  
+
   if (error) throw error;
   return data;
 };
@@ -32,7 +32,7 @@ export const fetchAllProjects = async () => {
     .from('projects')
     .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
     .order('created_at', { ascending: false });
-  
+
   if (error) throw error;
   return data;
 };
@@ -43,7 +43,7 @@ export const fetchProjectDetails = async (projectId: string) => {
     .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
     .eq('id', projectId)
     .single();
-  
+
   if (projectError) throw projectError;
 
   const { data: tasks, error: tasksError } = await supabase
@@ -65,7 +65,7 @@ export const deleteProject = async (projectId: string) => {
     .from('projects')
     .delete()
     .eq('id', projectId);
-  
+
   if (error) throw error;
 };
 
@@ -91,10 +91,10 @@ export const fetchUserXP = async (walletAddress: string) => {
   const { data: globalXP, error } = await supabase.rpc('get_global_xp', { wallet_addr: walletAddress });
 
   if (error) {
-      console.error('Error fetching user XP:', error);
-      return { xp: 0, level: 1 };
+    console.error('Error fetching user XP:', error);
+    return { xp: 0, level: 1 };
   }
-  
+
   const xp = globalXP || 0;
   // Calculate Level based on standard formula (same as Widget.tsx)
   const xpPerLevel = 3000;
@@ -107,6 +107,11 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
   try {
     // 1. Get or Create Project
     let projectId = state.projectId;
+
+    // Treat temporary IDs as new projects
+    if (projectId && projectId.startsWith('temp-')) {
+      projectId = undefined;
+    }
 
     if (!projectId) {
       // Fallback: Try to find by name + owner if no ID is present in state
@@ -131,7 +136,7 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
           theme: state.activeTheme
         })
         .eq('id', projectId);
-      
+
       if (updateError) throw updateError;
     } else {
       // Create new project
@@ -147,7 +152,7 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
         })
         .select()
         .single();
-      
+
       if (projError) throw projError;
       projectId = newProject.id;
     }
@@ -169,7 +174,8 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
             description: task.desc,
             link: task.link,
             icon_url: task.icon,
-            xp_reward: task.xp
+            xp_reward: task.xp,
+            is_sponsored: task.isSponsored
           }))
         );
       if (insertError) throw insertError;
