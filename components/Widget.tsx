@@ -1034,111 +1034,183 @@ const Widget: React.FC<WidgetProps> = ({
       const stepIndex = index + 1;
       const isLastStep = index === tasksSorted.length - 1;
       const showTypeTag = isOnboardingVariant || resolvedKind !== 'link';
+      const titleText = isQuizTask ? (task.question?.trim() || task.title) : task.title;
+      const descriptionText = isQuizTask ? '' : task.desc;
+      const stepIcon = task.icon?.startsWith('icon:') ? (
+        <>
+          {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-300/80" />}
+          {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-300/80" />}
+          {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-300/80" />}
+          {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-300/80" />}
+          {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-300/80" />}
+          {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-300/80" />}
+          {task.icon === 'icon:repost' && <Zap size={14} className="text-green-300/80" />}
+          {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-300/80" />}
+          {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-300/80" />}
+          {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-300/80" />}
+          {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-300/80" />}
+          {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-300/80" />}
+        </>
+      ) : task.icon ? (
+        <img
+          src={task.icon}
+          alt=""
+          className="h-4 w-4 md:h-5 md:w-5 object-contain opacity-80"
+          loading="lazy"
+        />
+      ) : (
+        <Sparkles size={14} className="text-emerald-300/80" />
+      );
+      const questionText = isQuizTask ? (task.question?.trim() || task.title) : '';
+      const titleClassName = `text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`;
+      const questionClassName = `text-[12px] md:text-[13px] font-semibold tracking-normal leading-snug break-words whitespace-normal ${isLightTheme ? 'text-slate-800' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`;
       const flashColor = isSuccess ? '#22c55e' : (isError ? '#ef4444' : null);
       const flashClass = (isSuccess || isError) ? 'animate-pulse' : '';
       const inputBorderClass = feedback?.type === 'error'
         ? 'border-rose-500/60 focus:border-rose-400'
         : 'border-white/10 focus:border-indigo-500';
       const showFeedback = Boolean(feedback && (!checkStatus || checkStatus === 'error'));
+      const showTypeBadge = showTypeTag && !isQuizTask;
+      const iconNode = !isOnboardingVariant ? (
+        task.icon?.startsWith('icon:') ? (
+          <div
+            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+            style={{ background: `${state.accentColor}10` }}
+          >
+            {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
+            {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
+            {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
+            {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
+            {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
+            {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+            {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+            {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+            {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+            {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+            {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+            {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+          </div>
+        ) : task.icon ? (
+          <div
+            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+            style={{ background: `${state.accentColor}10` }}
+          >
+            <img
+              src={task.icon}
+              alt=""
+              className="h-4 w-4 md:h-5 md:w-5 object-contain"
+              loading="lazy"
+            />
+          </div>
+        ) : null
+      ) : null;
       return (
-        <div key={task.id} className={`relative ${isOnboardingVariant ? 'pl-7 md:pl-8' : ''}`}>
-          {isOnboardingVariant && (
-            <div className="absolute left-0 top-3 bottom-3 flex flex-col items-center">
+        <div key={task.id} className="relative">
+          <div
+            className={`p-3 md:p-4 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''} ${isOnboardingVariant ? 'backdrop-blur-xl' : ''} ${isOnboardingVariant ? 'ring-1 ring-white/10' : ''}`}
+            style={{
+              borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
+              boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined,
+              minHeight: isOnboardingVariant ? '94px' : undefined
+            }}
+          >
+            {isOnboardingVariant && (
               <div
-                className={`w-5 h-5 md:w-6 md:h-6 rounded-full text-[9px] md:text-[10px] font-black flex items-center justify-center border ${isCompleted ? 'text-emerald-400' : (isLightTheme ? 'text-slate-700' : 'text-white')}`}
+                className={`absolute left-2 top-2 w-6 h-6 md:w-7 md:h-7 rounded-xl text-[9px] md:text-[10px] font-black flex items-center justify-center border ${isCompleted ? 'text-emerald-400' : (isLightTheme ? 'text-slate-700' : 'text-white')}`}
                 style={{
                   backgroundColor: isCompleted ? `${state.accentColor}20` : (isLightTheme ? '#ffffff' : 'rgba(255,255,255,0.08)'),
                   borderColor: isCompleted ? state.accentColor : (isLightTheme ? '#e2e8f0' : 'rgba(255,255,255,0.2)')
                 }}
               >
-                {stepIndex}
+                <div className="relative flex items-center justify-center">
+                  {stepIcon}
+                  <span className="absolute -top-1 -right-1 text-[8px] md:text-[9px] font-black text-white bg-black/70 rounded-full px-1">
+                    {stepIndex}
+                  </span>
+                </div>
               </div>
-              {!isLastStep && (
-                <div
-                  className="flex-1 w-px mt-1"
-                  style={{ backgroundColor: isLightTheme ? '#e2e8f0' : 'rgba(255,255,255,0.15)' }}
-                />
-              )}
-            </div>
-          )}
-          <div
-            className={`p-2 md:p-3.5 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''} ${isOnboardingVariant ? 'backdrop-blur-xl' : ''}`}
-            style={{
-              borderColor: state.activeTheme === 'gaming' ? `#fbbf2440` : undefined,
-              boxShadow: state.activeTheme === 'gaming' ? `3px 3px 0px 0px #fbbf2420` : undefined
-            }}
-          >
+            )}
             <div className="flex justify-between items-start mb-0.5 gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                {task.icon?.startsWith('icon:') ? (
-                  <div
-                    className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
-                    style={{ background: `${state.accentColor}10` }}
-                  >
-                    {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
-                    {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
-                    {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
-                    {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
-                    {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
-                    {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-                    {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-                    {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
-                    {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-                    {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
-                    {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-                    {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+              <div className={`min-w-0 ${isOnboardingVariant ? 'pl-8 md:pl-9' : ''}`}>
+                {isQuizTask ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      {iconNode}
+                      <span className={`text-[9px] md:text-[9px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-600' : 'text-white/70'}`}>
+                        Question
+                      </span>
+                      {task.isSponsored && (
+                        <span
+                          className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                          style={{
+                            backgroundColor: `${state.accentColor}10`,
+                            borderColor: `${state.accentColor}20`,
+                            color: state.accentColor
+                          }}
+                        >
+                          Sponsored
+                        </span>
+                      )}
+                      {task.isDemo && (
+                        <span
+                          className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                          style={{
+                            backgroundColor: `${state.accentColor}10`,
+                            borderColor: `${state.accentColor}20`,
+                            color: state.accentColor
+                          }}
+                        >
+                          Demo
+                        </span>
+                      )}
+                    </div>
+                    <h5 className={questionClassName}>
+                      {questionText || titleText}
+                    </h5>
                   </div>
-                ) : task.icon ? (
-                  <div
-                    className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
-                    style={{ background: `${state.accentColor}10` }}
-                  >
-                    <img
-                      src={task.icon}
-                      alt=""
-                      className="h-4 w-4 md:h-5 md:w-5 object-contain"
-                      loading="lazy"
-                    />
+                ) : (
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {iconNode}
+                    <h5 className={titleClassName}>
+                      {titleText}
+                    </h5>
+                    {showTypeBadge && (
+                      <span
+                        className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                        style={{
+                          backgroundColor: `${state.accentColor}10`,
+                          borderColor: `${state.accentColor}20`,
+                          color: state.accentColor
+                        }}
+                      >
+                        {resolvedKind === 'quiz' ? 'Question' : 'Link'}
+                      </span>
+                    )}
+                    {task.isSponsored && (
+                      <span
+                        className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                        style={{
+                          backgroundColor: `${state.accentColor}10`,
+                          borderColor: `${state.accentColor}20`,
+                          color: state.accentColor
+                        }}
+                      >
+                        Sponsored
+                      </span>
+                    )}
+                    {task.isDemo && (
+                      <span
+                        className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
+                        style={{
+                          backgroundColor: `${state.accentColor}10`,
+                          borderColor: `${state.accentColor}20`,
+                          color: state.accentColor
+                        }}
+                      >
+                        Demo
+                      </span>
+                    )}
                   </div>
-                ) : null}
-                <h5 className={`text-[11px] md:text-xs font-black uppercase tracking-tight truncate ${isLightTheme ? 'text-black' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`}>
-                  {task.title}
-                </h5>
-                {showTypeTag && (
-                  <span
-                    className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                    style={{
-                      backgroundColor: `${state.accentColor}10`,
-                      borderColor: `${state.accentColor}20`,
-                      color: state.accentColor
-                    }}
-                  >
-                    {resolvedKind === 'quiz' ? 'Quiz' : 'Link'}
-                  </span>
-                )}
-                {task.isSponsored && (
-                  <span
-                    className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                    style={{
-                      backgroundColor: `${state.accentColor}10`,
-                      borderColor: `${state.accentColor}20`,
-                      color: state.accentColor
-                    }}
-                  >
-                    Sponsored
-                  </span>
-                )}
-                {task.isDemo && (
-                  <span
-                    className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
-                    style={{
-                      backgroundColor: `${state.accentColor}10`,
-                      borderColor: `${state.accentColor}20`,
-                      color: state.accentColor
-                    }}
-                  >
-                    Demo
-                  </span>
                 )}
               </div>
               <span
@@ -1148,14 +1220,11 @@ const Widget: React.FC<WidgetProps> = ({
                 +{task.xp}
               </span>
             </div>
-            {isQuizTask && task.question && (
-              <p className={`text-[11px] md:text-[11px] mb-1 leading-relaxed ${isLightTheme ? 'text-slate-700' : 'opacity-80 text-white'}`}>
-                {task.question}
+            {descriptionText && (
+              <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
+                {descriptionText}
               </p>
             )}
-            <p className={`text-[11px] md:text-[11px] mb-2 leading-relaxed line-clamp-2 ${isLightTheme ? 'text-slate-700' : 'opacity-60 text-white'}`}>
-              {task.desc}
-            </p>
             {isQuizTask ? (
               <div className="space-y-1.5">
                 <div className="flex flex-col md:flex-row gap-2">
@@ -1670,7 +1739,7 @@ const Widget: React.FC<WidgetProps> = ({
                         backgroundImage: `radial-gradient(circle at top right, ${onboardingAccent}40, transparent 60%)`
                       }}
                     />
-                    <div className="relative p-3 md:p-4 space-y-3">
+                    <div className="relative p-3 md:p-4 space-y-3 md:space-y-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <div
@@ -1703,7 +1772,7 @@ const Widget: React.FC<WidgetProps> = ({
                           </p>
                         </div>
                       </div>
-                      <div className="space-y-2 md:space-y-3">
+                      <div className="space-y-3 md:space-y-4">
                         {renderTaskList(onboardingTasks, { variant: 'onboarding' })}
                       </div>
                     </div>

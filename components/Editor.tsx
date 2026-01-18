@@ -451,9 +451,14 @@ const Editor: React.FC<EditorProps> = ({
     if (editForm) {
       const resolvedKind = editForm.kind ?? 'link';
       // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
+      const normalizedTitle = resolvedKind === 'quiz'
+        ? (editForm.question?.trim() || editForm.title)
+        : editForm.title;
       const nextTask = {
         ...editForm,
-        link: editForm.link || '',
+        title: normalizedTitle,
+        desc: resolvedKind === 'quiz' ? '' : editForm.desc,
+        link: resolvedKind === 'quiz' ? '' : (editForm.link || ''),
         section: editForm.section ?? 'missions',
         kind: resolvedKind,
         question: editForm.question ?? '',
@@ -646,7 +651,7 @@ const Editor: React.FC<EditorProps> = ({
               </div>
               <div className="space-y-0.5">
                 <p className="text-[9px] font-black text-white uppercase">Onboarding Pack</p>
-                <p className="text-[8px] font-bold text-emerald-300">3 quiz tasks</p>
+                <p className="text-[8px] font-bold text-emerald-300">3 questions</p>
               </div>
             </button>
             {TASK_TEMPLATES.map((tpl) => (
@@ -848,7 +853,7 @@ const Editor: React.FC<EditorProps> = ({
                           )}
                           {resolvedKind !== 'link' && (
                             <span className="text-[7px] font-black bg-sky-500/10 text-sky-300 px-1 rounded uppercase tracking-tighter border border-sky-500/20">
-                              Quiz
+                              Question
                             </span>
                           )}
                           {task.isSponsored && (
@@ -890,25 +895,6 @@ const Editor: React.FC<EditorProps> = ({
                   </div>
                 ) : (
                   <div className="p-5 bg-indigo-600/5 border-l-4 border-indigo-500 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase">Task Title</label>
-                      <input
-                        value={editForm?.title}
-                        autoFocus
-                        onChange={(e) => setEditForm(prev => prev ? { ...prev, title: e.target.value } : null)}
-                        placeholder="e.g. Follow on Twitter"
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold text-slate-500 uppercase">Instructions</label>
-                      <textarea
-                        value={editForm?.desc}
-                        onChange={(e) => setEditForm(prev => prev ? { ...prev, desc: e.target.value } : null)}
-                        placeholder="What should the user do?"
-                        className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-16 text-white outline-none resize-none focus:border-indigo-500"
-                      />
-                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label className="text-[9px] font-bold text-slate-500 uppercase">Task Section</label>
@@ -929,20 +915,41 @@ const Editor: React.FC<EditorProps> = ({
                           className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
                         >
                           <option value="link">Link</option>
-                          <option value="quiz">Quiz</option>
+                          <option value="quiz">Question</option>
                         </select>
                       </div>
                     </div>
                     {(editForm?.kind ?? 'link') === 'link' ? (
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
-                        <input
-                          value={editForm?.link ?? ''}
-                          onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
-                          placeholder="https://..."
-                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
-                        />
-                      </div>
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Task Title</label>
+                          <input
+                            value={editForm?.title}
+                            autoFocus
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, title: e.target.value } : null)}
+                            placeholder="e.g. Follow on Twitter"
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Description</label>
+                          <textarea
+                            value={editForm?.desc}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, desc: e.target.value } : null)}
+                            placeholder="What should the user do?"
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-16 text-white outline-none resize-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Action Link</label>
+                          <input
+                            value={editForm?.link ?? ''}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, link: e.target.value } : null)}
+                            placeholder="https://..."
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          />
+                        </div>
+                      </>
                     ) : (
                       <>
                         <div className="space-y-1">
