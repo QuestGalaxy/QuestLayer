@@ -4,7 +4,7 @@ import Widget from './components/Widget.tsx';
 import { INITIAL_TASKS } from './constants.ts';
 import { AppKitProvider } from './appkit.tsx';
 import { setupAudioListeners } from './lib/audio-effects.js';
-import type { AppState } from './types.ts';
+import type { AppState, Task } from './types.ts';
 import widgetStyles from './widget.css?inline';
 
 export type WidgetConfig = Partial<
@@ -260,7 +260,9 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalCont
                 section: t.task_section ?? 'missions',
                 kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
                 question: t.question ?? '',
-                answer: t.answer ?? ''
+                answer: t.answer ?? '',
+                nftContract: t.nft_contract ?? '',
+                nftChainId: t.nft_chain_id ?? 1
               }));
               setState(prev => ({
                 ...prev,
