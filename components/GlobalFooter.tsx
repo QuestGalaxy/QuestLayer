@@ -34,6 +34,7 @@ const GlobalFooter: React.FC<GlobalFooterProps> = ({ variant = 'default', classN
           <a className={`${tone.navHover} transition-colors`} href="/">QuestLayer</a>
           <a className={`${tone.navHover} transition-colors`} href="/browse">QuestBrowse</a>
           <a className={`${tone.navHover} transition-colors`} href="/explore">Explore</a>
+          <a className={`${tone.navHover} transition-colors`} href="/leaderboard">Leaderboard</a>
           <a className={`${tone.navHover} transition-colors`} href="/terms">Terms</a>
           <a className={`${tone.navHover} transition-colors`} href="/privacy">Privacy</a>
         </nav>

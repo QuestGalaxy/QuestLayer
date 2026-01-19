@@ -194,9 +194,11 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
   const { disconnect } = useDisconnect();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<ProjectLeaderboard[]>([]);
+  const [userProjectIds, setUserProjectIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
   const [nextLevelXP, setNextLevelXP] = useState(3000);
+  const [leaderboardFilter, setLeaderboardFilter] = useState<'global' | 'mine'>('global');
 
   useEffect(() => {
     const loadUserStats = async () => {
@@ -218,6 +220,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
         const allProjects = await fetchAllProjects();
         if (!allProjects || allProjects.length === 0) {
           if (isMounted) setProjects([]);
+          if (isMounted) setUserProjectIds(new Set());
           return;
         }
 
@@ -249,6 +252,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
 
         const projectIds = uniqueProjects.map(project => project.id);
         const userXpByProject = new Map<string, number>();
+        const userProjects = new Set<string>();
 
         if (address && projectIds.length > 0) {
           const { data: userLinks, error: userError } = await supabase
@@ -258,6 +262,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
             .in('project_id', projectIds);
 
           if (!userError && userLinks && userLinks.length > 0) {
+            userLinks.forEach(link => userProjects.add(link.project_id));
             const userIds = userLinks.map(link => link.id);
             const { data: progressRows } = await supabase
               .from('user_progress')
@@ -316,9 +321,15 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
           return visitsB - visitsA;
         });
 
-        if (isMounted) setProjects(fullData);
+        if (isMounted) {
+          setProjects(fullData);
+          setUserProjectIds(userProjects);
+        }
       } catch (error) {
-        if (isMounted) setProjects([]);
+        if (isMounted) {
+          setProjects([]);
+          setUserProjectIds(new Set());
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -331,16 +342,30 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
     };
   }, [address]);
 
+  useEffect(() => {
+    if (isConnected) {
+      setLeaderboardFilter('mine');
+    } else {
+      setLeaderboardFilter('global');
+    }
+  }, [isConnected]);
+
   const totalXp = useMemo(() => projects.reduce((sum, project) => sum + project.userXp, 0), [projects]);
-  const totalPages = Math.ceil(projects.length / PROJECTS_PER_PAGE);
-  const paginatedProjects = projects.slice(
+  const filteredProjects = useMemo(() => {
+    if (leaderboardFilter === 'mine' && isConnected) {
+      return projects.filter(project => userProjectIds.has(project.project.id));
+    }
+    return projects;
+  }, [leaderboardFilter, isConnected, projects, userProjectIds]);
+  const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
+  const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * PROJECTS_PER_PAGE,
     currentPage * PROJECTS_PER_PAGE
   );
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [projects.length]);
+  }, [filteredProjects.length, leaderboardFilter]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-y-auto">
@@ -371,23 +396,59 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
               <h1 className="mt-3 text-4xl md:text-6xl font-black uppercase tracking-tight">
                 QuestLayer
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">
-                  Global Leaderboard
+                  {leaderboardFilter === 'mine' && isConnected ? 'Your Leaderboard' : 'Global Leaderboard'}
                 </span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm text-slate-300">
-                Explore the most active quests worldwide. Connect your wallet to highlight your XP and rank.
+                {leaderboardFilter === 'mine' && isConnected
+                  ? 'Track your personal ranks across the projects you have joined.'
+                  : 'Explore the most active quests worldwide. Connect your wallet to highlight your XP and rank.'}
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              {isConnected && (
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
-                  <div className="text-2xl font-black text-white">{formatNumber(totalXp)}</div>
+            <div className="w-full md:w-auto">
+              <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-xl">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-col gap-2">
+                    <div className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-400">Filter</div>
+                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
+                      <button
+                        onClick={() => setLeaderboardFilter('global')}
+                        className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                          leaderboardFilter === 'global'
+                            ? 'bg-white text-black'
+                            : 'text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        Global
+                      </button>
+                      {isConnected && (
+                        <button
+                          onClick={() => setLeaderboardFilter('mine')}
+                          className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                            leaderboardFilter === 'mine'
+                              ? 'bg-indigo-400 text-slate-950'
+                              : 'text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          My Projects
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {isConnected && (
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
+                        <div className="text-xl font-black text-white">{formatNumber(totalXp)}</div>
+                      </div>
+                    )}
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Projects</div>
+                      <div className="text-xl font-black text-white">{filteredProjects.length}</div>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Projects</div>
-                <div className="text-2xl font-black text-white">{projects.length}</div>
               </div>
             </div>
           </div>
@@ -419,13 +480,15 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
           </div>
         )}
 
-        {!loading && projects.length === 0 && (
+        {!loading && filteredProjects.length === 0 && (
           <div className="mt-8 rounded-[28px] border border-white/10 bg-white/5 p-8 text-center text-slate-300">
-            No leaderboard activity yet.
+            {leaderboardFilter === 'mine' && isConnected
+              ? 'No personal leaderboard activity yet.'
+              : 'No leaderboard activity yet.'}
           </div>
         )}
 
-        {!loading && projects.length > 0 && (
+        {!loading && filteredProjects.length > 0 && (
           <>
             <div className="mt-10 grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
               {paginatedProjects.map(project => (

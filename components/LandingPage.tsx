@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Code, Wallet, Target, Trophy, ChevronRight, Sparkles, LogIn, X } from 'lucide-react';
+import { BarChart3, ChevronRight, Gem, Lock, LogIn, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
 
@@ -370,6 +370,111 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
               </div>
             </div>
 
+          </div>
+        </div>
+
+        {/* --- FEATURES STRIP --- */}
+        <div className="relative w-full mt-16 md:mt-24">
+          <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-r from-orange-500/15 via-indigo-500/10 to-purple-500/15 blur-3xl opacity-80 pointer-events-none" />
+          <div className="relative rounded-[36px] border border-white/10 bg-white/5 p-8 md:p-12 overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,146,60,0.2),transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(99,102,241,0.2),transparent_55%)]" />
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] text-orange-300">
+                <span className="h-2 w-2 rounded-full bg-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.8)]" />
+                Features
+              </div>
+
+              <div className="mt-6 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+                <div>
+                  <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white">
+                    Embed Quests.
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-yellow-300 to-indigo-400">
+                      Trigger Growth.
+                    </span>
+                  </h2>
+                  <p className="mt-4 text-sm md:text-base text-slate-300 max-w-xl">
+                    Turn your website into a living reward hub - powered by quests, XP, NFTs & tokens.
+                  </p>
+                  <button
+                    onClick={handleStartBuilding}
+                    disabled={isConnecting}
+                    className="group mt-8 inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-black shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Launch Your Widget <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    {
+                      icon: Rocket,
+                      title: '1-Line Embed Setup',
+                      copy: 'Go live in minutes.',
+                      tone: 'from-orange-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: Target,
+                      title: 'Quests That Drive Action',
+                      copy: 'Follow, join, mint, stake, claim.',
+                      tone: 'from-indigo-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: Gem,
+                      title: 'Token / NFT / XP Rewards',
+                      copy: 'Automated distribution.',
+                      tone: 'from-yellow-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: Lock,
+                      title: 'NFT-Gated Missions',
+                      copy: 'Reward your real holders.',
+                      tone: 'from-purple-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: Trophy,
+                      title: 'Leaderboards & Seasons',
+                      copy: 'Competitive grind = retention.',
+                      tone: 'from-emerald-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: UserPlus,
+                      title: 'Referral Growth Loops',
+                      copy: 'Invite-to-earn built-in.',
+                      tone: 'from-sky-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: BarChart3,
+                      title: 'Analytics Dashboard',
+                      copy: 'Clicks -> connects -> completions.',
+                      tone: 'from-rose-500/30 via-transparent to-transparent'
+                    },
+                    {
+                      icon: Sparkles,
+                      title: 'Free Lifetime',
+                      copy: 'Launch without hidden fees.',
+                      tone: 'from-cyan-500/30 via-transparent to-transparent'
+                    }
+                  ].map(({ icon: Icon, title, copy, tone }) => (
+                    <div
+                      key={title}
+                      className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-xl"
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${tone} opacity-60`} />
+                      <div className="relative z-10 flex items-start gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white">
+                          <Icon size={18} />
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-black uppercase tracking-widest text-white">{title}</div>
+                          <div className="mt-1 text-[11px] text-slate-400">{copy}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
