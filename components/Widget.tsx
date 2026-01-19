@@ -6,7 +6,8 @@ import { THEMES } from '../constants.ts';
 import {
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2,
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown,
-  MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart, User
+  MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart, User,
+  XCircle, Lock, RefreshCw, Shield
 } from 'lucide-react';
 import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
@@ -98,6 +99,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [onboardingFeedback, setOnboardingFeedback] = useState<Record<string | number, { type: 'error' | 'success'; message: string }>>({});
   const [onboardingCheckStatus, setOnboardingCheckStatus] = useState<Record<string | number, 'checking' | 'success' | 'error'>>({});
   const [nftVerifyState, setNftVerifyState] = useState<Record<string | number, { status: 'idle' | 'signing' | 'checking' | 'success' | 'error'; message?: string }>>({});
+  const [nftBgImage, setNftBgImage] = useState<string | null>(null);
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
 
@@ -218,6 +220,35 @@ const Widget: React.FC<WidgetProps> = ({
       viewport?.removeEventListener('resize', updateMaxHeight);
     };
   }, [effectiveConnected]);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      let url = state.projectUrl;
+      if (!url && state.projectDomain) {
+        url = state.projectDomain.startsWith('http') ? state.projectDomain : `https://${state.projectDomain}`;
+      }
+      
+      // If we have a URL, try to fetch high-res metadata
+      if (url) {
+        try {
+          const res = await fetch(`/api/metadata?url=${encodeURIComponent(url)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.image) {
+              setNftBgImage(data.image);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('[QuestLayer] Failed to fetch project metadata (likely due to local dev environment):', e);
+        }
+      }
+      
+      // Fallback: If API fails or no URL, we don't set nftBgImage here.
+      // We will handle fallback in the render to use projectIconUrl
+    };
+    fetchMetadata();
+  }, [state.projectUrl, state.projectDomain]);
 
   useEffect(() => {
     if (!isFreeForm || isPreview) return;
@@ -801,18 +832,18 @@ const Widget: React.FC<WidgetProps> = ({
     }
     const contract = (task.nftContract || '').trim();
     if (!contract) {
-      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Missing collection contract.' } }));
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Missing collection contract.' } } as any));
       return;
     }
     if (!dbProjectId) {
-      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Project is not published yet.' } }));
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Project is not published yet.' } } as any));
       return;
     }
     if (nftVerifyState[task.id]?.status === 'signing' || nftVerifyState[task.id]?.status === 'checking') return;
 
     const dbTaskId = await resolveDbTaskId(task);
     if (!dbTaskId) {
-      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Task not synced to database.' } }));
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Task not synced to database.' } } as any));
       return;
     }
 
@@ -823,11 +854,11 @@ const Widget: React.FC<WidgetProps> = ({
       setNftVerifyState(prev => ({
         ...prev,
         [task.id]: { status: 'error', message: `Switch wallet to ${chainLabel}.` }
-      }));
+      } as any));
       return;
     }
 
-    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'signing', message: 'Sign to verify ownership.' } }));
+    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'signing', message: 'Sign to verify ownership.' } } as any));
     const timestamp = new Date().toISOString();
     const message = buildNftHoldMessage({
       address,
@@ -839,13 +870,13 @@ const Widget: React.FC<WidgetProps> = ({
 
     let signature = '';
     try {
-      signature = await signMessageAsync({ message });
+      signature = await signMessageAsync({ message, account: address as any });
     } catch {
-      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Signature rejected.' } }));
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Signature rejected.' } } as any));
       return;
     }
 
-    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking on-chain balance...' } }));
+    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking on-chain balance...' } } as any));
 
     try {
       const response = await fetch('/api/nft-hold', {
@@ -864,27 +895,27 @@ const Widget: React.FC<WidgetProps> = ({
       if (!response.ok) {
         const detailSuffix = payload?.details ? ` (${payload.details})` : '';
         const errorMessage = (payload?.error || 'Verification failed.') + detailSuffix;
-        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } }));
+        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } } as any));
         return;
       }
 
       if (payload?.alreadyCompleted) {
         setCompletedTaskIds(prev => new Set(prev).add(task.id));
-        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Already verified.' } }));
+        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Already verified.' } } as any));
         return;
       }
 
       if (!payload?.success) {
         const detailSuffix = payload?.details ? ` (${payload.details})` : '';
         const errorMessage = (payload?.error || 'No eligible NFT found.') + detailSuffix;
-        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } }));
+        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } } as any));
         return;
       }
 
       completeQuest(task, { skipDb: true, xpAwarded: payload?.xpAwarded ?? task.xp });
-      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'NFT verified.' } }));
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'NFT verified.' } } as any));
     } catch {
-      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Network error. Try again.' } }));
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Network error. Try again.' } } as any));
     }
   };
 
@@ -895,14 +926,14 @@ const Widget: React.FC<WidgetProps> = ({
     if (!input.trim()) {
       setOnboardingFeedback(prev => ({
         ...prev,
-        [task.id]: { type: 'error', message: 'Type your answer first.' }
+        [task.id]: { type: 'error' as const, message: 'Type your answer first.' }
       }));
       return;
     }
     if (!task.answer || !task.answer.trim()) {
       setOnboardingFeedback(prev => ({
         ...prev,
-        [task.id]: { type: 'error', message: 'Answer not configured yet.' }
+        [task.id]: { type: 'error' as const, message: 'Answer not configured yet.' }
       }));
       return;
     }
@@ -912,13 +943,13 @@ const Widget: React.FC<WidgetProps> = ({
       delete next[task.id];
       return next;
     });
-    setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: 'checking' }));
+    setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: 'checking' as const }));
     const checkTimeout = setTimeout(() => {
       const isMatch = isAnswerMatch(input, task.answer ?? '');
-      setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: isMatch ? 'success' : 'error' }));
+      setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: isMatch ? 'success' as const : 'error' as const }));
       setOnboardingFeedback(prev => ({
         ...prev,
-        [task.id]: { type: isMatch ? 'success' : 'error', message: isMatch ? 'Correct' : 'Wrong' }
+        [task.id]: { type: isMatch ? 'success' as const : 'error' as const, message: isMatch ? 'Correct' : 'Wrong' }
       }));
       const resetTimeout = setTimeout(() => {
         setOnboardingCheckStatus(prev => {
@@ -1406,7 +1437,7 @@ const Widget: React.FC<WidgetProps> = ({
                           color: state.accentColor
                         }}
                       >
-                        {resolvedKind === 'quiz' ? 'Question' : (resolvedKind === 'nft_hold' ? 'NFT Hold' : 'Link')}
+                        {resolvedKind === 'nft_hold' ? 'NFT Hold' : 'Link'}
                       </span>
                     )}
                     {task.isSponsored && (
@@ -1520,43 +1551,146 @@ const Widget: React.FC<WidgetProps> = ({
                 )}
               </div>
             ) : isNftTask ? (
-              <div className="space-y-2">
-                <button
-                  onClick={() => handleNftHoldVerify(task)}
-                  disabled={isCompleted || isNftBusy}
-                  style={(!isLightTheme && !isTransparentTheme) ? {
-                    backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
-                    borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
-                    color: state.activeTheme === 'gaming' ? 'black' : 'white',
-                    cursor: isCompleted ? 'not-allowed' : 'pointer'
-                  } : (isTransparentTheme ? {
-                    borderColor: isCompleted ? '#94a3b8' : state.accentColor,
-                    backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
-                    color: isCompleted ? '#94a3b8' : 'white',
-                    cursor: isCompleted ? 'not-allowed' : 'pointer'
-                  } : {
-                    backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor,
-                    color: isCompleted ? '#94a3b8' : 'white',
-                    borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
-                    cursor: isCompleted ? 'not-allowed' : 'pointer'
-                  })}
-                  className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button}`}
-                >
-                  {isCompleted || isNftSuccess ? (
-                    <span className="flex items-center gap-1">Verified <CheckCircle2 size={10} /></span>
-                  ) : isNftSigning ? (
-                    <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Signing</span>
-                  ) : isNftChecking ? (
-                    <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Verifying</span>
-                  ) : (
-                    <span className="flex items-center gap-1">Verify</span>
-                  )}
-                </button>
-                {nftMessage && (
-                  <p className={`text-[10px] font-bold ${isNftError ? 'text-rose-400' : 'text-emerald-400'}`}>
-                    {nftMessage}
-                  </p>
+              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 group/nft ${
+                isCompleted || isNftSuccess
+                  ? 'border-emerald-500/50 bg-emerald-500/5'
+                  : isNftError
+                    ? 'border-rose-500/50 bg-rose-500/5'
+                    : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
+              }`}>
+                {/* Background Image */}
+                {(nftBgImage || projectIconUrl) && (
+                  <>
+                    <div className="absolute inset-0 opacity-30 pointer-events-none transition-opacity duration-700">
+                      <img 
+                        src={nftBgImage || projectIconUrl} 
+                        alt="" 
+                        className="w-full h-full object-cover blur-sm" 
+                        onError={(e) => {
+                          // If main image fails, and we are not already using fallback, try fallback or hide
+                          if (nftBgImage && e.currentTarget.src === nftBgImage) {
+                             if (projectIconUrl) e.currentTarget.src = projectIconUrl;
+                             else e.currentTarget.style.display = 'none';
+                          } else {
+                             e.currentTarget.style.display = 'none';
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                  </>
                 )}
+
+                {/* Background Glow */}
+                <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${
+                  isNftChecking || isNftSigning ? 'opacity-40' : ''
+                }`}
+                style={{
+                  background: isCompleted || isNftSuccess
+                    ? 'radial-gradient(circle at center, #10b981 0%, transparent 70%)'
+                    : isNftError
+                      ? 'radial-gradient(circle at center, #f43f5e 0%, transparent 70%)'
+                      : `radial-gradient(circle at center, ${state.accentColor} 0%, transparent 70%)`
+                }} />
+
+                <div className="relative p-4 flex flex-col items-center text-center space-y-3">
+                  {/* Header / Project Banner Effect */}
+                  <div className="flex flex-col items-center gap-2">
+                     <div className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-xl transition-transform duration-500 ${isNftBusy ? 'scale-110' : ''}`}
+                        style={{ borderColor: isCompleted ? '#10b981' : (isNftError ? '#f43f5e' : state.accentColor) }}
+                     >
+                        {projectIconUrl ? (
+                          <img src={projectIconUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <ShieldCheck size={24} className={isCompleted ? 'text-emerald-400' : 'text-white'} />
+                        )}
+                        {/* Status Indicator Icon */}
+                        <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
+                           {isCompleted || isNftSuccess ? (
+                             <CheckCircle2 size={12} className="text-emerald-400" />
+                           ) : isNftError ? (
+                             <XCircle size={12} className="text-rose-400" />
+                           ) : (
+                             <Lock size={12} className="text-white/60" />
+                           )}
+                        </div>
+                     </div>
+
+                     <div className="space-y-0.5">
+                       <h4 className={`text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+                         {state.projectName} Holder
+                       </h4>
+                       <p className={`text-[10px] font-medium ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
+                         NFT Verification
+                       </p>
+                     </div>
+                  </div>
+
+                  {/* Dynamic Action Button */}
+                  <button
+                    onClick={() => handleNftHoldVerify(task)}
+                    disabled={isCompleted || isNftBusy}
+                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${
+                      isCompleted || isNftSuccess
+                        ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                        : isNftError
+                          ? 'bg-rose-500 text-white hover:bg-rose-600'
+                          : isNftBusy
+                            ? 'cursor-wait'
+                            : 'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
+                    style={!(isCompleted || isNftSuccess || isNftError) ? {
+                      backgroundColor: state.accentColor,
+                      color: 'white',
+                      boxShadow: `0 0 20px ${state.accentColor}40`
+                    } : {}}
+                  >
+                    {/* Button Content */}
+                    <div className="relative z-10 flex items-center gap-2">
+                      {isCompleted || isNftSuccess ? (
+                        <>
+                          <span>Verified Owner</span>
+                          <CheckCircle2 size={14} />
+                        </>
+                      ) : isNftSigning ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Requesting Signature...</span>
+                        </>
+                      ) : isNftChecking ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Verifying On-Chain...</span>
+                        </>
+                      ) : isNftError ? (
+                        <>
+                          <span>Verification Failed</span>
+                          <RefreshCw size={14} />
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify Holdings</span>
+                          <Shield size={14} />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Loading Progress Bar */}
+                    {isNftBusy && (
+                      <div
+                        className="absolute bottom-0 left-0 h-1 bg-white/30 animate-[progress_2s_ease-in-out_infinite]"
+                        style={{ width: '100%' }}
+                      />
+                    )}
+                  </button>
+
+                  {/* Feedback Message */}
+                  <div className={`text-[10px] font-bold transition-all duration-300 ${
+                    nftMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
+                  } ${isNftError ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {nftMessage}
+                  </div>
+                </div>
               </div>
             ) : (
               <button

@@ -37,6 +37,7 @@ export interface AppState {
   projectId?: string;
   projectName: string;
   projectDomain?: string; // New field for whitelisted domain
+  projectUrl?: string; // Full project URL for metadata fetching
   projectLogo?: string; // Favicon or logo URL
   accentColor: string;
   position: Position;
