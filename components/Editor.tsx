@@ -718,11 +718,13 @@ const Editor: React.FC<EditorProps> = ({
                     <div className="flex items-center gap-3">
                       <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${isActive ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-900 border-white/10'
                         }`}>
-                        {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-                        {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-                        {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-                        {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-                      </div>
+                      {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                      {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                      {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                      {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                      {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                      {task.icon === 'icon:gem' && <Gem size={14} className="text-amber-300" />}
+                    </div>
                       <div>
                         <p className="text-[10px] font-black text-white uppercase">{task.title}</p>
                         <p className="text-[9px] text-slate-500 font-medium">{task.desc}</p>
