@@ -27,9 +27,17 @@ const parseBody = async (req: any) => {
   return JSON.parse(Buffer.concat(chunks).toString('utf-8'));
 };
 
+const DEFAULT_RPC_URLS: Record<number, string> = {
+  1: 'https://rpc.ankr.com/eth',
+  56: 'https://bsc-dataseed.binance.org',
+  137: 'https://rpc.ankr.com/polygon',
+  42161: 'https://arb1.arbitrum.io/rpc',
+  43114: 'https://api.avax.network/ext/bc/C/rpc'
+};
+
 const getRpcUrl = (chainId: number) => {
   const chainSpecific = process.env[`RPC_URL_${chainId}`];
-  return chainSpecific || process.env.RPC_URL || '';
+  return chainSpecific || process.env.RPC_URL || DEFAULT_RPC_URLS[chainId] || '';
 };
 
 const getSupabaseClient = () => {

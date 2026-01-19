@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
-import { useSignMessage } from 'wagmi';
+import { useChainId, useSignMessage, useSwitchChain } from 'wagmi';
 
 interface WidgetProps {
   isOpen: boolean;
@@ -22,6 +22,50 @@ interface WidgetProps {
   isEmbedded?: boolean;
   portalContainer?: HTMLElement | null;
 }
+
+const CHAIN_METADATA: Record<number, {
+  chainIdHex: `0x${string}`;
+  chainName: string;
+  nativeCurrency: { name: string; symbol: string; decimals: number };
+  rpcUrls: string[];
+  blockExplorerUrls: string[];
+}> = {
+  1: {
+    chainIdHex: '0x1',
+    chainName: 'Ethereum Mainnet',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: ['https://rpc.ankr.com/eth'],
+    blockExplorerUrls: ['https://etherscan.io']
+  },
+  56: {
+    chainIdHex: '0x38',
+    chainName: 'BNB Smart Chain',
+    nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+    rpcUrls: ['https://bsc-dataseed.binance.org'],
+    blockExplorerUrls: ['https://bscscan.com']
+  },
+  137: {
+    chainIdHex: '0x89',
+    chainName: 'Polygon',
+    nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+    rpcUrls: ['https://rpc.ankr.com/polygon'],
+    blockExplorerUrls: ['https://polygonscan.com']
+  },
+  42161: {
+    chainIdHex: '0xa4b1',
+    chainName: 'Arbitrum One',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+    blockExplorerUrls: ['https://arbiscan.io']
+  },
+  43114: {
+    chainIdHex: '0xa86a',
+    chainName: 'Avalanche C-Chain',
+    nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+    rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
+    blockExplorerUrls: ['https://snowtrace.io']
+  }
+};
 
 const Widget: React.FC<WidgetProps> = ({
   isOpen,
@@ -37,6 +81,8 @@ const Widget: React.FC<WidgetProps> = ({
   const { address, isConnected, status } = useAppKitAccount();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
+  const walletChainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
   const [loadingId, setLoadingId] = useState<string | number | null>(null);
   const [sharedPlatforms, setSharedPlatforms] = useState<string[]>([]);
@@ -709,6 +755,44 @@ const Widget: React.FC<WidgetProps> = ({
     ].join('\n');
   };
 
+  const ensureWalletChain = async (chainId: number) => {
+    if (!walletChainId || walletChainId === chainId) return true;
+    try {
+      await switchChainAsync({ chainId });
+      return true;
+    } catch {
+      const metadata = CHAIN_METADATA[chainId];
+      const provider = (window as any).ethereum;
+      if (!metadata || !provider?.request) return false;
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: metadata.chainIdHex }]
+        });
+        return true;
+      } catch (switchError: any) {
+        if (switchError?.code !== 4902) return false;
+        try {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: metadata.chainIdHex,
+                chainName: metadata.chainName,
+                nativeCurrency: metadata.nativeCurrency,
+                rpcUrls: metadata.rpcUrls,
+                blockExplorerUrls: metadata.blockExplorerUrls
+              }
+            ]
+          });
+          return true;
+        } catch {
+          return false;
+        }
+      }
+    }
+  };
+
   const handleNftHoldVerify = async (task: Task) => {
     if (completedTaskIds.has(task.id)) return;
     if (!effectiveConnected || !address) {
@@ -726,8 +810,6 @@ const Widget: React.FC<WidgetProps> = ({
     }
     if (nftVerifyState[task.id]?.status === 'signing' || nftVerifyState[task.id]?.status === 'checking') return;
 
-    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'signing', message: 'Sign to verify ownership.' } }));
-
     const dbTaskId = await resolveDbTaskId(task);
     if (!dbTaskId) {
       setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Task not synced to database.' } }));
@@ -735,6 +817,17 @@ const Widget: React.FC<WidgetProps> = ({
     }
 
     const chainId = task.nftChainId ?? 1;
+    const chainLabel = CHAIN_METADATA[chainId]?.chainName ?? `chain ${chainId}`;
+    const switched = await ensureWalletChain(chainId);
+    if (!switched) {
+      setNftVerifyState(prev => ({
+        ...prev,
+        [task.id]: { status: 'error', message: `Switch wallet to ${chainLabel}.` }
+      }));
+      return;
+    }
+
+    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'signing', message: 'Sign to verify ownership.' } }));
     const timestamp = new Date().toISOString();
     const message = buildNftHoldMessage({
       address,
