@@ -640,42 +640,48 @@ const Editor: React.FC<EditorProps> = ({
             <Zap size={12} className="text-indigo-500" />
             <h3>Quick Templates</h3>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <button
-              onClick={addOnboardingTemplate}
-              disabled={calculateXPRemaining() <= 0}
-              className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/60 hover:bg-emerald-500/15 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="h-8 w-8 rounded-full bg-emerald-900/30 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Sparkles size={14} className="text-emerald-300" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[9px] font-black text-white uppercase">Onboarding Pack</p>
-                <p className="text-[8px] font-bold text-emerald-300">3 questions</p>
-              </div>
-            </button>
-            {TASK_TEMPLATES.map((tpl) => (
+          <div className="relative">
+            <div className="grid grid-rows-2 grid-flow-col auto-cols-[120px] sm:auto-cols-[140px] gap-2 overflow-x-auto scrollbar-hide pb-1 pr-6">
               <button
-                key={tpl.id}
-                onClick={() => addTemplateTask(tpl)}
+                onClick={addOnboardingTemplate}
                 disabled={calculateXPRemaining() <= 0}
-                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/60 hover:bg-emerald-500/15 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="h-8 w-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  {tpl.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-                  {tpl.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-                  {tpl.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
-                  {tpl.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-                  {tpl.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
-                  {tpl.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-                  {tpl.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+                <div className="h-8 w-8 rounded-full bg-emerald-900/30 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Sparkles size={14} className="text-emerald-300" />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-[9px] font-black text-white uppercase">{tpl.title}</p>
-                  <p className="text-[8px] font-bold text-indigo-400">{tpl.xp} XP</p>
+                  <p className="text-[9px] font-black text-white uppercase">Onboarding Pack</p>
+                  <p className="text-[8px] font-bold text-emerald-300">3 questions</p>
                 </div>
               </button>
-            ))}
+              {TASK_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => addTemplateTask(tpl)}
+                  disabled={calculateXPRemaining() <= 0}
+                  className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="h-8 w-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    {tpl.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                    {tpl.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                    {tpl.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
+                    {tpl.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                    {tpl.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
+                    {tpl.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                    {tpl.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-black text-white uppercase">{tpl.title}</p>
+                    <p className="text-[8px] font-bold text-indigo-400">{tpl.xp} XP</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-slate-950/80 to-transparent" />
+            <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 flex items-center text-slate-400 animate-bounce">
+              <ArrowRight size={12} />
+            </div>
           </div>
         </section>
 
@@ -697,43 +703,49 @@ const Editor: React.FC<EditorProps> = ({
             </span>
             <span className="ml-auto text-[8px] font-bold text-amber-500/80 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">+100 XP Each</span>
           </div>
-          <div className="grid grid-cols-1 gap-2">
-            {SPONSORED_TASKS.map((task) => {
-              const isActive = state.tasks.some(t => t.id === task.id);
-              return (
-                <div
-                  key={task.id}
-                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isActive
-                    ? 'bg-amber-500/5 border-amber-500/20'
-                    : 'bg-white/5 border-white/5'
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${isActive ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-900 border-white/10'
-                      }`}>
-                      {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-                      {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-                      {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-                      {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-white uppercase">{task.title}</p>
-                      <p className="text-[9px] text-slate-500 font-medium">{task.desc}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleSponsoredTask(task)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-amber-500' : 'bg-slate-700'
+          <div className="relative">
+            <div className="grid grid-rows-2 grid-flow-col auto-cols-[240px] sm:auto-cols-[280px] gap-2 overflow-x-auto scrollbar-hide pb-1 pr-6">
+              {SPONSORED_TASKS.map((task) => {
+                const isActive = state.tasks.some(t => t.id === task.id);
+                return (
+                  <div
+                    key={task.id}
+                    className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${isActive
+                      ? 'bg-amber-500/5 border-amber-500/20'
+                      : 'bg-white/5 border-white/5'
                       }`}
                   >
-                    <span
-                      className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isActive ? 'translate-x-5' : 'translate-x-1'
+                    <div className="flex items-center gap-3">
+                      <div className={`h-8 w-8 rounded-full border flex items-center justify-center ${isActive ? 'bg-amber-500/10 border-amber-500/20' : 'bg-slate-900 border-white/10'
+                        }`}>
+                        {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
+                        {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
+                        {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
+                        {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-white uppercase">{task.title}</p>
+                        <p className="text-[9px] text-slate-500 font-medium">{task.desc}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => toggleSponsoredTask(task)}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-amber-500' : 'bg-slate-700'
                         }`}
-                    />
-                  </button>
-                </div>
-              );
-            })}
+                    >
+                      <span
+                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isActive ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-slate-950/80 to-transparent" />
+            <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 flex items-center text-slate-400 animate-bounce">
+              <ArrowRight size={12} />
+            </div>
           </div>
         </section>
 
