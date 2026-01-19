@@ -546,6 +546,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           link: t.link,
           icon: t.icon_url,
           xp: t.xp_reward,
+          isSponsored: t.is_sponsored,
           section: t.task_section ?? 'missions',
           kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
           question: t.question ?? '',
