@@ -46,7 +46,23 @@ const CHAIN_MAP: Record<number, typeof mainnet> = {
 
 const getRpcUrl = (chainId: number) => {
   const chainSpecific = process.env[`RPC_URL_${chainId}`];
-  return chainSpecific || process.env.RPC_URL || DEFAULT_RPC_URLS[chainId] || '';
+  const fallback = process.env.RPC_URL;
+  const defaultUrl = DEFAULT_RPC_URLS[chainId];
+  return chainSpecific || fallback || defaultUrl || '';
+};
+
+const getRpcMeta = (chainId: number, rpcUrl: string) => {
+  const chainSpecificKey = `RPC_URL_${chainId}`;
+  const source = process.env[chainSpecificKey]
+    ? chainSpecificKey
+    : (process.env.RPC_URL ? 'RPC_URL' : 'DEFAULT');
+  let host = 'unknown';
+  try {
+    host = new URL(rpcUrl).host;
+  } catch {
+    host = 'invalid-url';
+  }
+  return { source, host };
 };
 
 const getSupabaseClient = () => {
@@ -154,6 +170,7 @@ export default async function handler(req: any, res: any) {
     res.status(500).json({ error: 'RPC URL not configured.' });
     return;
   }
+  const rpcMeta = getRpcMeta(chainId, rpcUrl);
 
   const { data: user, error: userError } = await supabase
     .from('end_users')
@@ -199,7 +216,10 @@ export default async function handler(req: any, res: any) {
   } catch (error: any) {
     res.status(502).json({
       error: 'On-chain check failed.',
-      details: error?.shortMessage || error?.message || 'RPC error'
+      details: error?.shortMessage || error?.message || 'RPC error',
+      chainId,
+      rpcSource: rpcMeta.source,
+      rpcHost: rpcMeta.host
     });
     return;
   }
