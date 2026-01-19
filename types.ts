@@ -4,7 +4,7 @@ export type Position = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'glass' | 'terminal' | 'aura' | 'avatar' | 'ironman';
 
 export type TaskSection = 'missions' | 'onboarding';
-export type TaskKind = 'link' | 'quiz';
+export type TaskKind = 'link' | 'quiz' | 'nft_hold';
 
 export interface Task {
   id: string | number;
@@ -19,6 +19,8 @@ export interface Task {
   kind: TaskKind;
   question?: string;
   answer?: string;
+  nftContract?: string;
+  nftChainId?: number;
 }
 
 export interface ThemeConfig {

@@ -232,7 +232,9 @@ const App: React.FC = () => {
       section: task.section ?? 'missions',
       kind: task.kind ?? 'link',
       question: task.question ?? '',
-      answer: task.answer ?? ''
+      answer: task.answer ?? '',
+      nftContract: task.nftContract ?? '',
+      nftChainId: task.nftChainId ?? null
     }));
     return JSON.stringify({
       projectId: snapshotState.projectId ?? null,
@@ -365,7 +367,9 @@ const App: React.FC = () => {
                   section: t.task_section ?? 'missions',
                   kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
                   question: t.question ?? '',
-                  answer: t.answer ?? ''
+                  answer: t.answer ?? '',
+                  nftContract: t.nft_contract ?? '',
+                  nftChainId: t.nft_chain_id ?? undefined
                 })),
                 userXP: 0,
                 currentStreak: 1,
@@ -389,7 +393,9 @@ const App: React.FC = () => {
                   section: t.task_section ?? 'missions',
                   kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
                   question: t.question ?? '',
-                  answer: t.answer ?? ''
+                  answer: t.answer ?? '',
+                  nftContract: t.nft_contract ?? '',
+                  nftChainId: t.nft_chain_id ?? undefined
                 })),
                 userXP: 0,
                 currentStreak: 1,

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
+import { useSignMessage } from 'wagmi';
 
 interface WidgetProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ const Widget: React.FC<WidgetProps> = ({
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
   const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
   const [loadingId, setLoadingId] = useState<string | number | null>(null);
   const [sharedPlatforms, setSharedPlatforms] = useState<string[]>([]);
@@ -49,6 +51,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [onboardingInputs, setOnboardingInputs] = useState<Record<string | number, string>>({});
   const [onboardingFeedback, setOnboardingFeedback] = useState<Record<string | number, { type: 'error' | 'success'; message: string }>>({});
   const [onboardingCheckStatus, setOnboardingCheckStatus] = useState<Record<string | number, 'checking' | 'success' | 'error'>>({});
+  const [nftVerifyState, setNftVerifyState] = useState<Record<string | number, { status: 'idle' | 'signing' | 'checking' | 'success' | 'error'; message?: string }>>({});
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
 
@@ -614,23 +617,26 @@ const Widget: React.FC<WidgetProps> = ({
     }
   }, [loadingId, timerValue]);
 
-  const completeQuest = (task: Task) => {
+  const completeQuest = (task: Task, options?: { skipDb?: boolean; xpAwarded?: number }) => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     // Prevent multiple triggers if already completing
     if (completedTaskIds.has(task.id)) return;
+
+    const xpAwarded = options?.xpAwarded ?? task.xp;
 
     playSound('reward');
 
     // Optimistic Update
     setState(prev => ({
       ...prev,
-      userXP: prev.userXP + task.xp
+      userXP: prev.userXP + xpAwarded
     }));
     setCompletedTaskIds(prev => new Set(prev).add(task.id));
     setLoadingId(null);
+    setGlobalXP(prev => prev + xpAwarded);
 
     // DB Update
-    if (dbUserId) {
+    if (!options?.skipDb && dbUserId) {
       const completeTaskInDb = async () => {
         let dbTaskId = taskMap[task.id];
 
@@ -661,15 +667,129 @@ const Widget: React.FC<WidgetProps> = ({
           const currentDbXP = userProgress?.xp || state.userXP;
 
           await supabase.from('user_progress')
-            .update({ xp: currentDbXP + task.xp })
+            .update({ xp: currentDbXP + xpAwarded })
             .eq('user_id', dbUserId);
-
-          setGlobalXP(prev => prev + task.xp);
         } else {
           console.error("Task ID not found for completion", task);
         }
       };
       completeTaskInDb();
+    }
+  };
+
+  const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+  const resolveDbTaskId = async (task: Task) => {
+    if (taskMap[task.id]) return taskMap[task.id];
+    if (typeof task.id === 'string' && isUuid(task.id)) return task.id;
+    if (!dbProjectId) return null;
+    const { data: foundTask } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('project_id', dbProjectId)
+      .eq('title', task.title)
+      .single();
+    if (foundTask?.id) {
+      setTaskMap(prev => ({ ...prev, [task.id]: foundTask.id }));
+      return foundTask.id;
+    }
+    return null;
+  };
+
+  const buildNftHoldMessage = (params: { address: string; projectId: string; taskId: string; chainId: number; timestamp: string }) => {
+    const addressLower = params.address.toLowerCase();
+    return [
+      'QuestLayer NFT Hold Verification',
+      `Wallet: ${addressLower}`,
+      `Project: ${params.projectId}`,
+      `Task: ${params.taskId}`,
+      `Chain: ${params.chainId}`,
+      `Timestamp: ${params.timestamp}`
+    ].join('\n');
+  };
+
+  const handleNftHoldVerify = async (task: Task) => {
+    if (completedTaskIds.has(task.id)) return;
+    if (!effectiveConnected || !address) {
+      await open();
+      return;
+    }
+    const contract = (task.nftContract || '').trim();
+    if (!contract) {
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Missing collection contract.' } }));
+      return;
+    }
+    if (!dbProjectId) {
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Project is not published yet.' } }));
+      return;
+    }
+    if (nftVerifyState[task.id]?.status === 'signing' || nftVerifyState[task.id]?.status === 'checking') return;
+
+    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'signing', message: 'Sign to verify ownership.' } }));
+
+    const dbTaskId = await resolveDbTaskId(task);
+    if (!dbTaskId) {
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Task not synced to database.' } }));
+      return;
+    }
+
+    const chainId = task.nftChainId ?? 1;
+    const timestamp = new Date().toISOString();
+    const message = buildNftHoldMessage({
+      address,
+      projectId: dbProjectId,
+      taskId: dbTaskId,
+      chainId,
+      timestamp
+    });
+
+    let signature = '';
+    try {
+      signature = await signMessageAsync({ message });
+    } catch {
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Signature rejected.' } }));
+      return;
+    }
+
+    setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking on-chain balance...' } }));
+
+    try {
+      const response = await fetch('/api/nft-hold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          signature,
+          message,
+          projectId: dbProjectId,
+          taskId: dbTaskId
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorMessage = payload?.error || 'Verification failed.';
+        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } }));
+        return;
+      }
+
+      if (payload?.alreadyCompleted) {
+        setCompletedTaskIds(prev => new Set(prev).add(task.id));
+        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Already verified.' } }));
+        return;
+      }
+
+      if (!payload?.success) {
+        const errorMessage = payload?.error || 'No eligible NFT found.';
+        setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } }));
+        return;
+      }
+
+      completeQuest(task, { skipDb: true, xpAwarded: payload?.xpAwarded ?? task.xp });
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'NFT verified.' } }));
+    } catch {
+      setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Network error. Try again.' } }));
     }
   };
 
@@ -1021,7 +1141,8 @@ const Widget: React.FC<WidgetProps> = ({
     const tasksSorted = sortTasksByCompletion(tasks);
     return tasksSorted.map((task, index) => {
       const resolvedKind = resolveTaskKind(task);
-      const isQuizTask = resolvedKind !== 'link';
+      const isQuizTask = resolvedKind === 'quiz';
+      const isNftTask = resolvedKind === 'nft_hold';
       const isCompleted = completedTaskIds.has(task.id);
       const isLoading = loadingId === task.id;
       const inputValue = onboardingInputs[task.id] ?? '';
@@ -1031,6 +1152,13 @@ const Widget: React.FC<WidgetProps> = ({
       const isSuccess = checkStatus === 'success';
       const isError = checkStatus === 'error';
       const isLocked = isChecking || isSuccess || isError;
+      const nftStatus = nftVerifyState[task.id]?.status ?? 'idle';
+      const nftMessage = nftVerifyState[task.id]?.message;
+      const isNftSigning = nftStatus === 'signing';
+      const isNftChecking = nftStatus === 'checking';
+      const isNftSuccess = nftStatus === 'success';
+      const isNftError = nftStatus === 'error';
+      const isNftBusy = isNftSigning || isNftChecking;
       const stepIndex = index + 1;
       const isLastStep = index === tasksSorted.length - 1;
       const showTypeTag = isOnboardingVariant || resolvedKind !== 'link';
@@ -1183,7 +1311,7 @@ const Widget: React.FC<WidgetProps> = ({
                           color: state.accentColor
                         }}
                       >
-                        {resolvedKind === 'quiz' ? 'Question' : 'Link'}
+                        {resolvedKind === 'quiz' ? 'Question' : (resolvedKind === 'nft_hold' ? 'NFT Hold' : 'Link')}
                       </span>
                     )}
                     {task.isSponsored && (
@@ -1293,6 +1421,45 @@ const Widget: React.FC<WidgetProps> = ({
                 {showFeedback && (
                   <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {feedback.message}
+                  </p>
+                )}
+              </div>
+            ) : isNftTask ? (
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleNftHoldVerify(task)}
+                  disabled={isCompleted || isNftBusy}
+                  style={(!isLightTheme && !isTransparentTheme) ? {
+                    backgroundColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#f59e0b' : state.accentColor),
+                    borderColor: isCompleted ? '#94a3b8' : (state.activeTheme === 'gaming' ? '#b45309' : state.accentColor),
+                    color: state.activeTheme === 'gaming' ? 'black' : 'white',
+                    cursor: isCompleted ? 'not-allowed' : 'pointer'
+                  } : (isTransparentTheme ? {
+                    borderColor: isCompleted ? '#94a3b8' : state.accentColor,
+                    backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
+                    color: isCompleted ? '#94a3b8' : 'white',
+                    cursor: isCompleted ? 'not-allowed' : 'pointer'
+                  } : {
+                    backgroundColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                    color: isCompleted ? '#94a3b8' : 'white',
+                    borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
+                    cursor: isCompleted ? 'not-allowed' : 'pointer'
+                  })}
+                  className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button}`}
+                >
+                  {isCompleted || isNftSuccess ? (
+                    <span className="flex items-center gap-1">Verified <CheckCircle2 size={10} /></span>
+                  ) : isNftSigning ? (
+                    <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Signing</span>
+                  ) : isNftChecking ? (
+                    <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Verifying</span>
+                  ) : (
+                    <span className="flex items-center gap-1">Verify</span>
+                  )}
+                </button>
+                {nftMessage && (
+                  <p className={`text-[10px] font-bold ${isNftError ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {nftMessage}
                   </p>
                 )}
               </div>

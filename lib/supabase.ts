@@ -179,7 +179,9 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
             task_section: task.section ?? 'missions',
             task_kind: task.kind ?? 'link',
             question: task.question ?? '',
-            answer: task.answer ?? ''
+            answer: task.answer ?? '',
+            nft_contract: task.nftContract ?? null,
+            nft_chain_id: task.nftChainId ?? null
           }))
         );
       if (insertError) throw insertError;

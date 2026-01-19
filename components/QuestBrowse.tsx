@@ -550,7 +550,9 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           section: t.task_section ?? 'missions',
           kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
           question: t.question ?? '',
-          answer: t.answer ?? ''
+          answer: t.answer ?? '',
+          nftContract: t.nft_contract ?? '',
+          nftChainId: t.nft_chain_id ?? undefined
         })),
         userXP: 0,
         currentStreak: 1,

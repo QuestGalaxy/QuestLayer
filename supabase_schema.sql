@@ -30,13 +30,17 @@ create table if not exists tasks (
   task_section text default 'missions',
   task_kind text default 'link',
   question text,
-  answer text
+  answer text,
+  nft_contract text,
+  nft_chain_id integer
 );
 
 alter table tasks add column if not exists task_section text default 'missions';
 alter table tasks add column if not exists task_kind text default 'link';
 alter table tasks add column if not exists question text;
 alter table tasks add column if not exists answer text;
+alter table tasks add column if not exists nft_contract text;
+alter table tasks add column if not exists nft_chain_id integer;
 
 -- 3. End Users (People using the widget)
 create table if not exists end_users (

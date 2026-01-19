@@ -266,7 +266,9 @@ const Editor: React.FC<EditorProps> = ({
       section: 'missions',
       kind: 'link',
       question: '',
-      answer: ''
+      answer: '',
+      nftContract: '',
+      nftChainId: 1
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -300,7 +302,9 @@ const Editor: React.FC<EditorProps> = ({
       section: template.section,
       kind: template.kind,
       question: '',
-      answer: ''
+      answer: '',
+      nftContract: '',
+      nftChainId: 1
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -441,6 +445,8 @@ const Editor: React.FC<EditorProps> = ({
       kind: task.kind ?? 'link',
       question: task.question ?? '',
       answer: task.answer ?? '',
+      nftContract: task.nftContract ?? '',
+      nftChainId: task.nftChainId ?? 1,
       link: task.link ?? ''
     });
   };
@@ -450,20 +456,25 @@ const Editor: React.FC<EditorProps> = ({
   const saveEdit = () => {
     if (editForm) {
       const resolvedKind = editForm.kind ?? 'link';
+      const isQuiz = resolvedKind === 'quiz';
+      const isLink = resolvedKind === 'link';
+      const isNftHold = resolvedKind === 'nft_hold';
       // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
-      const normalizedTitle = resolvedKind === 'quiz'
+      const normalizedTitle = isQuiz
         ? (editForm.question?.trim() || editForm.title)
         : editForm.title;
       const nextTask = {
         ...editForm,
         title: normalizedTitle,
-        desc: resolvedKind === 'quiz' ? '' : editForm.desc,
-        link: resolvedKind === 'quiz' ? '' : (editForm.link || ''),
+        desc: isQuiz ? '' : editForm.desc,
+        link: isLink ? (editForm.link || '') : '',
         section: editForm.section ?? 'missions',
         kind: resolvedKind,
         question: editForm.question ?? '',
         answer: editForm.answer ?? '',
-        icon: editForm.icon || (resolvedKind === 'link' ? getFaviconUrl(editForm.link) : '') || getRandomGameIcon()
+        nftContract: isNftHold ? (editForm.nftContract || '').trim() : '',
+        nftChainId: isNftHold ? (editForm.nftChainId ?? 1) : undefined,
+        icon: editForm.icon || (isLink ? getFaviconUrl(editForm.link) : '') || getRandomGameIcon()
       };
 
       // Validate XP Limit before saving
@@ -867,7 +878,7 @@ const Editor: React.FC<EditorProps> = ({
                           )}
                           {resolvedKind !== 'link' && (
                             <span className="text-[7px] font-black bg-sky-500/10 text-sky-300 px-1 rounded uppercase tracking-tighter border border-sky-500/20">
-                              Question
+                              {resolvedKind === 'quiz' ? 'Question' : 'NFT Hold'}
                             </span>
                           )}
                           {task.isSponsored && (
@@ -930,6 +941,7 @@ const Editor: React.FC<EditorProps> = ({
                         >
                           <option value="link">Link</option>
                           <option value="quiz">Question</option>
+                          <option value="nft_hold">NFT Hold</option>
                         </select>
                       </div>
                     </div>
@@ -964,7 +976,7 @@ const Editor: React.FC<EditorProps> = ({
                           />
                         </div>
                       </>
-                    ) : (
+                    ) : (editForm?.kind ?? 'link') === 'quiz' ? (
                       <>
                         <div className="space-y-1">
                           <label className="text-[9px] font-bold text-slate-500 uppercase">Question</label>
@@ -985,6 +997,57 @@ const Editor: React.FC<EditorProps> = ({
                           />
                           <p className="text-[9px] text-slate-500">
                             Case-insensitive, ignores spaces; matches if the answer appears in the sentence.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Task Title</label>
+                          <input
+                            value={editForm?.title}
+                            autoFocus
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, title: e.target.value } : null)}
+                            placeholder="e.g. Hold the Genesis NFT"
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Description</label>
+                          <textarea
+                            value={editForm?.desc}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, desc: e.target.value } : null)}
+                            placeholder="Explain which collection to hold."
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-16 text-white outline-none resize-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Collection Contract</label>
+                          <input
+                            value={editForm?.nftContract ?? ''}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, nftContract: e.target.value } : null)}
+                            placeholder="0x..."
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Chain</label>
+                          <select
+                            value={(editForm?.nftChainId ?? 1).toString()}
+                            onChange={(e) => {
+                              const parsed = Number(e.target.value);
+                              setEditForm(prev => prev ? { ...prev, nftChainId: Number.isFinite(parsed) ? parsed : 1 } : null);
+                            }}
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          >
+                            <option value="1">Ethereum</option>
+                            <option value="137">Polygon</option>
+                            <option value="43114">Avalanche</option>
+                            <option value="56">Smart Chain</option>
+                            <option value="42161">Arbitrum</option>
+                          </select>
+                          <p className="text-[9px] text-slate-500">
+                            Uses `RPC_URL_&lt;CHAIN_ID&gt;` when set, otherwise `RPC_URL`.
                           </p>
                         </div>
                       </>
