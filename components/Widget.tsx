@@ -862,7 +862,8 @@ const Widget: React.FC<WidgetProps> = ({
       const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const errorMessage = payload?.error || 'Verification failed.';
+        const detailSuffix = payload?.details ? ` (${payload.details})` : '';
+        const errorMessage = (payload?.error || 'Verification failed.') + detailSuffix;
         setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } }));
         return;
       }
@@ -874,7 +875,8 @@ const Widget: React.FC<WidgetProps> = ({
       }
 
       if (!payload?.success) {
-        const errorMessage = payload?.error || 'No eligible NFT found.';
+        const detailSuffix = payload?.details ? ` (${payload.details})` : '';
+        const errorMessage = (payload?.error || 'No eligible NFT found.') + detailSuffix;
         setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } }));
         return;
       }
