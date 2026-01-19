@@ -31,6 +31,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 }) => {
   const [showBetaTooltip, setShowBetaTooltip] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
+  const [isLogoLoading, setIsLogoLoading] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "Congratulations!",
     message: "You found your first secret Reward!",
@@ -91,6 +92,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       return;
     }
 
+    setIsLogoLoading(true);
     try {
       // 1. Find Project (QuestLayer or any)
       let projectId;
@@ -185,6 +187,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         type: "success"
       });
       setShowRewardModal(true);
+    } finally {
+      setIsLogoLoading(false);
     }
   };
 
@@ -198,15 +202,32 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Center Video - Absolute Positioned behind content */}
           <div 
             onClick={handleLogoClick}
-            className="absolute bottom-0 z-0 pointer-events-auto cursor-pointer select-none flex items-center justify-center ql-video-patrol hover:scale-110 transition-transform duration-300"
+            className={`absolute bottom-0 pointer-events-auto cursor-pointer select-none flex items-center justify-center ql-video-patrol transition-transform duration-300 ${isLogoLoading ? 'z-20' : 'z-0'} ${isLogoLoading ? 'ql-logo-loading' : 'hover:scale-110'}`}
           >
+            {isLogoLoading && (
+              <>
+                <span className="absolute inset-0 ql-logo-glow" />
+                <span className="absolute -inset-6 ql-logo-shimmer" />
+                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 ql-logo-burst" />
+                <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 ql-logo-beam" />
+                <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 ql-logo-payload">
+                  <span className="ql-logo-payload-chip">XP</span>
+                  <span className="ql-logo-payload-text">Reward inbound</span>
+                  <div className="ql-logo-dots">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              </>
+            )}
             <video 
               src="/questLogo.webm"
               autoPlay 
               loop 
               muted 
               playsInline
-              className="h-20 md:h-28 w-auto object-contain opacity-90"
+              className={`h-20 md:h-28 w-auto object-contain opacity-90 transition-transform duration-300 ${isLogoLoading ? 'translate-y-2 scale-105 drop-shadow-[0_12px_20px_rgba(15,23,42,0.6)]' : ''}`}
             />
           </div>
           
@@ -214,6 +235,148 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             @keyframes ql-patrol {
               0%, 100% { left: 25%; transform: translate(-50%, 18%); }
               50% { left: 75%; transform: translate(-50%, 18%); }
+            }
+            .ql-logo-loading {
+              animation-play-state: paused;
+            }
+            .ql-logo-glow {
+              background: radial-gradient(circle at 50% 55%, rgba(99,102,241,0.35), rgba(15,23,42,0) 60%);
+              filter: blur(8px);
+              opacity: 0.9;
+              animation: ql-logo-glow 1.2s ease-in-out infinite;
+              border-radius: 999px;
+            }
+            .ql-logo-shimmer {
+              border-radius: 999px;
+              background: conic-gradient(from 0deg, rgba(99,102,241,0), rgba(99,102,241,0.35), rgba(99,102,241,0));
+              filter: blur(6px);
+              opacity: 0.6;
+              animation: ql-logo-shimmer 1.6s linear infinite;
+            }
+            .ql-logo-burst {
+              width: 64px;
+              height: 16px;
+              background: radial-gradient(circle, rgba(255,255,255,0.6), rgba(99,102,241,0) 70%);
+              filter: blur(6px);
+              opacity: 0.8;
+              animation: ql-logo-burst 0.9s ease-out infinite;
+            }
+            .ql-logo-beam {
+              width: 180px;
+              height: 40px;
+              background: radial-gradient(ellipse at center, rgba(129,140,248,0.5), rgba(15,23,42,0) 70%);
+              filter: blur(10px);
+              opacity: 0.7;
+              animation: ql-logo-beam 1.1s ease-in-out infinite;
+            }
+            .ql-logo-payload {
+              display: inline-flex;
+              align-items: center;
+              gap: 10px;
+              padding: 8px 16px;
+              border-radius: 12px;
+              background: rgba(15, 23, 42, 0.95);
+              border: 1px solid rgba(129, 140, 248, 0.3);
+              box-shadow: 
+                0 0 0 1px rgba(15, 23, 42, 1),
+                0 0 20px rgba(99, 102, 241, 0.4),
+                inset 0 0 20px rgba(99, 102, 241, 0.1);
+              color: #e2e8f0;
+              font-size: 11px;
+              font-weight: 800;
+              letter-spacing: 0.2em;
+              text-transform: uppercase;
+              animation: ql-logo-payload 2s ease-in-out infinite;
+              backdrop-filter: blur(10px);
+              position: relative;
+              overflow: hidden;
+            }
+            .ql-logo-payload::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: -100%;
+              width: 100%;
+              height: 100%;
+              background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+              );
+              animation: ql-scan 2s linear infinite;
+            }
+            .ql-logo-payload-chip {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 24px;
+              height: 24px;
+              border-radius: 6px;
+              background: linear-gradient(135deg, #6366f1, #0ea5e9);
+              color: #fff;
+              font-size: 10px;
+              font-weight: 900;
+              box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+              position: relative;
+              z-index: 1;
+            }
+            .ql-logo-payload-text {
+              background: linear-gradient(to right, #e2e8f0, #94a3b8);
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              text-shadow: 0 0 20px rgba(148, 163, 184, 0.3);
+              position: relative;
+              z-index: 1;
+            }
+            .ql-logo-dots {
+              display: flex;
+              gap: 3px;
+            }
+            .ql-logo-dots span {
+              width: 4px;
+              height: 4px;
+              border-radius: 50%;
+              background: #818cf8;
+              animation: ql-dots-pulse 1s ease-in-out infinite;
+            }
+            .ql-logo-dots span:nth-child(2) { animation-delay: 0.2s; }
+            .ql-logo-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+            @keyframes ql-scan {
+              0% { left: -100%; }
+              50%, 100% { left: 200%; }
+            }
+            @keyframes ql-dots-pulse {
+              0%, 100% { opacity: 0.3; transform: scale(0.8); }
+              50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 8px #818cf8; }
+            }
+            @keyframes ql-logo-glow {
+              0%, 100% { opacity: 0.5; transform: scale(0.96); }
+              50% { opacity: 1; transform: scale(1.04); }
+            }
+            @keyframes ql-logo-shimmer {
+              0% { transform: rotate(0deg); opacity: 0.3; }
+              50% { opacity: 0.7; }
+              100% { transform: rotate(360deg); opacity: 0.3; }
+            }
+            @keyframes ql-logo-burst {
+              0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+              30% { opacity: 0.9; }
+              100% { opacity: 0; transform: translateX(-50%) scale(1.4); }
+            }
+            @keyframes ql-logo-beam {
+              0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(0.9); }
+              50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+            }
+            @keyframes ql-logo-payload {
+              0%, 100% { transform: translateX(-50%) translateY(0); }
+              50% { transform: translateX(-50%) translateY(-6px); }
+            }
+            @keyframes ql-logo-dots {
+              0% { opacity: 0.3; }
+              50% { opacity: 1; }
+              100% { opacity: 0.3; }
             }
             .ql-video-patrol {
               animation: ql-patrol 10s ease-in-out infinite;
