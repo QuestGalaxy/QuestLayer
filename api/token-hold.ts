@@ -221,7 +221,7 @@ export default async function handler(req: any, res: any) {
 
     if (formattedBalance < minAmount) {
       res.status(400).json({
-        error: `Insufficient balance. Required: ${minAmount}, Found: ${formattedBalance.toFixed(4)}`,
+        error: 'Insufficient balance',
         details: `Required: ${minAmount}, Found: ${formattedBalance.toFixed(4)}`
       });
       return;
