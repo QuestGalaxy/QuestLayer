@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, getAddress, http, isAddress, verifyMessage } from 'viem';
 import type { Hex } from 'viem';
+import { arbitrum, avalanche, bsc, mainnet, polygon } from 'viem/chains';
 
 const erc721BalanceOfAbi = [
   {
@@ -33,6 +34,14 @@ const DEFAULT_RPC_URLS: Record<number, string> = {
   137: 'https://rpc.ankr.com/polygon',
   42161: 'https://arb1.arbitrum.io/rpc',
   43114: 'https://api.avax.network/ext/bc/C/rpc'
+};
+
+const CHAIN_MAP: Record<number, typeof mainnet> = {
+  1: mainnet,
+  56: bsc,
+  137: polygon,
+  42161: arbitrum,
+  43114: avalanche
 };
 
 const getRpcUrl = (chainId: number) => {
@@ -177,7 +186,7 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  const client = createPublicClient({ transport: http(rpcUrl) });
+  const client = createPublicClient({ chain: CHAIN_MAP[chainId], transport: http(rpcUrl) });
 
   let balance: bigint;
   try {
@@ -187,8 +196,11 @@ export default async function handler(req: any, res: any) {
       functionName: 'balanceOf',
       args: [normalizedAddress]
     });
-  } catch {
-    res.status(502).json({ error: 'On-chain check failed.' });
+  } catch (error: any) {
+    res.status(502).json({
+      error: 'On-chain check failed.',
+      details: error?.shortMessage || error?.message || 'RPC error'
+    });
     return;
   }
 
