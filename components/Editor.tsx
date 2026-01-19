@@ -268,7 +268,10 @@ const Editor: React.FC<EditorProps> = ({
       question: '',
       answer: '',
       nftContract: '',
-      nftChainId: 1
+      nftChainId: 1,
+      tokenContract: '',
+      tokenChainId: 1,
+      minTokenAmount: '1'
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -304,7 +307,10 @@ const Editor: React.FC<EditorProps> = ({
       question: '',
       answer: '',
       nftContract: '',
-      nftChainId: 1
+      nftChainId: 1,
+      tokenContract: '',
+      tokenChainId: 1,
+      minTokenAmount: '1'
     };
     setTasks([newTask, ...state.tasks]);
     setEditingId(newTask.id);
@@ -392,6 +398,35 @@ const Editor: React.FC<EditorProps> = ({
     setEditForm(newTask);
   };
 
+  const addTokenTemplate = () => {
+    const remaining = calculateXPRemaining();
+    if (remaining <= 0) {
+      setAlertMessage(`You have reached the maximum ${getDynamicLimit()} XP limit.`);
+      return;
+    }
+    
+    const newTask: Task = {
+      id: Date.now(),
+      title: 'Token Holder Verification',
+      desc: 'Verify that you hold the required Tokens in your wallet.',
+      link: '',
+      icon: 'icon:coins',
+      xp: Math.min(100, remaining),
+      section: 'missions',
+      kind: 'token_hold',
+      question: '',
+      answer: '',
+      nftContract: '',
+      nftChainId: 1,
+      tokenContract: '0x...',
+      tokenChainId: 1,
+      minTokenAmount: '1'
+    };
+    setTasks([newTask, ...state.tasks]);
+    setEditingId(newTask.id);
+    setEditForm(newTask);
+  };
+
   const getTotalXPExcludingEditing = () =>
     state.tasks
       .filter(t => t.id !== editingId && !t.isSponsored)
@@ -473,6 +508,9 @@ const Editor: React.FC<EditorProps> = ({
       answer: task.answer ?? '',
       nftContract: task.nftContract ?? '',
       nftChainId: task.nftChainId ?? 1,
+      tokenContract: task.tokenContract ?? '',
+      tokenChainId: task.tokenChainId ?? 1,
+      minTokenAmount: task.minTokenAmount ?? '1',
       link: task.link ?? ''
     });
   };
@@ -485,6 +523,7 @@ const Editor: React.FC<EditorProps> = ({
       const isQuiz = resolvedKind === 'quiz';
       const isLink = resolvedKind === 'link';
       const isNftHold = resolvedKind === 'nft_hold';
+      const isTokenHold = resolvedKind === 'token_hold';
       // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
       const normalizedTitle = isQuiz
         ? (editForm.question?.trim() || editForm.title)
@@ -500,6 +539,9 @@ const Editor: React.FC<EditorProps> = ({
         answer: editForm.answer ?? '',
         nftContract: isNftHold ? (editForm.nftContract || '').trim() : '',
         nftChainId: isNftHold ? (editForm.nftChainId ?? 1) : undefined,
+        tokenContract: isTokenHold ? (editForm.tokenContract || '').trim() : '',
+        tokenChainId: isTokenHold ? (editForm.tokenChainId ?? 1) : undefined,
+        minTokenAmount: isTokenHold ? (editForm.minTokenAmount || '1').trim() : '1',
         icon: editForm.icon || (isLink ? getFaviconUrl(editForm.link) : '') || getRandomGameIcon()
       };
 
@@ -704,6 +746,20 @@ const Editor: React.FC<EditorProps> = ({
                 <div className="space-y-0.5">
                   <p className="text-[9px] font-black text-white uppercase">NFT Holder</p>
                   <p className="text-[8px] font-bold text-sky-300">100 XP</p>
+                </div>
+              </button>
+
+              <button
+                onClick={addTokenTemplate}
+                disabled={calculateXPRemaining() <= 0}
+                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-400/60 hover:bg-amber-500/15 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="h-8 w-8 rounded-full bg-amber-900/30 border border-amber-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Coins size={14} className="text-amber-300" />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-black text-white uppercase">Token Holder</p>
+                  <p className="text-[8px] font-bold text-amber-300">100 XP</p>
                 </div>
               </button>
 
@@ -919,7 +975,7 @@ const Editor: React.FC<EditorProps> = ({
                           )}
                           {resolvedKind !== 'link' && (
                             <span className="text-[7px] font-black bg-sky-500/10 text-sky-300 px-1 rounded uppercase tracking-tighter border border-sky-500/20">
-                              {resolvedKind === 'quiz' ? 'Question' : 'NFT Hold'}
+                              {resolvedKind === 'quiz' ? 'Question' : resolvedKind === 'nft_hold' ? 'NFT Hold' : 'Token Hold'}
                             </span>
                           )}
                           {task.isSponsored && (
@@ -983,6 +1039,7 @@ const Editor: React.FC<EditorProps> = ({
                           <option value="link">Link</option>
                           <option value="quiz">Question</option>
                           <option value="nft_hold">NFT Hold</option>
+                          <option value="token_hold">Token Hold</option>
                         </select>
                       </div>
                     </div>
@@ -1041,7 +1098,7 @@ const Editor: React.FC<EditorProps> = ({
                           </p>
                         </div>
                       </>
-                    ) : (
+                    ) : (editForm?.kind ?? 'link') === 'nft_hold' ? (
                       <>
                         <div className="space-y-1">
                           <label className="text-[9px] font-bold text-slate-500 uppercase">Task Title</label>
@@ -1078,6 +1135,66 @@ const Editor: React.FC<EditorProps> = ({
                             onChange={(e) => {
                               const parsed = Number(e.target.value);
                               setEditForm(prev => prev ? { ...prev, nftChainId: Number.isFinite(parsed) ? parsed : 1 } : null);
+                            }}
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          >
+                            <option value="1">Ethereum</option>
+                            <option value="137">Polygon</option>
+                            <option value="43114">Avalanche</option>
+                            <option value="56">Smart Chain</option>
+                            <option value="42161">Arbitrum</option>
+                          </select>
+                          <p className="text-[9px] text-slate-500">
+                            Uses `RPC_URL_&lt;CHAIN_ID&gt;` when set, otherwise `RPC_URL`.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Task Title</label>
+                          <input
+                            value={editForm?.title}
+                            autoFocus
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, title: e.target.value } : null)}
+                            placeholder="e.g. Hold 100 TOKEN"
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Description</label>
+                          <textarea
+                            value={editForm?.desc}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, desc: e.target.value } : null)}
+                            placeholder="Explain which token to hold."
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-16 text-white outline-none resize-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Token Contract</label>
+                          <input
+                            value={editForm?.tokenContract ?? ''}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, tokenContract: e.target.value } : null)}
+                            placeholder="0x..."
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Minimum Amount</label>
+                          <input
+                            value={editForm?.minTokenAmount ?? '1'}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, minTokenAmount: e.target.value } : null)}
+                            placeholder="e.g. 100"
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Chain</label>
+                          <select
+                            value={(editForm?.tokenChainId ?? 1).toString()}
+                            onChange={(e) => {
+                              const parsed = Number(e.target.value);
+                              setEditForm(prev => prev ? { ...prev, tokenChainId: Number.isFinite(parsed) ? parsed : 1 } : null);
                             }}
                             className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
                           >

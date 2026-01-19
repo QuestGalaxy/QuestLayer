@@ -552,7 +552,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           question: t.question ?? '',
           answer: t.answer ?? '',
           nftContract: t.nft_contract ?? '',
-          nftChainId: t.nft_chain_id ?? undefined
+          nftChainId: t.nft_chain_id ?? undefined,
+          tokenContract: t.token_contract ?? '',
+          tokenChainId: t.token_chain_id ?? undefined,
+          minTokenAmount: t.min_token_amount ?? '1'
         })),
         userXP: 0,
         currentStreak: 1,

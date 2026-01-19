@@ -32,7 +32,10 @@ create table if not exists tasks (
   question text,
   answer text,
   nft_contract text,
-  nft_chain_id integer
+  nft_chain_id integer,
+  token_contract text,
+  token_chain_id integer,
+  min_token_amount text
 );
 
 alter table tasks add column if not exists task_section text default 'missions';

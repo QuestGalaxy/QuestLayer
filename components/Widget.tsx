@@ -99,6 +99,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [onboardingFeedback, setOnboardingFeedback] = useState<Record<string | number, { type: 'error' | 'success'; message: string }>>({});
   const [onboardingCheckStatus, setOnboardingCheckStatus] = useState<Record<string | number, 'checking' | 'success' | 'error'>>({});
   const [nftVerifyState, setNftVerifyState] = useState<Record<string | number, { status: 'idle' | 'signing' | 'checking' | 'success' | 'error'; message?: string }>>({});
+  const [tokenVerifyState, setTokenVerifyState] = useState<Record<string | number, { status: 'idle' | 'signing' | 'checking' | 'success' | 'error'; message?: string }>>({});
   const [nftBgImage, setNftBgImage] = useState<string | null>(null);
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
@@ -919,6 +920,113 @@ const Widget: React.FC<WidgetProps> = ({
     }
   };
 
+  const buildTokenHoldMessage = (params: { address: string; projectId: string; taskId: string; chainId: number; timestamp: string }) => {
+    const addressLower = params.address.toLowerCase();
+    return [
+      'QuestLayer Token Hold Verification',
+      `Wallet: ${addressLower}`,
+      `Project: ${params.projectId}`,
+      `Task: ${params.taskId}`,
+      `Chain: ${params.chainId}`,
+      `Timestamp: ${params.timestamp}`
+    ].join('\n');
+  };
+
+  const handleTokenHoldVerify = async (task: Task) => {
+    if (completedTaskIds.has(task.id)) return;
+    if (!effectiveConnected || !address) {
+      await open();
+      return;
+    }
+    const contract = (task.tokenContract || '').trim();
+    if (!contract) {
+      setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Missing token contract.' } } as any));
+      return;
+    }
+    if (!dbProjectId) {
+      setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Project is not published yet.' } } as any));
+      return;
+    }
+    if (tokenVerifyState[task.id]?.status === 'signing' || tokenVerifyState[task.id]?.status === 'checking') return;
+
+    const dbTaskId = await resolveDbTaskId(task);
+    if (!dbTaskId) {
+      setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Task not synced to database.' } } as any));
+      return;
+    }
+
+    const chainId = task.tokenChainId ?? 1;
+    const chainLabel = CHAIN_METADATA[chainId]?.chainName ?? `chain ${chainId}`;
+    const switched = await ensureWalletChain(chainId);
+    if (!switched) {
+      setTokenVerifyState(prev => ({
+        ...prev,
+        [task.id]: { status: 'error', message: `Switch wallet to ${chainLabel}.` }
+      } as any));
+      return;
+    }
+
+    setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'signing', message: 'Sign to verify ownership.' } } as any));
+    const timestamp = new Date().toISOString();
+    const message = buildTokenHoldMessage({
+      address,
+      projectId: dbProjectId,
+      taskId: dbTaskId,
+      chainId,
+      timestamp
+    });
+
+    let signature = '';
+    try {
+      signature = await signMessageAsync({ message, account: address as any });
+    } catch {
+      setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Signature rejected.' } } as any));
+      return;
+    }
+
+    setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking token balance...' } } as any));
+
+    try {
+      const response = await fetch('/api/token-hold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address,
+          signature,
+          message,
+          projectId: dbProjectId,
+          taskId: dbTaskId
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const detailSuffix = payload?.details ? ` (${payload.details})` : '';
+        const errorMessage = (payload?.error || 'Verification failed.') + detailSuffix;
+        setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } } as any));
+        return;
+      }
+
+      if (payload?.alreadyCompleted) {
+        setCompletedTaskIds(prev => new Set(prev).add(task.id));
+        setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Already verified.' } } as any));
+        return;
+      }
+
+      if (!payload?.success) {
+        const detailSuffix = payload?.details ? ` (${payload.details})` : '';
+        const errorMessage = (payload?.error || 'Insufficient balance.') + detailSuffix;
+        setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: errorMessage } } as any));
+        return;
+      }
+
+      completeQuest(task, { skipDb: true, xpAwarded: payload?.xpAwarded ?? task.xp });
+      setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Tokens verified.' } } as any));
+    } catch {
+      setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'error', message: 'Network error. Try again.' } } as any));
+    }
+  };
+
   const handleOnboardingSubmit = (task: Task) => {
     if (completedTaskIds.has(task.id)) return;
     if (onboardingCheckStatus[task.id] === 'checking') return;
@@ -1269,6 +1377,7 @@ const Widget: React.FC<WidgetProps> = ({
       const resolvedKind = resolveTaskKind(task);
       const isQuizTask = resolvedKind === 'quiz';
       const isNftTask = resolvedKind === 'nft_hold';
+      const isTokenTask = resolvedKind === 'token_hold';
       const isCompleted = completedTaskIds.has(task.id);
       const isLoading = loadingId === task.id;
       const inputValue = onboardingInputs[task.id] ?? '';
@@ -1285,6 +1394,15 @@ const Widget: React.FC<WidgetProps> = ({
       const isNftSuccess = nftStatus === 'success';
       const isNftError = nftStatus === 'error';
       const isNftBusy = isNftSigning || isNftChecking;
+
+      const tokenStatus = tokenVerifyState[task.id]?.status ?? 'idle';
+      const tokenMessage = tokenVerifyState[task.id]?.message;
+      const isTokenSigning = tokenStatus === 'signing';
+      const isTokenChecking = tokenStatus === 'checking';
+      const isTokenSuccess = tokenStatus === 'success';
+      const isTokenError = tokenStatus === 'error';
+      const isTokenBusy = isTokenSigning || isTokenChecking;
+
       const stepIndex = index + 1;
       const isLastStep = index === tasksSorted.length - 1;
       const showTypeTag = isOnboardingVariant || resolvedKind !== 'link';
@@ -1437,7 +1555,7 @@ const Widget: React.FC<WidgetProps> = ({
                           color: state.accentColor
                         }}
                       >
-                        {resolvedKind === 'nft_hold' ? 'NFT Hold' : 'Link'}
+                        {resolvedKind === 'nft_hold' ? 'NFT Hold' : (resolvedKind === 'token_hold' ? 'Token Hold' : 'Link')}
                       </span>
                     )}
                     {task.isSponsored && (
@@ -1689,6 +1807,125 @@ const Widget: React.FC<WidgetProps> = ({
                     nftMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
                   } ${isNftError ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {nftMessage}
+                  </div>
+                </div>
+              </div>
+            ) : isTokenTask ? (
+              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 group/token ${
+                isCompleted || isTokenSuccess
+                  ? 'border-emerald-500/50 bg-emerald-500/5'
+                  : isTokenError
+                    ? 'border-rose-500/50 bg-rose-500/5'
+                    : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
+              }`}>
+                {/* Background Glow */}
+                <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${
+                  isTokenChecking || isTokenSigning ? 'opacity-40' : ''
+                }`}
+                style={{
+                  background: isCompleted || isTokenSuccess
+                    ? 'radial-gradient(circle at center, #10b981 0%, transparent 70%)'
+                    : isTokenError
+                      ? 'radial-gradient(circle at center, #f43f5e 0%, transparent 70%)'
+                      : `radial-gradient(circle at center, ${state.accentColor} 0%, transparent 70%)`
+                }} />
+
+                <div className="relative p-4 flex flex-col items-center text-center space-y-3">
+                  {/* Header / Project Banner Effect */}
+                  <div className="flex flex-col items-center gap-2">
+                     <div className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-xl transition-transform duration-500 ${isTokenBusy ? 'scale-110' : ''}`}
+                        style={{ borderColor: isCompleted ? '#10b981' : (isTokenError ? '#f43f5e' : state.accentColor) }}
+                     >
+                        {projectIconUrl ? (
+                          <img src={projectIconUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <Coins size={24} className={isCompleted ? 'text-emerald-400' : 'text-white'} />
+                        )}
+                        {/* Status Indicator Icon */}
+                        <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
+                           {isCompleted || isTokenSuccess ? (
+                             <CheckCircle2 size={12} className="text-emerald-400" />
+                           ) : isTokenError ? (
+                             <XCircle size={12} className="text-rose-400" />
+                           ) : (
+                             <Lock size={12} className="text-white/60" />
+                           )}
+                        </div>
+                     </div>
+
+                     <div className="space-y-0.5">
+                       <h4 className={`text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+                         {state.projectName} Token
+                       </h4>
+                       <p className={`text-[10px] font-medium ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
+                         Token Verification
+                       </p>
+                     </div>
+                  </div>
+
+                  {/* Dynamic Action Button */}
+                  <button
+                    onClick={() => handleTokenHoldVerify(task)}
+                    disabled={isCompleted || isTokenBusy}
+                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${
+                      isCompleted || isTokenSuccess
+                        ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                        : isTokenError
+                          ? 'bg-rose-500 text-white hover:bg-rose-600'
+                          : isTokenBusy
+                            ? 'cursor-wait'
+                            : 'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
+                    style={!(isCompleted || isTokenSuccess || isTokenError) ? {
+                      backgroundColor: state.accentColor,
+                      color: 'white',
+                      boxShadow: `0 0 20px ${state.accentColor}40`
+                    } : {}}
+                  >
+                    {/* Button Content */}
+                    <div className="relative z-10 flex items-center gap-2">
+                      {isCompleted || isTokenSuccess ? (
+                        <>
+                          <span>Verified Holder</span>
+                          <CheckCircle2 size={14} />
+                        </>
+                      ) : isTokenSigning ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Requesting Signature...</span>
+                        </>
+                      ) : isTokenChecking ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Verifying Balance...</span>
+                        </>
+                      ) : isTokenError ? (
+                        <>
+                          <span>Verification Failed</span>
+                          <RefreshCw size={14} />
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify Tokens</span>
+                          <Coins size={14} />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Loading Progress Bar */}
+                    {isTokenBusy && (
+                      <div
+                        className="absolute bottom-0 left-0 h-1 bg-white/30 animate-[progress_2s_ease-in-out_infinite]"
+                        style={{ width: '100%' }}
+                      />
+                    )}
+                  </button>
+
+                  {/* Feedback Message */}
+                  <div className={`text-[10px] font-bold transition-all duration-300 ${
+                    tokenMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
+                  } ${isTokenError ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {tokenMessage}
                   </div>
                 </div>
               </div>

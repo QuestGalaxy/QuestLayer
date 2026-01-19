@@ -43,7 +43,12 @@ const normalizeConfig = (config?: WidgetConfig): AppState => {
         section: task.section ?? 'missions',
         kind: rawKind === 'secret' ? 'quiz' : (rawKind as Task['kind']),
         question: task.question ?? '',
-        answer: task.answer ?? ''
+        answer: task.answer ?? '',
+        nftContract: task.nftContract ?? '',
+        nftChainId: task.nftChainId ?? 1,
+        tokenContract: task.tokenContract ?? '',
+        tokenChainId: task.tokenChainId ?? 1,
+        minTokenAmount: task.minTokenAmount ?? '1'
       });
     })
     : DEFAULT_STATE.tasks;
@@ -262,7 +267,10 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalCont
                 question: t.question ?? '',
                 answer: t.answer ?? '',
                 nftContract: t.nft_contract ?? '',
-                nftChainId: t.nft_chain_id ?? 1
+                nftChainId: t.nft_chain_id ?? 1,
+                tokenContract: t.token_contract ?? '',
+                tokenChainId: t.token_chain_id ?? 1,
+                minTokenAmount: t.min_token_amount ?? '1'
               }));
               setState(prev => ({
                 ...prev,

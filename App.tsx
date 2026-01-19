@@ -234,7 +234,10 @@ const App: React.FC = () => {
       question: task.question ?? '',
       answer: task.answer ?? '',
       nftContract: task.nftContract ?? '',
-      nftChainId: task.nftChainId ?? null
+      nftChainId: task.nftChainId ?? null,
+      tokenContract: task.tokenContract ?? '',
+      tokenChainId: task.tokenChainId ?? null,
+      minTokenAmount: task.minTokenAmount ?? '1'
     }));
     return JSON.stringify({
       projectId: snapshotState.projectId ?? null,
@@ -369,7 +372,10 @@ const App: React.FC = () => {
                   question: t.question ?? '',
                   answer: t.answer ?? '',
                   nftContract: t.nft_contract ?? '',
-                  nftChainId: t.nft_chain_id ?? undefined
+                  nftChainId: t.nft_chain_id ?? undefined,
+                  tokenContract: t.token_contract ?? '',
+                  tokenChainId: t.token_chain_id ?? undefined,
+                  minTokenAmount: t.min_token_amount ?? '1'
                 })),
                 userXP: 0,
                 currentStreak: 1,
@@ -395,7 +401,10 @@ const App: React.FC = () => {
                   question: t.question ?? '',
                   answer: t.answer ?? '',
                   nftContract: t.nft_contract ?? '',
-                  nftChainId: t.nft_chain_id ?? undefined
+                  nftChainId: t.nft_chain_id ?? undefined,
+                  tokenContract: t.token_contract ?? '',
+                  tokenChainId: t.token_chain_id ?? undefined,
+                  minTokenAmount: t.min_token_amount ?? '1'
                 })),
                 userXP: 0,
                 currentStreak: 1,
