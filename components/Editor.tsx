@@ -5,7 +5,7 @@ import { Task, Position, ThemeType, AppState } from '../types.ts';
 import {
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
-  Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info
+  Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info, ShieldCheck
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
@@ -299,8 +299,8 @@ const Editor: React.FC<EditorProps> = ({
       link: template.link,
       icon: template.icon,
       xp: Math.min(template.xp, remaining),
-      section: template.section,
-      kind: template.kind,
+      section: template.section as Task['section'],
+      kind: template.kind as Task['kind'],
       question: '',
       answer: '',
       nftContract: '',
@@ -364,6 +364,32 @@ const Editor: React.FC<EditorProps> = ({
     ];
 
     setTasks([...onboardingTasks, ...state.tasks]);
+  };
+
+  const addNftTemplate = () => {
+    const remaining = calculateXPRemaining();
+    if (remaining <= 0) {
+      setAlertMessage(`You have reached the maximum ${getDynamicLimit()} XP limit.`);
+      return;
+    }
+    
+    const newTask: Task = {
+      id: Date.now(),
+      title: 'NFT Holder Verification',
+      desc: 'Verify that you hold the required NFT in your wallet.',
+      link: '',
+      icon: 'icon:shield',
+      xp: Math.min(100, remaining),
+      section: 'missions',
+      kind: 'nft_hold',
+      question: '',
+      answer: '',
+      nftContract: '0x...',
+      nftChainId: 1
+    };
+    setTasks([newTask, ...state.tasks]);
+    setEditingId(newTask.id);
+    setEditForm(newTask);
   };
 
   const getTotalXPExcludingEditing = () =>
@@ -666,6 +692,21 @@ const Editor: React.FC<EditorProps> = ({
                   <p className="text-[8px] font-bold text-emerald-300">3 questions</p>
                 </div>
               </button>
+
+              <button
+                onClick={addNftTemplate}
+                disabled={calculateXPRemaining() <= 0}
+                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 hover:border-sky-400/60 hover:bg-sky-500/15 transition-all text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="h-8 w-8 rounded-full bg-sky-900/30 border border-sky-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ShieldCheck size={14} className="text-sky-300" />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[9px] font-black text-white uppercase">NFT Holder</p>
+                  <p className="text-[8px] font-bold text-sky-300">100 XP</p>
+                </div>
+              </button>
+
               {TASK_TEMPLATES.map((tpl) => (
                 <button
                   key={tpl.id}
