@@ -1,17 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import { createPublicClient, getAddress, http, isAddress, verifyMessage } from 'viem';
-import type { Hex } from 'viem';
+import { createPublicClient, getAddress, http, isAddress, verifyMessage, parseAbi } from 'viem';
+import type { Address, Chain, Hex } from 'viem';
 import { arbitrum, avalanche, bsc, mainnet, polygon } from 'viem/chains';
 
-const erc721BalanceOfAbi = [
-  {
-    type: 'function',
-    name: 'balanceOf',
-    stateMutability: 'view',
-    inputs: [{ name: 'owner', type: 'address' }],
-    outputs: [{ name: 'balance', type: 'uint256' }]
-  }
-] as const;
+const erc721BalanceOfAbi = parseAbi([
+  'function balanceOf(address owner) view returns (uint256)'
+]);
 
 const parseBody = async (req: any) => {
   if (req.body) {
@@ -29,14 +23,14 @@ const parseBody = async (req: any) => {
 };
 
 const DEFAULT_RPC_URLS: Record<number, string> = {
-  1: 'https://rpc.ankr.com/eth',
+  1: 'https://cloudflare-eth.com',
   56: 'https://bsc-dataseed.binance.org',
-  137: 'https://rpc.ankr.com/polygon',
+  137: 'https://polygon-rpc.com',
   42161: 'https://arb1.arbitrum.io/rpc',
   43114: 'https://api.avax.network/ext/bc/C/rpc'
 };
 
-const CHAIN_MAP: Record<number, typeof mainnet> = {
+const CHAIN_MAP: Record<number, Chain> = {
   1: mainnet,
   56: bsc,
   137: polygon,
@@ -208,11 +202,11 @@ export default async function handler(req: any, res: any) {
   let balance: bigint;
   try {
     balance = await client.readContract({
-      address: contract as Hex,
+      address: contract as Address,
       abi: erc721BalanceOfAbi,
       functionName: 'balanceOf',
-      args: [normalizedAddress]
-    });
+      args: [normalizedAddress as Address]
+    } as any) as bigint;
   } catch (error: any) {
     res.status(502).json({
       error: 'On-chain check failed.',
