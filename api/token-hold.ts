@@ -222,7 +222,7 @@ export default async function handler(req: any, res: any) {
     if (formattedBalance < minAmount) {
       res.status(400).json({
         error: `Insufficient balance. Required: ${minAmount}, Found: ${formattedBalance.toFixed(4)}`,
-        details: { required: minAmount, actual: formattedBalance, rpc: rpcMeta }
+        details: `Required: ${minAmount}, Found: ${formattedBalance.toFixed(4)}`
       });
       return;
     }
@@ -231,8 +231,7 @@ export default async function handler(req: any, res: any) {
       .from('task_completions')
       .insert({
         user_id: userId,
-        task_id: task.id,
-        completed_at: new Date().toISOString()
+        task_id: task.id
       });
 
     if (completeError) {
