@@ -222,8 +222,9 @@ const App: React.FC = () => {
   const isConnecting = status === 'connecting' || status === 'reconnecting';
 
   const buildPublishSnapshot = (snapshotState: AppState) => {
-    const tasks = snapshotState.tasks.map(task => ({
-      title: task.title,
+      const tasks = snapshotState.tasks.map(task => ({
+        id: task.id,
+        title: task.title,
       desc: task.desc,
       link: task.link,
       icon: task.icon,

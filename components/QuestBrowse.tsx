@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
-import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles } from 'lucide-react';
+import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles, BadgeCheck } from 'lucide-react';
 import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
 import UnifiedHeader from './UnifiedHeader';
@@ -112,6 +112,24 @@ const pickRandomTasks = (tasks: Task[], count: number, rng: () => number) => {
   return pool.slice(0, Math.min(count, pool.length));
 };
 
+const BadgeWithTooltip: React.FC<{
+  children: React.ReactNode;
+  tooltipText: string;
+}> = ({ children, tooltipText }) => {
+  return (
+    <div 
+      className="relative flex items-center z-30 group/tooltip"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {children}
+      <div className="hidden group-hover/tooltip:block absolute top-full right-0 mt-2 w-48 p-3 bg-slate-950/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] text-xs leading-relaxed text-slate-300 font-medium animate-in fade-in zoom-in-95 duration-200 text-left pointer-events-none select-none">
+         {tooltipText}
+         <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-950/95 border-t border-l border-white/10 rotate-45 transform" />
+      </div>
+    </div>
+  );
+};
+
 const BrowseCard: React.FC<{ 
   project: any; 
   stats: any; 
@@ -162,6 +180,7 @@ const BrowseCard: React.FC<{
 
   const fallbackAccent = project.accent_color || '#6366f1';
   const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();
+  const isVerified = !!project.last_ping_at;
 
   return (
     <div 
@@ -196,17 +215,27 @@ const BrowseCard: React.FC<{
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
         </div>
 
-        {isOnline && (
-          <div className="absolute top-4 right-4">
-            <div className="px-2 py-1 rounded-lg bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-[10px] font-black text-emerald-300 uppercase shadow-sm flex items-center gap-1.5">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-              </span>
-              Online
-            </div>
-          </div>
-        )}
+        <div className="absolute top-4 right-4 flex gap-2 items-end">
+          {isVerified && (
+            <BadgeWithTooltip tooltipText="This project has successfully connected to QuestLayer.">
+              <div className="px-2 py-1 rounded-lg bg-blue-500/20 backdrop-blur-md border border-blue-500/30 text-[10px] font-black text-blue-300 uppercase shadow-sm flex items-center gap-1.5">
+                <BadgeCheck size={12} className="text-blue-400" />
+                Verified
+              </div>
+            </BadgeWithTooltip>
+          )}
+          {isOnline && (
+            <BadgeWithTooltip tooltipText="This project is currently active and running.">
+              <div className="px-2 py-1 rounded-lg bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-[10px] font-black text-emerald-300 uppercase shadow-sm flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                Online
+              </div>
+            </BadgeWithTooltip>
+          )}
+        </div>
 
         <div 
           className="absolute -bottom-6 left-6 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl z-20 border-4 border-slate-900 transition-transform group-hover:scale-110 duration-300 overflow-hidden"
@@ -294,7 +323,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [browseFilter, setBrowseFilter] = useState<'popular' | 'new'>('popular');
+  const [browseFilter, setBrowseFilter] = useState<'popular' | 'new' | 'verified'>('popular');
   const [urlInput, setUrlInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
@@ -358,6 +387,11 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             const isOnlineA = a.last_ping_at && (new Date(a.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000);
             const isOnlineB = b.last_ping_at && (new Date(b.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000);
             if (isOnlineA !== isOnlineB) return isOnlineA ? -1 : 1;
+
+            // Then by Verified status (ever had a ping)
+            const isVerifiedA = !!a.last_ping_at;
+            const isVerifiedB = !!b.last_ping_at;
+            if (isVerifiedA !== isVerifiedB) return isVerifiedA ? -1 : 1;
 
             // Then by visits
             const visitsA = a.stats?.total_visits || 0;
@@ -690,6 +724,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       )
     )
     .filter(p => (browseFilter === 'new' ? isNewProject(p) : true))
+    .filter(p => (browseFilter === 'verified' ? !!p.last_ping_at : true))
     .sort((a, b) => {
       if (browseFilter === 'new') {
         const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -698,9 +733,24 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
         return (a.name || '').localeCompare(b.name || '');
       }
 
+      if (browseFilter === 'verified') {
+        const aOnline = isProjectOnline(a);
+        const bOnline = isProjectOnline(b);
+        if (aOnline !== bOnline) return aOnline ? -1 : 1;
+        const isVerifiedA = !!a.last_ping_at;
+        const isVerifiedB = !!b.last_ping_at;
+        if (isVerifiedA !== isVerifiedB) return isVerifiedA ? -1 : 1;
+        const visitsA = a.stats?.total_visits || 0;
+        const visitsB = b.stats?.total_visits || 0;
+        if (visitsA !== visitsB) return visitsB - visitsA;
+      }
+
       const aOnline = isProjectOnline(a);
       const bOnline = isProjectOnline(b);
       if (aOnline !== bOnline) return aOnline ? -1 : 1;
+      const isVerifiedA = !!a.last_ping_at;
+      const isVerifiedB = !!b.last_ping_at;
+      if (isVerifiedA !== isVerifiedB) return isVerifiedA ? -1 : 1;
       const visitsA = a.stats?.total_visits || 0;
       const visitsB = b.stats?.total_visits || 0;
       if (visitsA !== visitsB) return visitsB - visitsA;
@@ -1139,17 +1189,40 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             </div>
           ) : (
             <>
-              <div className="flex flex-col gap-1 mb-4">
-                <button
-                  onClick={() => setBrowseFilter(prev => (prev === 'popular' ? 'new' : 'popular'))}
-                  className="inline-flex items-center gap-2 text-xs font-bold uppercase text-slate-500 tracking-widest hover:text-white transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 w-fit"
-                  aria-label={`Switch to ${browseFilter === 'new' ? 'popular' : 'new'} ecosystems`}
-                >
-                  <Zap size={14} />
-                  <span className="transition-colors">
-                    <span className="ql-browse-word">{browseFilter === 'new' ? 'New' : 'Popular'}</span> Ecosystems
-                  </span>
-                </button>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
+                  <button
+                    onClick={() => setBrowseFilter('popular')}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                      browseFilter === 'popular' 
+                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Popular
+                  </button>
+                  <button
+                    onClick={() => setBrowseFilter('verified')}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-1.5 ${
+                      browseFilter === 'verified' 
+                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <BadgeCheck size={12} />
+                    Verified
+                  </button>
+                  <button
+                    onClick={() => setBrowseFilter('new')}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                      browseFilter === 'new' 
+                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    Newest
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {paginatedProjects.map((project) => (

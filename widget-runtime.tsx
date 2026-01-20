@@ -39,6 +39,7 @@ const normalizeConfig = (config?: WidgetConfig): AppState => {
       const rawKind = (task.kind ?? 'link') as string;
       return ({
         ...task,
+        id: task.id ?? `task-${Math.random().toString(36).substr(2, 9)}`,
         link: task.link ?? '',
         section: task.section ?? 'missions',
         kind: rawKind === 'secret' ? 'quiz' : (rawKind as Task['kind']),
