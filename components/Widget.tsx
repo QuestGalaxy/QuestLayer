@@ -22,6 +22,7 @@ interface WidgetProps {
   previewPositionMode?: 'fixed' | 'state';
   isEmbedded?: boolean;
   portalContainer?: HTMLElement | null;
+  apiBaseUrl?: string;
 }
 
 const CHAIN_METADATA: Record<number, {
@@ -76,7 +77,8 @@ const Widget: React.FC<WidgetProps> = ({
   isPreview = false,
   previewPositionMode = 'fixed',
   isEmbedded = false,
-  portalContainer = null
+  portalContainer = null,
+  apiBaseUrl
 }) => {
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
@@ -222,6 +224,16 @@ const Widget: React.FC<WidgetProps> = ({
     };
   }, [effectiveConnected]);
 
+  const getApiUrl = (path: string) => {
+    if (apiBaseUrl) {
+      // Remove trailing slash from base and leading slash from path to avoid double slashes
+      const base = apiBaseUrl.replace(/\/$/, '');
+      const endpoint = path.replace(/^\//, '');
+      return `${base}/${endpoint}`;
+    }
+    return path;
+  };
+
   useEffect(() => {
     const fetchMetadata = async () => {
       let url = state.projectUrl;
@@ -232,7 +244,7 @@ const Widget: React.FC<WidgetProps> = ({
       // If we have a URL, try to fetch high-res metadata
       if (url) {
         try {
-          const res = await fetch(`/api/metadata?url=${encodeURIComponent(url)}`);
+          const res = await fetch(getApiUrl(`/api/metadata?url=${encodeURIComponent(url)}`));
           if (res.ok) {
             const data = await res.json();
             if (data.image) {
@@ -878,9 +890,9 @@ const Widget: React.FC<WidgetProps> = ({
     }
 
     setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking on-chain balance...' } } as any));
-
+    
     try {
-      const response = await fetch('/api/nft-hold', {
+      const response = await fetch(getApiUrl('/api/nft-hold'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -987,7 +999,7 @@ const Widget: React.FC<WidgetProps> = ({
     setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking token balance...' } } as any));
 
     try {
-      const response = await fetch('/api/token-hold', {
+      const response = await fetch(getApiUrl('/api/token-hold'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

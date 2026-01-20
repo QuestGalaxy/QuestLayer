@@ -105,6 +105,9 @@
     var runtimeUrl = resolveFromScript("widget-runtime.js") + "?" + cacheBuster;
     var origin = script && script.src ? new URL(script.src).origin : window.location.origin;
 
+    // Inject apiBaseUrl into config so runtime knows where to hit API
+    config.apiBaseUrl = origin;
+
     if (isLikelyViteDev(origin)) {
       ensureViteReactPreamble();
       Promise.resolve()

@@ -11,6 +11,7 @@ export type WidgetConfig = Partial<
   Pick<AppState, 'projectName' | 'accentColor' | 'position' | 'activeTheme' | 'tasks'>
 > & {
   mountId?: string;
+  apiBaseUrl?: string;
 };
 
 declare global {
@@ -223,10 +224,11 @@ const ensurePortalMount = (): HTMLDivElement => {
 import { fetchProjectDetails, supabase } from './lib/supabase.ts';
 import type { Position, ThemeType } from './types.ts';
 
-const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalContainer?: HTMLDivElement | null }> = ({
+const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalContainer?: HTMLDivElement | null; apiBaseUrl?: string }> = ({
   initialState,
   version,
-  portalContainer
+  portalContainer,
+  apiBaseUrl
 }) => {
   const [state, setState] = useState<AppState>(initialState);
   const [isOpen, setIsOpen] = useState(false);
@@ -304,6 +306,7 @@ const RuntimeApp: React.FC<{ initialState: AppState; version: number; portalCont
         isPreview={false}
         isEmbedded={true}
         portalContainer={portalContainer}
+        apiBaseUrl={apiBaseUrl}
       />
     </AppKitProvider>
   );
@@ -319,7 +322,7 @@ export const initQuestLayer = (config?: WidgetConfig) => {
       widgetRoot = createRoot(container);
     }
     renderVersion += 1;
-    widgetRoot.render(<RuntimeApp initialState={state} version={renderVersion} portalContainer={portalContainer} />);
+    widgetRoot.render(<RuntimeApp initialState={state} version={renderVersion} portalContainer={portalContainer} apiBaseUrl={config?.apiBaseUrl} />);
   };
 
   if (document.readyState === 'loading') {
