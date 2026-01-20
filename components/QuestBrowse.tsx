@@ -217,7 +217,7 @@ const BrowseCard: React.FC<{
 
         <div className="absolute top-4 right-4 flex gap-2 items-end">
           {isVerified && (
-            <BadgeWithTooltip tooltipText="This project has successfully connected to QuestLayer.">
+            <BadgeWithTooltip tooltipText="Auto-verified: Embedded & active on the website">
               <div className="px-2 py-1 rounded-lg bg-blue-500/20 backdrop-blur-md border border-blue-500/30 text-[10px] font-black text-blue-300 uppercase shadow-sm flex items-center gap-1.5">
                 <BadgeCheck size={12} className="text-blue-400" />
                 Verified
