@@ -301,7 +301,7 @@ const Widget: React.FC<WidgetProps> = ({
   useEffect(() => {
     if (!effectiveConnected || !address) return;
     const fetchGlobalXP = async () => {
-      const { data: globalXPData } = await supabase.rpc('get_global_xp', { wallet_addr: address.toLowerCase() });
+      const { data: globalXPData } = await supabase.rpc('get_global_xp', { wallet_addr: address });
       if (globalXPData !== null) {
         setGlobalXP(globalXPData);
       }
@@ -370,7 +370,7 @@ const Widget: React.FC<WidgetProps> = ({
           .upsert(
             {
               project_id: projectId,
-              wallet_address: address.toLowerCase()
+              wallet_address: address
             },
             { onConflict: 'project_id,wallet_address' }
           )

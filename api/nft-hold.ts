@@ -180,7 +180,7 @@ export default async function handler(req: any, res: any) {
     .upsert(
       {
         project_id: projectId,
-        wallet_address: addressLower
+        wallet_address: normalizedAddress
       },
       { onConflict: 'project_id,wallet_address' }
     )
