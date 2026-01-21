@@ -26,7 +26,19 @@ export interface Task {
   minTokenAmount?: string;
 }
 
+export interface ThemeColors {
+  primary?: string;
+  border?: string | null;
+  secondary?: string;
+  background?: string;
+  text?: string;
+  success?: string;
+}
+
 export interface ThemeConfig {
+  type: 'light' | 'dark';
+  isTransparent?: boolean;
+  colors?: ThemeColors;
   card: string;
   trigger: string;
   header: string;

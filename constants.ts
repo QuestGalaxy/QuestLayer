@@ -3,6 +3,7 @@ import { ThemeConfig, ThemeType, Task } from './types';
 
 export const THEMES: Record<ThemeType, ThemeConfig> = {
   sleek: {
+    type: 'dark',
     card: 'bg-slate-900/80 backdrop-blur-xl rounded-t-2xl md:rounded-3xl border-2 border-white/10 shadow-2xl',
     trigger: 'rounded-2xl',
     header: 'bg-white/5 border-b border-white/5',
@@ -12,6 +13,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Plus_Jakarta_Sans"]'
   },
   cyber: {
+    type: 'dark',
+    colors: { border: 'accent' },
     card: 'bg-black rounded-none border-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]',
     trigger: 'rounded-none skew-x-[-12deg]',
     header: 'bg-slate-900 border-b-2 border-dashed',
@@ -21,6 +24,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Space_Mono"]'
   },
   minimal: {
+    type: 'light',
+    colors: { border: null, primary: '#000000' },
     card: 'bg-white rounded-none border-2 border-slate-200 shadow-2xl',
     trigger: 'rounded-full text-white bg-black border-black',
     header: 'bg-slate-50 border-b border-slate-200',
@@ -30,6 +35,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   gaming: {
+    type: 'dark',
+    colors: { primary: '#f59e0b', border: '#fbbf24', secondary: '#b45309', text: 'black' },
     card: 'bg-indigo-950 rounded-t-2xl md:rounded-3xl border-2 border-[#fbbf24] shadow-2xl',
     trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic',
     header: 'bg-black/40 border-b-2 border-[#fbbf24]',
@@ -39,6 +46,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Plus_Jakarta_Sans"]'
   },
   brutal: {
+    type: 'light',
+    colors: { primary: '#000000', border: '#000000' },
     card: 'bg-white rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]',
     trigger: 'rounded-none border-4 border-black bg-white text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
     header: 'bg-yellow-400 border-b-4 border-black',
@@ -48,6 +57,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   glass: {
+    type: 'dark',
+    isTransparent: true,
     card: 'bg-slate-950/60 backdrop-blur-3xl rounded-2xl md:rounded-[40px] border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)]',
     trigger: 'rounded-full bg-slate-950/60 backdrop-blur-xl border border-white/30 shadow-xl',
     header: 'bg-white/5 border-b border-white/10 backdrop-blur-md',
@@ -57,6 +68,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Plus_Jakarta_Sans"]'
   },
   terminal: {
+    type: 'dark',
+    colors: { primary: '#86efac', border: '#1f3d2a', text: '#86efac' },
     card: 'bg-[#0b0f0c] rounded-none border border-[#1f3d2a] shadow-[0_0_0_1px_rgba(24,255,131,0.12)]',
     trigger: 'rounded-none border border-[#1f3d2a] bg-[#0b0f0c] text-[#86efac] tracking-[0.2em]',
     header: 'bg-[#0f1612] border-b border-[#1f3d2a]',
@@ -66,6 +79,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Space_Mono"]'
   },
   aura: {
+    type: 'light',
+    colors: { primary: '#f43f5e', border: '#fecdd3' },
     card: 'bg-[#fff7f3] rounded-2xl md:rounded-[36px] border border-rose-200 shadow-[0_20px_50px_rgba(244,63,94,0.18)]',
     trigger: 'rounded-full border border-rose-200 bg-rose-100 text-rose-900',
     header: 'bg-rose-100 border-b border-rose-200',
@@ -75,6 +90,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   avatar: {
+    type: 'dark',
+    colors: { border: '#67e8f9' },
     card: 'bg-[#061b2d] rounded-2xl md:rounded-[34px] border border-cyan-200/30 shadow-[0_0_45px_rgba(34,211,238,0.18)]',
     trigger: 'rounded-full border border-cyan-200/60 bg-[#0a2a43] text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.45)]',
     header: 'bg-[#0f2f4d] border-b border-cyan-200/20',
@@ -84,6 +101,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Plus_Jakarta_Sans"]'
   },
   ironman: {
+    type: 'dark',
+    colors: { border: '#f59e0b' },
     card: 'bg-[#200709] rounded-2xl md:rounded-[32px] border-2 border-amber-400/60 shadow-[0_0_28px_rgba(251,191,36,0.35)]',
     trigger: 'rounded-xl border-2 border-amber-400 bg-[#7f0d12] text-amber-100 shadow-[0_0_20px_rgba(248,113,113,0.4)]',
     header: 'bg-[#3a0b0f] border-b border-amber-400/40',
@@ -93,6 +112,8 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Plus_Jakarta_Sans"]'
   },
   quest: {
+    type: 'light',
+    colors: { border: null, primary: '#000000' },
     card: 'bg-white rounded-3xl border border-slate-100 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)]',
     trigger: 'rounded-2xl bg-[#a78bfa] hover:bg-[#9061f9] text-white shadow-lg shadow-indigo-500/20 transition-all duration-300',
     header: 'bg-white/80 backdrop-blur-md border-b border-slate-100 rounded-t-3xl',
