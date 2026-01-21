@@ -201,9 +201,9 @@ const App: React.FC = () => {
 
   const [state, setState] = useState<AppState>({
     projectName: 'Vortex Protocol',
-    accentColor: '#6366f1',
+    accentColor: '#a78bfa',
     position: 'free-form',
-    activeTheme: 'sleek',
+    activeTheme: 'quest',
     tasks: INITIAL_TASKS,
     userXP: 0,
     currentStreak: 1,

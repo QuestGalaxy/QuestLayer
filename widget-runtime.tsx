@@ -24,9 +24,9 @@ declare global {
 
 const DEFAULT_STATE: AppState = {
   projectName: 'QuestLayer',
-  accentColor: '#6366f1',
+  accentColor: '#a78bfa',
   position: 'free-form',
-  activeTheme: 'sleek',
+  activeTheme: 'quest',
   tasks: INITIAL_TASKS,
   userXP: 0,
   currentStreak: 1,

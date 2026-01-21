@@ -151,7 +151,7 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const activeTheme = THEMES[state.activeTheme];
-  const isLightTheme = ['minimal', 'brutal', 'aura'].includes(state.activeTheme);
+  const isLightTheme = ['minimal', 'brutal', 'aura', 'quest'].includes(state.activeTheme);
   const isTransparentTheme = state.activeTheme === 'glass';
 
   const isFreeForm = state.position === 'free-form';
@@ -1995,7 +1995,7 @@ const Widget: React.FC<WidgetProps> = ({
 
   const popupContent = (
     <div
-      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col shadow-2xl overflow-hidden border-2 theme-transition ${isFreeForm ? `${isPreview ? 'relative' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`} z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
+      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col overflow-hidden theme-transition ${isFreeForm ? `${isPreview ? 'relative' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`} z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
       style={{
         maxHeight: (isOpen && maxPanelHeight)
           ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
@@ -2008,7 +2008,7 @@ const Widget: React.FC<WidgetProps> = ({
               ? '#67e8f9'
               : (state.activeTheme === 'ironman'
                 ? '#f59e0b'
-                : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)')))))
+                : ((state.activeTheme === 'quest' || state.activeTheme === 'minimal') ? undefined : (isLightTheme ? '#000' : (isTransparentTheme ? `${state.accentColor}60` : 'rgba(255,255,255,0.08)'))))))
       }}
     >
       {/* Header */}
@@ -2441,7 +2441,7 @@ const Widget: React.FC<WidgetProps> = ({
 
       {/* Footer */}
       <div
-        className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.header}`}
+        className={`p-2 md:p-3 border-t shrink-0 flex items-center justify-center gap-1.5 ${activeTheme.footer ?? activeTheme.header}`}
         style={{ borderColor: state.activeTheme === 'gaming' ? state.accentColor : undefined }}
       >
         <Zap className={`${isLightTheme ? 'text-black' : 'text-indigo-500'} fill-current w-[8px] h-[8px] md:w-[10px] md:h-[10px]`} style={!isLightTheme ? { color: state.accentColor } : {}} />

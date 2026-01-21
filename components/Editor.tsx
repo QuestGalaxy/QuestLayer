@@ -487,6 +487,11 @@ const Editor: React.FC<EditorProps> = ({
       base: 'border',
       active: 'border-amber-300 bg-amber-400/20 text-amber-100 shadow-[0_0_22px_rgba(251,191,36,0.4)]',
       inactive: 'border-amber-500/30 bg-amber-500/5 text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-100'
+    },
+    quest: {
+      base: 'border',
+      active: 'border-indigo-300 bg-indigo-500/20 text-indigo-100 shadow-[0_0_22px_rgba(167,139,250,0.4)]',
+      inactive: 'border-indigo-500/30 bg-indigo-500/5 text-indigo-200/70 hover:bg-indigo-400/10 hover:text-indigo-100'
     }
   };
 
@@ -619,7 +624,7 @@ const Editor: React.FC<EditorProps> = ({
               </div>
               <div className="relative">
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-                  {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura', 'avatar', 'ironman'] as ThemeType[])
+                  {(['sleek', 'cyber', 'minimal', 'gaming', 'brutal', 'glass', 'terminal', 'aura', 'avatar', 'ironman', 'quest'] as ThemeType[])
                     .map((t) => (
                       <button
                         key={t}

@@ -3,7 +3,7 @@ import { ThemeConfig, ThemeType, Task } from './types';
 
 export const THEMES: Record<ThemeType, ThemeConfig> = {
   sleek: {
-    card: 'bg-slate-900/80 backdrop-blur-xl rounded-t-2xl md:rounded-3xl border-white/10',
+    card: 'bg-slate-900/80 backdrop-blur-xl rounded-t-2xl md:rounded-3xl border-2 border-white/10 shadow-2xl',
     trigger: 'rounded-2xl',
     header: 'bg-white/5 border-b border-white/5',
     button: 'rounded-2xl',
@@ -21,7 +21,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Space_Mono"]'
   },
   minimal: {
-    card: 'bg-white rounded-none border-slate-200',
+    card: 'bg-white rounded-none border-2 border-slate-200 shadow-2xl',
     trigger: 'rounded-full text-white bg-black border-black',
     header: 'bg-slate-50 border-b border-slate-200',
     button: 'rounded-none border-2 border-black bg-black text-white hover:bg-white hover:text-black transition-colors',
@@ -30,7 +30,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     font: 'font-["Inter"]'
   },
   gaming: {
-    card: 'bg-indigo-950 rounded-t-2xl md:rounded-3xl border-2 border-[#fbbf24]',
+    card: 'bg-indigo-950 rounded-t-2xl md:rounded-3xl border-2 border-[#fbbf24] shadow-2xl',
     trigger: 'rounded-lg border-2 border-[#fbbf24] bg-indigo-900 italic',
     header: 'bg-black/40 border-b-2 border-[#fbbf24]',
     button: 'rounded-lg border-b-4 border-amber-800 bg-amber-500 text-black active:border-b-0 active:translate-y-1',
@@ -90,6 +90,16 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     button: 'rounded-xl bg-amber-400 text-[#26070a] border border-amber-300 hover:bg-amber-300 shadow-[0_10px_20px_rgba(251,191,36,0.25)]',
     itemCard: 'bg-[#2a0b0f] border border-amber-400/30 rounded-xl md:rounded-2xl',
     iconBox: 'rounded-xl bg-[#7f0d12] border border-amber-400/40',
+    font: 'font-["Plus_Jakarta_Sans"]'
+  },
+  quest: {
+    card: 'bg-white rounded-3xl border border-slate-100 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)]',
+    trigger: 'rounded-2xl bg-[#a78bfa] hover:bg-[#9061f9] text-white shadow-lg shadow-indigo-500/20 transition-all duration-300',
+    header: 'bg-white/80 backdrop-blur-md border-b border-slate-100 rounded-t-3xl',
+    footer: 'bg-white/80 backdrop-blur-md rounded-b-3xl border-slate-100',
+    button: 'rounded-xl bg-[#a78bfa] hover:bg-[#9061f9] text-white font-medium shadow-md shadow-indigo-500/10 transition-all active:scale-95',
+    itemCard: 'bg-slate-50/50 border border-slate-200/60 rounded-2xl hover:bg-white hover:border-[#a78bfa]/30 transition-all duration-300',
+    iconBox: 'rounded-xl bg-white border border-slate-100 shadow-sm text-[#a78bfa]',
     font: 'font-["Plus_Jakarta_Sans"]'
   }
 };

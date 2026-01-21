@@ -1,7 +1,7 @@
 
 export type Position = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'free-form';
 
-export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'glass' | 'terminal' | 'aura' | 'avatar' | 'ironman';
+export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'glass' | 'terminal' | 'aura' | 'avatar' | 'ironman' | 'quest';
 
 export type TaskSection = 'missions' | 'onboarding';
 export type TaskKind = 'link' | 'quiz' | 'nft_hold' | 'token_hold';
@@ -30,6 +30,7 @@ export interface ThemeConfig {
   card: string;
   trigger: string;
   header: string;
+  footer?: string;
   button: string;
   itemCard: string;
   iconBox: string;
