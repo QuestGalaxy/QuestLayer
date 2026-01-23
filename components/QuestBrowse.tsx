@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
 import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles, BadgeCheck } from 'lucide-react';
 import Widget from './Widget';
@@ -140,6 +140,8 @@ const BrowseCard: React.FC<{
   onImageLoad: (id: string, url: string) => void;
 }> = ({ project, stats, isOnline, onClick, onImageError, cachedImage, onImageLoad }) => {
   const [ogImage, setOgImage] = useState<string | null>(cachedImage || null);
+  const [isClicking, setIsClicking] = useState(false);
+  const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     if (cachedImage) {
@@ -178,14 +180,43 @@ const BrowseCard: React.FC<{
     return () => { isMounted = false; };
   }, [project.domain, project.id, onImageError, cachedImage, onImageLoad]);
 
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const fallbackAccent = project.accent_color || '#6366f1';
   const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();
   const isVerified = !!project.last_ping_at;
+  const handleClick = () => {
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+    setIsClicking(true);
+    onClick();
+    clickTimeoutRef.current = setTimeout(() => {
+      setIsClicking(false);
+      clickTimeoutRef.current = null;
+    }, 550);
+  };
 
   return (
     <div 
-      onClick={onClick}
-      className="group relative rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all duration-500 hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)] flex flex-col h-full hover:-translate-y-1 cursor-pointer"
+      onClick={handleClick}
+      onPointerDown={() => {
+        if (clickTimeoutRef.current) {
+          clearTimeout(clickTimeoutRef.current);
+          clickTimeoutRef.current = null;
+        }
+        setIsClicking(true);
+      }}
+      onPointerLeave={() => setIsClicking(false)}
+      className={`group relative rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all duration-500 hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)] flex flex-col h-full hover:-translate-y-1 cursor-pointer ${
+        isClicking ? 'scale-[0.99] ring-2 ring-indigo-400/40 shadow-[0_0_30px_rgba(99,102,241,0.25)]' : ''
+      }`}
     >
       <div className="relative h-48 w-full bg-slate-950/50 border-b border-white/5">
         <div className="absolute inset-0 overflow-hidden">
