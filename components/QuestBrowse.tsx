@@ -404,29 +404,47 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             return createdB - createdA;
           });
 
-          // Deduplicate: Allow same domain from DIFFERENT users, but unique per user.
-          // Key = domain + owner_wallet
           const normalize = (d: string) => {
             try {
               const url = d.trim().startsWith('http') ? d.trim() : `https://${d.trim()}`;
               return new URL(url).hostname.replace(/^www\./, '').toLowerCase();
-            } catch { return d.toLowerCase(); }
+            } catch {
+              return d.toLowerCase();
+            }
           };
 
-          const seenKeys = new Set();
-          const uniqueProjects = sortedProjects.filter(project => {
-            if (!project.domain) return false;
-            
+          const byDomain = new Map<string, any>();
+          sortedProjects.forEach(project => {
+            if (!project.domain) return;
             const domain = normalize(project.domain);
-            const owner = project.owner_wallet || 'anon'; // Handle cases with missing owner if any
-            const key = `${domain}|${owner}`;
+            const existing = byDomain.get(domain);
+            if (!existing) {
+              byDomain.set(domain, project);
+              return;
+            }
 
-            if (seenKeys.has(key)) return false;
-            seenKeys.add(key);
-            return true;
+            const existingOnline = existing.last_ping_at
+              ? new Date(existing.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
+              : false;
+            const candidateOnline = project.last_ping_at
+              ? new Date(project.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
+              : false;
+
+            if (candidateOnline && !existingOnline) {
+              byDomain.set(domain, project);
+              return;
+            }
+
+            if (candidateOnline === existingOnline) {
+              const existingVisits = existing.stats?.total_visits || 0;
+              const candidateVisits = project.stats?.total_visits || 0;
+              if (candidateVisits > existingVisits) {
+                byDomain.set(domain, project);
+              }
+            }
           });
 
-          setProjects(uniqueProjects);
+          setProjects(Array.from(byDomain.values()));
         }
       } catch (err) {
         console.error(err);
