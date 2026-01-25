@@ -29,26 +29,27 @@ const DEFAULT_WIDGET_STATE: AppState = {
 };
 
 const SLIDING_LINKS = [
+  { name: 'Galxe', domain: 'galxe.com' },
+  { name: 'Phantom', domain: 'phantom.app' },
+  { name: 'Daylight', domain: 'daylight.xyz' },
+  { name: 'Magic Eden', domain: 'magiceden.io' },
   { name: 'Uniswap', domain: 'uniswap.org' },
-  { name: 'PancakeSwap', domain: 'pancakeswap.finance' },
-  { name: 'Trader Joe', domain: 'traderjoexyz.com' },
-  { name: 'Raydium', domain: 'raydium.io' },
-  { name: 'CoinGecko', domain: 'coingecko.com' },
-  { name: 'CoinMarketCap', domain: 'coinmarketcap.com' },
-  { name: 'DeFiLlama', domain: 'defillama.com' },
-  { name: 'Dune', domain: 'dune.com' },
-  { name: 'Token Terminal', domain: 'tokenterminal.com' },
-  { name: 'MetaMask', domain: 'metamask.io' },
-  { name: 'CoinCollect', domain: 'coincollect.app' },
-  { name: 'Ethereum', domain: 'ethereum.org' },
-  { name: 'Solana', domain: 'solana.com' },
-  { name: 'BNB Chain', domain: 'bnbchain.org' },
-  { name: 'Avalanche', domain: 'avax.network' },
-  { name: 'Polygon', domain: 'polygon.technology' },
-  { name: 'Arbitrum', domain: 'arbitrum.io' },
+   { name: 'PancakeSwap', domain: 'pancakeswap.finance' },
+   { name: 'DeFiLlama', domain: 'defillama.com' },
+   { name: 'Raydium', domain: 'raydium.io' },
+   { name: 'CoinCollect', domain: 'coincollect.app' },
+   { name: 'Aave', domain: 'aave.com' },
+  { name: 'Curve', domain: 'curve.fi' },
+  { name: 'Balancer', domain: 'balancer.fi' },
+  { name: 'Compound', domain: 'compound.finance' },
+  { name: 'Sushi', domain: 'sushi.com' },
+  { name: 'Audius', domain: 'audius.co' },
+  { name: 'WalletConnect', domain: 'walletconnect.com' },
+  { name: 'QuickNode', domain: 'quicknode.com' },
   { name: 'Optimism', domain: 'optimism.io' },
-  { name: 'Polkadot', domain: 'polkadot.network' },
-  { name: 'Cosmos', domain: 'cosmos.network' }
+  { name: 'zkSync', domain: 'zksync.io' },
+  { name: 'Superfluid', domain: 'superfluid.finance' },
+  { name: 'Snapshot', domain: 'snapshot.org' }
 ];
 
 const THEME_KEYS = Object.keys(THEMES) as ThemeType[];
@@ -360,7 +361,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
   const [ogImageCache, setOgImageCache] = useState<Record<string, string>>({});
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
-  const isDev = import.meta.env.DEV;
+  const isDev = (import.meta as any).env?.DEV ?? false;
   const NEW_WIDGET_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
   
   const handleNextProject = () => {
