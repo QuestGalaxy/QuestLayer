@@ -5,7 +5,7 @@ import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
-import { INITIAL_TASKS, SPONSORED_TASKS, THEMES } from '../constants';
+import { INITIAL_TASKS, SPONSORED_TASKS, THEMES, STORE_SLIDING_LINKS } from '../constants';
 import { AppState, Position, ThemeType, Task } from '../types';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 
@@ -28,30 +28,6 @@ const DEFAULT_WIDGET_STATE: AppState = {
   currentStreak: 1,
   dailyClaimed: false
 };
-
-const SLIDING_LINKS = [
-  { name: 'Galxe', domain: 'galxe.com' },
-  { name: 'Phantom', domain: 'phantom.app' },
-  { name: 'Daylight', domain: 'daylight.xyz' },
-  { name: 'Magic Eden', domain: 'magiceden.io' },
-  { name: 'Uniswap', domain: 'uniswap.org' },
-   { name: 'PancakeSwap', domain: 'pancakeswap.finance' },
-   { name: 'DeFiLlama', domain: 'defillama.com' },
-   { name: 'Raydium', domain: 'raydium.io' },
-   { name: 'CoinCollect', domain: 'coincollect.app' },
-   { name: 'Aave', domain: 'aave.com' },
-  { name: 'Curve', domain: 'curve.fi' },
-  { name: 'Balancer', domain: 'balancer.fi' },
-  { name: 'Compound', domain: 'compound.finance' },
-  { name: 'Sushi', domain: 'sushi.com' },
-  { name: 'Audius', domain: 'audius.co' },
-  { name: 'WalletConnect', domain: 'walletconnect.com' },
-  { name: 'QuickNode', domain: 'quicknode.com' },
-  { name: 'Optimism', domain: 'optimism.io' },
-  { name: 'zkSync', domain: 'zksync.io' },
-  { name: 'Superfluid', domain: 'superfluid.finance' },
-  { name: 'Snapshot', domain: 'snapshot.org' }
-];
 
 const THEME_KEYS = Object.keys(THEMES) as ThemeType[];
 const FALLBACK_ACCENTS = [
@@ -501,7 +477,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   useEffect(() => {
     let isMounted = true;
     const fetchFeaturedImages = async () => {
-      const candidates = SLIDING_LINKS
+      const candidates = STORE_SLIDING_LINKS
         .filter((link) => link.domain && !featuredImages[link.domain]);
       if (candidates.length === 0) return;
 
@@ -539,7 +515,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       }
     };
 
-    if (SLIDING_LINKS.length > 0) {
+    if (STORE_SLIDING_LINKS.length > 0) {
       void fetchFeaturedImages();
     }
 
@@ -1268,7 +1244,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         onMouseUp={handleMouseUp}
                         onMouseMove={handleMouseMove}
                     >
-                        {SLIDING_LINKS.concat(SLIDING_LINKS).map((badge, i) => (
+                        {STORE_SLIDING_LINKS.concat(STORE_SLIDING_LINKS).map((badge, i) => (
                             <div 
                                 key={i} 
                                 onClick={() => handleBadgeClick(badge)}
@@ -1386,7 +1362,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
               )}
 
               {/* Sliding Featured Cards */}
-              {SLIDING_LINKS.some((link) => featuredImages[link.domain]) && (
+              {STORE_SLIDING_LINKS.some((link) => featuredImages[link.domain]) && (
                 <div className="mt-12">
                   <div className="mb-4 text-center text-sm font-black uppercase tracking-[0.4em] text-slate-400">
                     Earn With Web3 Quests
@@ -1396,11 +1372,11 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                   </div>
                   <div className="relative overflow-hidden">
                     <div className="flex gap-4 w-max animate-[ql-marquee_40s_linear_infinite]">
-                      {SLIDING_LINKS
+                      {STORE_SLIDING_LINKS
                         .filter((link) => featuredImages[link.domain])
                         .slice(0, 12)
                         .concat(
-                          SLIDING_LINKS
+                          STORE_SLIDING_LINKS
                             .filter((link) => featuredImages[link.domain])
                             .slice(0, 12)
                         )

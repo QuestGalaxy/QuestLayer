@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, ChevronRight, Gem, Lock, LogIn, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
+import { STORE_SLIDING_LINKS } from '../constants';
 
 interface LandingPageProps {
   onLaunch: () => void;
@@ -16,10 +17,30 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [bgVideoLoaded, setBgVideoLoaded] = useState(false);
+  const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
+  const isDev = (import.meta as any).env?.DEV ?? false;
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const featuredStoreItems = useMemo(() => {
+    const tags = ['XP Quests', 'Liquidity', 'Collectibles', 'DeFi', 'Wallet', 'Discover', 'Swap', 'NFTs'];
+    const accents = [
+      'from-indigo-500/40 via-indigo-500/10 to-transparent',
+      'from-orange-500/40 via-orange-500/10 to-transparent',
+      'from-emerald-500/40 via-emerald-500/10 to-transparent',
+      'from-sky-500/40 via-sky-500/10 to-transparent',
+      'from-purple-500/40 via-purple-500/10 to-transparent',
+      'from-blue-500/40 via-blue-500/10 to-transparent',
+      'from-rose-500/40 via-rose-500/10 to-transparent',
+      'from-teal-500/40 via-teal-500/10 to-transparent'
+    ];
+    return STORE_SLIDING_LINKS.slice(0, 8).map((item, index) => ({
+      ...item,
+      tag: tags[index % tags.length],
+      accent: accents[index % accents.length]
+    }));
+  }, []);
 
   React.useEffect(() => {
     // Lazy load video after mount to prioritize LCP
@@ -32,6 +53,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
     }, 1000); // 1 second delay to ensure initial paint is done
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFeaturedImages = async () => {
+      const entries = await Promise.all(
+        featuredStoreItems.map(async (item) => {
+          try {
+            const target = item.domain.startsWith('http') ? item.domain : `https://${item.domain}`;
+            const res = await fetch(`/api/og?url=${encodeURIComponent(target)}`);
+            const data = await res.json();
+            if (data?.image) return [item.domain, data.image] as const;
+            if (isDev) {
+              return [item.domain, `https://www.google.com/s2/favicons?domain=${item.domain}&sz=256`] as const;
+            }
+            return [item.domain, ''] as const;
+          } catch {
+            if (isDev) {
+              return [item.domain, `https://www.google.com/s2/favicons?domain=${item.domain}&sz=256`] as const;
+            }
+            return [item.domain, ''] as const;
+          }
+        })
+      );
+      if (!isMounted) return;
+      const nextImages: Record<string, string> = {};
+      entries.forEach(([domain, image]) => {
+        if (image) nextImages[domain] = image;
+      });
+      setFeaturedImages(nextImages);
+    };
+    fetchFeaturedImages();
+    return () => {
+      isMounted = false;
+    };
+  }, [featuredStoreItems, isDev]);
 
   React.useEffect(() => {
     if (isConnected && allowAutoLaunch) {
@@ -219,39 +275,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { name: 'Galxe', tag: 'XP Quests', accent: 'from-indigo-500/40 via-indigo-500/10 to-transparent' },
-              { name: 'Uniswap', tag: 'Liquidity', accent: 'from-orange-500/40 via-orange-500/10 to-transparent' },
-              { name: 'Magic Eden', tag: 'Collectibles', accent: 'from-emerald-500/40 via-emerald-500/10 to-transparent' },
-              { name: 'Aave', tag: 'DeFi', accent: 'from-sky-500/40 via-sky-500/10 to-transparent' }
-            ].map((item) => (
-              <button
-                key={item.name}
-                onClick={onBrowse}
-                className="group text-left rounded-3xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/70 transition-all overflow-hidden"
-              >
-                <div className="relative h-24 sm:h-28 w-full bg-slate-950/60 border-b border-white/5">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.accent}`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-                  <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-[0.25em] text-white/80">
-                    Live
-                  </div>
-                </div>
-                <div className="p-3 sm:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl border border-white/10 bg-slate-950/60 flex items-center justify-center text-white font-black text-xs">
-                      {item.name.slice(0, 2).toUpperCase()}
+          <style>
+            {`
+              @keyframes landing-marquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+            `}
+          </style>
+          <div className="mt-6 relative overflow-hidden">
+            <div className="flex gap-3 sm:gap-4 w-max animate-[landing-marquee_35s_linear_infinite]">
+              {featuredStoreItems.concat(featuredStoreItems).map((item, idx) => (
+                <button
+                  key={`${item.name}-${idx}`}
+                  onClick={onBrowse}
+                  className="group text-left rounded-3xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/70 transition-all overflow-hidden min-w-[220px] sm:min-w-[240px]"
+                >
+                  <div className="relative h-24 sm:h-28 w-full bg-slate-950/60 border-b border-white/5 overflow-hidden">
+                    {featuredImages[item.domain] ? (
+                      <img
+                        src={featuredImages[item.domain]}
+                        alt={item.name}
+                        className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
+                      />
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-br ${item.accent}`} />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-[0.25em] text-white/80">
+                      Live
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-black uppercase text-[11px] sm:text-xs tracking-widest truncate">{item.name}</div>
-                      <div className="text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-[0.3em] mt-1 truncate">{item.tag}</div>
-                    </div>
-                    <ChevronRight size={14} className="text-white/30 group-hover:text-white/70 transition-colors shrink-0" />
                   </div>
-                </div>
-              </button>
-            ))}
+                  <div className="p-3 sm:p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl border border-white/10 bg-slate-950/60 flex items-center justify-center text-white font-black text-xs">
+                        {item.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-black uppercase text-[11px] sm:text-xs tracking-widest truncate">{item.name}</div>
+                        <div className="text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-[0.3em] mt-1 truncate">{item.tag}</div>
+                      </div>
+                      <ChevronRight size={14} className="text-white/30 group-hover:text-white/70 transition-colors shrink-0" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

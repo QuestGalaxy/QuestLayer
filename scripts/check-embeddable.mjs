@@ -29,11 +29,11 @@ const normalizeOrigin = (value) => {
 const normalizedOrigin = normalizeOrigin(origin);
 
 const parseSlidingLinks = () => {
-  const filePath = path.resolve(process.cwd(), 'components/QuestBrowse.tsx');
+  const filePath = path.resolve(process.cwd(), 'constants.ts');
   const content = fs.readFileSync(filePath, 'utf8');
-  const match = content.match(/const SLIDING_LINKS = \[([\s\S]*?)\];/);
+  const match = content.match(/export const STORE_SLIDING_LINKS = \[([\s\S]*?)\];/);
   if (!match) {
-    throw new Error('SLIDING_LINKS not found in components/QuestBrowse.tsx');
+    throw new Error('STORE_SLIDING_LINKS not found in constants.ts');
   }
   const block = match[1];
   const domains = [];

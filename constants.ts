@@ -125,6 +125,30 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
   }
 };
 
+export const STORE_SLIDING_LINKS = [
+  { name: 'Galxe', domain: 'galxe.com' },
+  { name: 'Phantom', domain: 'phantom.app' },
+  { name: 'Daylight', domain: 'daylight.xyz' },
+  { name: 'Magic Eden', domain: 'magiceden.io' },
+  { name: 'Uniswap', domain: 'uniswap.org' },
+  { name: 'PancakeSwap', domain: 'pancakeswap.finance' },
+  { name: 'DeFiLlama', domain: 'defillama.com' },
+  { name: 'Raydium', domain: 'raydium.io' },
+  { name: 'CoinCollect', domain: 'coincollect.app' },
+  { name: 'Aave', domain: 'aave.com' },
+  { name: 'Curve', domain: 'curve.fi' },
+  { name: 'Balancer', domain: 'balancer.fi' },
+  { name: 'Compound', domain: 'compound.finance' },
+  { name: 'Sushi', domain: 'sushi.com' },
+  { name: 'Audius', domain: 'audius.co' },
+  { name: 'WalletConnect', domain: 'walletconnect.com' },
+  { name: 'QuickNode', domain: 'quicknode.com' },
+  { name: 'Optimism', domain: 'optimism.io' },
+  { name: 'zkSync', domain: 'zksync.io' },
+  { name: 'Superfluid', domain: 'superfluid.finance' },
+  { name: 'Snapshot', domain: 'snapshot.org' }
+];
+
 
 
 export const SPONSORED_TASKS: Task[] = [
