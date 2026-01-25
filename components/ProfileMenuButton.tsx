@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ExternalLink, Home, Layout, LogOut, ShoppingBag, Star, Trophy, User } from 'lucide-react';
+import { ChevronDown, ExternalLink, Home, Layout, LogOut, ShoppingBag, Star, Trophy, Upload, User } from 'lucide-react';
 import ConnectCta from './ConnectCta';
 
 interface ProfileMenuButtonProps {
@@ -13,6 +13,7 @@ interface ProfileMenuButtonProps {
   onHome?: () => void;
   onLeaderboard?: () => void;
   onWidgetBuilder?: () => void;
+  onSubmitProject?: () => void;
 }
 
 const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
@@ -25,7 +26,8 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
   onDisconnect,
   onHome,
   onLeaderboard,
-  onWidgetBuilder
+  onWidgetBuilder,
+  onSubmitProject
 }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -155,6 +157,20 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
                   <Layout size={18} />
                 </div>
                 <span className="font-bold text-sm">Widget Builder</span>
+              </button>
+            )}
+            {onSubmitProject && (
+              <button
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  onSubmitProject();
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
+              >
+                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-300 group-hover:bg-indigo-500/20 transition-colors">
+                  <Upload size={18} />
+                </div>
+                <span className="font-bold text-sm">Submit Project</span>
               </button>
             )}
             <div className="relative group">

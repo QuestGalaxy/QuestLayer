@@ -275,7 +275,7 @@ const renderCorePage = (page) => {
         title: page.keyword,
         description: page.definition,
         secondaryHref: '/templates',
-        secondaryCta: 'Browse templates'
+        secondaryCta: 'Store templates'
       })}
       ${renderSection(
         `How our ${page.keyword} works`,
@@ -719,7 +719,7 @@ const renderIndexPage = ({
         description,
         secondaryHref: '/quest-widget',
         secondaryCta: 'See core widgets'
-      })}\n      ${renderSection('Browse', renderCardGrid(cards))}\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
+      })}\n      ${renderSection('Store', renderCardGrid(cards))}\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
 };
 
 const writePage = async (filePath, content) => {

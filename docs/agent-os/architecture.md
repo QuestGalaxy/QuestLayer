@@ -19,7 +19,7 @@ Routing is manual and tied to `window.location.pathname`.
 window.location.pathname
   -> App.tsx currentPage state
   -> window.history.pushState + SEO meta tags
-  -> page component (Landing/Dashboard/Explore/Browse/Leaderboard)
+  -> page component (Landing/Dashboard/Explore/Store/Leaderboard)
 ```
 
 Primary switch is in `App.tsx` with page components in `components/`.

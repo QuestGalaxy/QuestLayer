@@ -10,6 +10,7 @@ interface LeaderboardPageProps {
   onBack: () => void;
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
   onWidgetBuilder?: () => void;
+  onSubmitProject?: () => void;
 }
 
 type LeaderboardEntry = {
@@ -188,7 +189,7 @@ const ProjectCard: React.FC<{
   );
 };
 
-const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, onWidgetBuilder }) => {
+const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, onWidgetBuilder, onSubmitProject }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -381,6 +382,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
           onDisconnect={() => disconnect()}
           onLeaderboard={() => {}}
           onWidgetBuilder={onWidgetBuilder}
+          onSubmitProject={onSubmitProject}
       />
 
       <div className="relative overflow-hidden pt-28 md:pt-36">

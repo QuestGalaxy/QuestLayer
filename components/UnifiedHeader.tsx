@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { X, Gift, Wallet, AlertCircle } from 'lucide-react';
+import { X, Gift, Wallet, AlertCircle, Upload } from 'lucide-react';
 import ProfileMenuButton from './ProfileMenuButton';
 import { supabase } from '../lib/supabase';
 
@@ -15,6 +15,7 @@ interface UnifiedHeaderProps {
   onDisconnect: () => void;
   onLeaderboard: () => void;
   onWidgetBuilder?: () => void;
+  onSubmitProject?: () => void;
 }
 
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
@@ -27,7 +28,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   onConnect,
   onDisconnect,
   onLeaderboard,
-  onWidgetBuilder
+  onWidgetBuilder,
+  onSubmitProject
 }) => {
   const [showBetaTooltip, setShowBetaTooltip] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
@@ -428,8 +430,17 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
 
-          {/* Profile Menu */}
-          <div className="relative shrink-0 z-10">
+          <div className="relative flex items-center gap-2 md:gap-3 shrink-0 z-10">
+            {onSubmitProject && (
+              <button
+                onClick={onSubmitProject}
+                className="hidden md:inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-100 text-[9px] md:text-[11px] font-black uppercase tracking-[0.25em] hover:bg-indigo-500/25 hover:text-white transition-all"
+              >
+                <Upload size={12} className="text-indigo-300" />
+                <span className="hidden md:inline">Submit Project</span>
+                <span className="md:hidden">Submit</span>
+              </button>
+            )}
             <ProfileMenuButton
               isConnected={isConnected}
               address={address}
@@ -441,6 +452,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               onHome={onHome || onBack}
               onLeaderboard={onLeaderboard}
               onWidgetBuilder={onWidgetBuilder}
+              onSubmitProject={onSubmitProject}
             />
           </div>
         </div>

@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
             leaderboard: path.resolve(__dirname, 'leaderboard.html'),
             builder: path.resolve(__dirname, 'builder.html'),
             dashboard: path.resolve(__dirname, 'dashboard.html'),
+            submit: path.resolve(__dirname, 'submit.html'),
             widget: path.resolve(__dirname, 'widget-runtime.js')
           },
           output: {

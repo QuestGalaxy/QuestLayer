@@ -419,7 +419,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
               onClick={onBrowse}
               className="flex items-center gap-2 bg-slate-900 border border-white/10 hover:bg-slate-800 text-slate-400 hover:text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all group"
             >
-              <Globe size={14} className="group-hover:text-indigo-400 transition-colors" /> <span>Browse</span>
+              <Globe size={14} className="group-hover:text-indigo-400 transition-colors" /> <span>Store</span>
             </button>
             <button
               onClick={handleDisconnect}

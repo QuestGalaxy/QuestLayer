@@ -13,13 +13,17 @@ import Dashboard from './components/Dashboard.tsx';
 import ExplorePage from './components/ExplorePage.tsx';
 import QuestBrowse from './components/QuestBrowse.tsx';
 import LeaderboardPage from './components/LeaderboardPage.tsx';
+import SubmitProject from './components/SubmitProject.tsx';
 import { fetchProjectDetails, deleteProject } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard'>(() => {
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard' | 'submit'>(() => {
     // Check URL path on initial load
     if (window.location.pathname === '/browse') {
       return 'questbrowse';
+    }
+    if (window.location.pathname === '/submit' || window.location.pathname === '/store/submit') {
+      return 'submit';
     }
     if (window.location.pathname === '/explore') {
       return 'explore';
@@ -36,20 +40,46 @@ const App: React.FC = () => {
     return 'landing';
   });
 
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const submitModalReturnPathRef = useRef<string>('/');
+
+  const getSubmitPath = () => (currentPage === 'questbrowse' ? '/store/submit' : '/submit');
+
+  const openSubmitModal = () => {
+    submitModalReturnPathRef.current = window.location.pathname + window.location.search;
+    setIsSubmitModalOpen(true);
+    window.history.pushState({ modal: 'submit' }, '', getSubmitPath());
+  };
+
+  const closeSubmitModal = () => {
+    setIsSubmitModalOpen(false);
+    const returnPath = submitModalReturnPathRef.current || '/';
+    window.history.pushState(null, '', returnPath);
+  };
+
   // Handle URL updates and back button
   useEffect(() => {
     const handlePopState = () => {
-      if (window.location.pathname === '/browse') {
+      if (window.location.pathname === '/submit' || window.location.pathname === '/store/submit') {
+        setIsSubmitModalOpen(false);
+        setCurrentPage('submit');
+      } else if (window.location.pathname === '/browse') {
+        setIsSubmitModalOpen(false);
         setCurrentPage('questbrowse');
       } else if (window.location.pathname === '/leaderboard') {
+        setIsSubmitModalOpen(false);
         setCurrentPage('leaderboard');
       } else if (window.location.pathname === '/explore') {
+        setIsSubmitModalOpen(false);
         setCurrentPage('explore');
       } else if (window.location.pathname === '/builder') {
+        setIsSubmitModalOpen(false);
         setCurrentPage('builder');
       } else if (window.location.pathname === '/dashboard') {
+        setIsSubmitModalOpen(false);
         setCurrentPage('dashboard');
       } else if (window.location.pathname === '/') {
+        setIsSubmitModalOpen(false);
         setCurrentPage('landing');
       }
     };
@@ -60,6 +90,7 @@ const App: React.FC = () => {
 
   // Update URL when page changes
   useEffect(() => {
+    if (isSubmitModalOpen && currentPage !== 'submit') return;
     const setMetaTag = (selector: string, attributes: Record<string, string>) => {
       let tag = document.querySelector<HTMLMetaElement>(selector);
       if (!tag) {
@@ -108,16 +139,16 @@ const App: React.FC = () => {
     if (currentPage === 'questbrowse') {
       window.history.pushState(null, '', '/browse');
       applySeo({
-        title: 'QuestBrowse - Browse Web3 & Earn XP',
-        description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.',
+        title: 'Quest Store - Explore Web3 & Earn XP',
+        description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by exploring your favorite protocols.',
         path: '/browse',
         image: '/questbrowse.jpeg'
       });
       applyJsonLd({
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
-        name: 'QuestBrowse - Browse Web3 & Earn XP',
-        description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.',
+        name: 'Quest Store - Explore Web3 & Earn XP',
+        description: 'Discover decentralized ecosystems, earn XP, and unlock rewards simply by exploring your favorite protocols.',
         url: 'https://questlayer.app/browse'
       });
     } else if (currentPage === 'builder') {
@@ -168,6 +199,15 @@ const App: React.FC = () => {
         description: 'See top QuestLayer users and compete for the highest XP rank.',
         url: 'https://questlayer.app/leaderboard'
       });
+    } else if (currentPage === 'submit') {
+      const submitPath = window.location.pathname === '/store/submit' ? '/store/submit' : '/submit';
+      window.history.pushState(null, '', submitPath);
+      applySeo({
+        title: 'Quest Store - Submit Project',
+        description: 'Submit your project to the QuestLayer Store and get verified for visibility.',
+        path: submitPath,
+        image: '/questbrowse.jpeg'
+      });
     } else if (currentPage === 'landing') {
       window.history.pushState(null, '', '/');
       applySeo({
@@ -188,7 +228,7 @@ const App: React.FC = () => {
         }
       });
     }
-  }, [currentPage]);
+  }, [currentPage, isSubmitModalOpen]);
 
   const [view, setView] = useState<'editor' | 'preview'>('editor');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
@@ -296,19 +336,32 @@ const App: React.FC = () => {
 
   if (currentPage === 'landing') {
     return (
-      <LandingPage
-        onLaunch={() => {
-          setAllowAutoLaunch(true);
-          setCurrentPage('dashboard');
-        }}
-        onBrowse={() => {
-          setCurrentPage('questbrowse');
-        }}
-        onTryBuilder={() => {
-          setCurrentPage('builder');
-        }}
-        allowAutoLaunch={allowAutoLaunch}
-      />
+      <>
+        <LandingPage
+          onLaunch={() => {
+            setAllowAutoLaunch(true);
+            setCurrentPage('dashboard');
+          }}
+          onBrowse={() => {
+            setCurrentPage('questbrowse');
+          }}
+          onTryBuilder={() => {
+            setCurrentPage('builder');
+          }}
+          onSubmitProject={openSubmitModal}
+          allowAutoLaunch={allowAutoLaunch}
+        />
+        {isSubmitModalOpen && (
+          <SubmitProject
+            mode="modal"
+            onClose={closeSubmitModal}
+            onOpenBuilder={() => {
+              setIsSubmitModalOpen(false);
+              setCurrentPage('builder');
+            }}
+          />
+        )}
+      </>
     );
   }
 
@@ -322,25 +375,62 @@ const App: React.FC = () => {
 
   if (currentPage === 'questbrowse') {
     return (
-      <QuestBrowse
-        onBack={() => setCurrentPage('landing')}
-        onLeaderboard={() => setCurrentPage('leaderboard')}
-        onWidgetBuilder={() => setCurrentPage('dashboard')}
-        initialBrowseRequest={pendingBrowseRequest}
-        onBrowseHandled={() => setPendingBrowseRequest(null)}
-      />
+      <>
+        <QuestBrowse
+          onBack={() => setCurrentPage('landing')}
+          onLeaderboard={() => setCurrentPage('leaderboard')}
+          onWidgetBuilder={() => setCurrentPage('dashboard')}
+          onSubmitProject={openSubmitModal}
+          initialBrowseRequest={pendingBrowseRequest}
+          onBrowseHandled={() => setPendingBrowseRequest(null)}
+        />
+        {isSubmitModalOpen && (
+          <SubmitProject
+            mode="modal"
+            onClose={closeSubmitModal}
+            onOpenBuilder={() => {
+              setIsSubmitModalOpen(false);
+              setCurrentPage('builder');
+            }}
+          />
+        )}
+      </>
     );
   }
 
   if (currentPage === 'leaderboard') {
     return (
-      <LeaderboardPage
-        onBack={() => setCurrentPage('questbrowse')}
-        onContinue={({ projectId, domain }) => {
-          setPendingBrowseRequest({ projectId, url: domain || undefined });
-          setCurrentPage('questbrowse');
-        }}
-        onWidgetBuilder={() => setCurrentPage('dashboard')}
+      <>
+        <LeaderboardPage
+          onBack={() => setCurrentPage('questbrowse')}
+          onContinue={({ projectId, domain }) => {
+            setPendingBrowseRequest({ projectId, url: domain || undefined });
+            setCurrentPage('questbrowse');
+          }}
+          onWidgetBuilder={() => setCurrentPage('dashboard')}
+          onSubmitProject={openSubmitModal}
+        />
+        {isSubmitModalOpen && (
+          <SubmitProject
+            mode="modal"
+            onClose={closeSubmitModal}
+            onOpenBuilder={() => {
+              setIsSubmitModalOpen(false);
+              setCurrentPage('builder');
+            }}
+          />
+        )}
+      </>
+    );
+  }
+
+  if (currentPage === 'submit') {
+    const submitReturnPage = window.location.pathname.startsWith('/store') ? 'questbrowse' : 'landing';
+    return (
+      <SubmitProject
+        mode="page"
+        onClose={() => setCurrentPage(submitReturnPage)}
+        onOpenBuilder={() => setCurrentPage('builder')}
       />
     );
   }

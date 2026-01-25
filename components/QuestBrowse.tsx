@@ -13,12 +13,13 @@ interface QuestBrowseProps {
   onBack: () => void;
   onLeaderboard: () => void;
   onWidgetBuilder?: () => void;
+  onSubmitProject?: () => void;
   initialBrowseRequest?: { projectId?: string; url?: string } | null;
   onBrowseHandled?: () => void;
 }
 
 const DEFAULT_WIDGET_STATE: AppState = {
-  projectName: 'Quest Browser',
+  projectName: 'Quest Store',
   accentColor: '#6366f1',
   position: 'free-form',
   activeTheme: 'sleek',
@@ -115,7 +116,7 @@ const pickRandomTasks = (tasks: Task[], count: number, rng: () => number) => {
 
 const BadgeWithTooltip: React.FC<{
   children: React.ReactNode;
-  tooltipText: string;
+  tooltipText: React.ReactNode;
 }> = ({ children, tooltipText }) => {
   return (
     <div 
@@ -123,7 +124,7 @@ const BadgeWithTooltip: React.FC<{
       onClick={(e) => e.stopPropagation()}
     >
       {children}
-      <div className="hidden group-hover/tooltip:block absolute top-full right-0 mt-2 w-48 p-3 bg-slate-950/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] text-xs leading-relaxed text-slate-300 font-medium animate-in fade-in zoom-in-95 duration-200 text-left pointer-events-none select-none">
+      <div className="hidden group-hover/tooltip:block absolute top-full right-0 mt-2 w-40 p-2 bg-slate-950/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] text-[10px] leading-snug text-slate-300 font-medium animate-in fade-in zoom-in-95 duration-200 text-left pointer-events-none select-none">
          {tooltipText}
          <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-950/95 border-t border-l border-white/10 rotate-45 transform" />
       </div>
@@ -192,6 +193,9 @@ const BrowseCard: React.FC<{
   const fallbackAccent = project.accent_color || '#6366f1';
   const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();
   const isVerified = !!project.last_ping_at;
+  const lastCheckedLabel = project.last_ping_at
+    ? new Date(project.last_ping_at).toLocaleString('en-US')
+    : 'Not checked yet';
   const handleClick = () => {
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
@@ -249,7 +253,14 @@ const BrowseCard: React.FC<{
 
         <div className="absolute top-4 right-4 flex gap-2 items-end">
           {isVerified && (
-            <BadgeWithTooltip tooltipText="Auto-verified: Embedded & active on the website">
+            <BadgeWithTooltip
+              tooltipText={
+                <div className="flex flex-col gap-1">
+                  <span>Auto-verified: Embedded & active on the website.</span>
+                  <span className="text-[9px] text-slate-400">Last checked: {lastCheckedLabel}</span>
+                </div>
+              }
+            >
               <div className="px-2 py-1 rounded-lg bg-blue-500/20 backdrop-blur-md border border-blue-500/30 text-[10px] font-black text-blue-300 uppercase shadow-sm flex items-center gap-1.5">
                 <BadgeCheck size={12} className="text-blue-400" />
                 Verified
@@ -333,7 +344,7 @@ const BrowseCard: React.FC<{
   );
 };
 
-const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidgetBuilder, initialBrowseRequest, onBrowseHandled }) => {
+const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidgetBuilder, onSubmitProject, initialBrowseRequest, onBrowseHandled }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -355,7 +366,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [browseFilter, setBrowseFilter] = useState<'popular' | 'new' | 'verified'>('popular');
+  const [browseFilter, setBrowseFilter] = useState<'trending' | 'new' | 'verified'>('trending');
   const [urlInput, setUrlInput] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [invalidImages, setInvalidImages] = useState<Set<string>>(new Set());
@@ -559,7 +570,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
     return {
       ...DEFAULT_WIDGET_STATE,
-      projectName: normalizedDomain || 'Quest Browser',
+      projectName: normalizedDomain || 'Quest Store',
       projectDomain: url,
       accentColor: nextAccent,
       activeTheme: nextTheme,
@@ -602,6 +613,32 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       setIsIframeLoading(false);
       setIsWidgetOpen(false);
     }, 6000);
+  };
+
+  const handleSearchOrSubmit = (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const isLikelyUrl = trimmed.startsWith('http://')
+      || trimmed.startsWith('https://')
+      || trimmed.includes('.');
+    if (!isLikelyUrl) {
+      setSearchTerm(trimmed);
+      return;
+    }
+    const normalized = normalizeDomain(trimmed);
+    if (normalized) {
+      const matchedIndex = projects.findIndex(project => normalizeDomain(project.domain || '') === normalized);
+      if (matchedIndex !== -1) {
+        setCurrentProjectIndex(matchedIndex);
+        void handleBrowseProjectById(projects[matchedIndex].id, projects[matchedIndex].domain);
+        return;
+      }
+    }
+    if (onSubmitProject) {
+      onSubmitProject();
+      return;
+    }
+    handleBrowseUrl(trimmed, true);
   };
 
   const handleBrowseProjectById = async (projectId: string, domain?: string, updateUrl = true) => {
@@ -885,7 +922,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         <input 
                             value={currentUrl}
                             onChange={(e) => setCurrentUrl(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(currentUrl)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearchOrSubmit(currentUrl)}
+                            onPaste={(e) => {
+                              const pasted = e.clipboardData.getData('text');
+                              if (!pasted) return;
+                              e.preventDefault();
+                              setCurrentUrl(pasted);
+                              handleSearchOrSubmit(pasted);
+                            }}
                             className="w-full bg-slate-950/70 border border-white/10 rounded-full py-2 pl-16 sm:pl-20 pr-28 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-400/60 focus:shadow-[0_0_0_1px_rgba(99,102,241,0.35)] font-mono"
                         />
                         <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 pr-1">
@@ -917,7 +961,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                     ref={iframeRef}
                     src={currentUrl}
                     className="w-full h-full border-none"
-                    title="Quest Browser"
+                    title="Quest Store"
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                     onLoad={() => {
                         if (iframeLoadTimeoutRef.current) {
@@ -968,7 +1012,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                                     </div>
                                     <div>
                                         <div className="text-[11px] font-black uppercase tracking-[0.35em] text-indigo-300/80">
-                                            QuestBrowse
+                                            Quest Store
                                         </div>
                                         <div className="text-xl font-black text-white tracking-tight">
                                             This site blocks embedding
@@ -986,7 +1030,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                                                 <Search size={14} className="animate-[pulse_2s_ease-in-out_infinite]" />
                                             </span>
                                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">
-                                                1. Browse
+                                                1. Visit Store
                                             </span>
                                         </div>
                                         <p className="text-[12px] leading-relaxed text-slate-100">
@@ -1029,7 +1073,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                                         }}
                                         className="px-4 py-2 rounded-xl border border-white/10 text-xs font-black uppercase text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                                     >
-                                        Keep Browsing
+                                        Keep Exploring
                                     </button>
                                     {currentUrl && (
                                         <a
@@ -1148,6 +1192,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             onDisconnect={() => disconnect()}
             onLeaderboard={onLeaderboard}
             onWidgetBuilder={onWidgetBuilder}
+            onSubmitProject={onSubmitProject}
         />
 
         {/* Video Background */}
@@ -1170,11 +1215,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
             {/* Hero URL Input */}
             <div className="py-12 md:py-20 text-center space-y-6 mt-[10px]">
                 <div className="px-4">
+                    <div className="mb-3 text-[10px] md:text-xs font-black uppercase tracking-[0.35em] text-indigo-300/70">
+                        Live Experiences
+                    </div>
                     <h1 className="text-3xl md:text-6xl font-black text-white uppercase tracking-tight mb-4 drop-shadow-2xl">
-                        Browse the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Web3</span>
+                        Explore the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Web3 Store</span>
                     </h1>
                     <p className="text-slate-300 text-xs md:text-lg font-medium max-w-lg mx-auto leading-relaxed drop-shadow-lg">
-                        Discover decentralized ecosystems, earn XP, and unlock rewards simply by browsing your favorite protocols.
+                        Discover decentralized ecosystems, earn XP, and unlock rewards simply by exploring your favorite protocols.
                     </p>
                 </div>
             <div className="max-w-2xl mx-auto relative px-4">
@@ -1185,14 +1233,25 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                     </div>
                     <input 
                         type="text" 
-                        placeholder="Enter any website URL (e.g. uniswap.org)..."
+                        placeholder="Search or paste URL"
                         value={urlInput}
-                        onChange={(e) => setUrlInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleBrowseUrl(urlInput)}
+                        onChange={(e) => {
+                          setUrlInput(e.target.value);
+                          setSearchTerm(e.target.value);
+                        }}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearchOrSubmit(urlInput)}
+                        onPaste={(e) => {
+                          const pasted = e.clipboardData.getData('text');
+                          if (!pasted) return;
+                          e.preventDefault();
+                          setUrlInput(pasted);
+                          setSearchTerm(pasted);
+                          handleSearchOrSubmit(pasted);
+                        }}
                         className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 text-sm md:text-lg h-12 min-w-0"
                     />
                     <button 
-                        onClick={() => handleBrowseUrl(urlInput)}
+                        onClick={() => handleSearchOrSubmit(urlInput)}
                         className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 h-12 rounded-xl font-bold uppercase tracking-wide transition-all shrink-0"
                     >
                         Go
@@ -1242,14 +1301,14 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-2 p-1 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
                   <button
-                    onClick={() => setBrowseFilter('popular')}
+                    onClick={() => setBrowseFilter('trending')}
                     className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
-                      browseFilter === 'popular' 
+                      browseFilter === 'trending' 
                         ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
                         : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    Popular
+                    Trending
                   </button>
                   <button
                     onClick={() => setBrowseFilter('verified')}
@@ -1270,7 +1329,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    Newest
+                    New
                   </button>
                 </div>
               </div>
