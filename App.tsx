@@ -14,16 +14,20 @@ import ExplorePage from './components/ExplorePage.tsx';
 import QuestBrowse from './components/QuestBrowse.tsx';
 import LeaderboardPage from './components/LeaderboardPage.tsx';
 import SubmitProject from './components/SubmitProject.tsx';
+import ProjectDetail from './components/ProjectDetail.tsx';
 import { fetchProjectDetails, deleteProject } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard' | 'submit'>(() => {
+  const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard' | 'submit' | 'projectdetail'>(() => {
     // Check URL path on initial load
     if (window.location.pathname === '/browse') {
       return 'questbrowse';
     }
     if (window.location.pathname === '/submit' || window.location.pathname === '/store/submit') {
       return 'submit';
+    }
+    if (window.location.pathname.startsWith('/store/')) {
+      return 'projectdetail';
     }
     if (window.location.pathname === '/explore') {
       return 'explore';
@@ -42,14 +46,31 @@ const App: React.FC = () => {
 
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const submitModalReturnPathRef = useRef<string>('/');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [leaderboardProjectId, setLeaderboardProjectId] = useState<string | null>(null);
 
   const getSubmitPath = () => (currentPage === 'questbrowse' ? '/store/submit' : '/submit');
+  const getProjectIdFromPath = (path: string) => {
+    if (!path.startsWith('/store/') || path.startsWith('/store/submit')) return null;
+    const match = path.match(/^\/store\/([^/]+)/);
+    return match?.[1] ?? null;
+  };
 
   const openSubmitModal = () => {
     submitModalReturnPathRef.current = window.location.pathname + window.location.search;
     setIsSubmitModalOpen(true);
     window.history.pushState({ modal: 'submit' }, '', getSubmitPath());
   };
+
+  useEffect(() => {
+    if (currentPage !== 'projectdetail' || selectedProjectId) return;
+    const fromPath = getProjectIdFromPath(window.location.pathname);
+    if (fromPath) {
+      setSelectedProjectId(fromPath);
+    } else {
+      setCurrentPage('questbrowse');
+    }
+  }, [currentPage, selectedProjectId]);
 
   const closeSubmitModal = () => {
     setIsSubmitModalOpen(false);
@@ -60,26 +81,36 @@ const App: React.FC = () => {
   // Handle URL updates and back button
   useEffect(() => {
     const handlePopState = () => {
-      if (window.location.pathname === '/submit' || window.location.pathname === '/store/submit') {
+      const projectIdFromPath = getProjectIdFromPath(window.location.pathname);
+      if (projectIdFromPath) {
+        setSelectedProjectId(projectIdFromPath);
+        setIsSubmitModalOpen(false);
+        setCurrentPage('projectdetail');
+      } else if (window.location.pathname === '/submit' || window.location.pathname === '/store/submit') {
         setIsSubmitModalOpen(false);
         setCurrentPage('submit');
       } else if (window.location.pathname === '/browse') {
         setIsSubmitModalOpen(false);
+        setLeaderboardProjectId(null);
         setCurrentPage('questbrowse');
       } else if (window.location.pathname === '/leaderboard') {
         setIsSubmitModalOpen(false);
         setCurrentPage('leaderboard');
       } else if (window.location.pathname === '/explore') {
         setIsSubmitModalOpen(false);
+        setLeaderboardProjectId(null);
         setCurrentPage('explore');
       } else if (window.location.pathname === '/builder') {
         setIsSubmitModalOpen(false);
+        setLeaderboardProjectId(null);
         setCurrentPage('builder');
       } else if (window.location.pathname === '/dashboard') {
         setIsSubmitModalOpen(false);
+        setLeaderboardProjectId(null);
         setCurrentPage('dashboard');
       } else if (window.location.pathname === '/') {
         setIsSubmitModalOpen(false);
+        setLeaderboardProjectId(null);
         setCurrentPage('landing');
       }
     };
@@ -206,6 +237,15 @@ const App: React.FC = () => {
         title: 'Quest Store - Submit Project',
         description: 'Submit your project to the QuestLayer Store and get verified for visibility.',
         path: submitPath,
+        image: '/questbrowse.jpeg'
+      });
+    } else if (currentPage === 'projectdetail') {
+      const projectPath = selectedProjectId ? `/store/${selectedProjectId}` : '/browse';
+      window.history.pushState(null, '', projectPath);
+      applySeo({
+        title: 'Quest Store - Project Details',
+        description: 'View project requirements, rewards, and verification status.',
+        path: projectPath,
         image: '/questbrowse.jpeg'
       });
     } else if (currentPage === 'landing') {
@@ -378,9 +418,16 @@ const App: React.FC = () => {
       <>
         <QuestBrowse
           onBack={() => setCurrentPage('landing')}
-          onLeaderboard={() => setCurrentPage('leaderboard')}
+          onLeaderboard={() => {
+            setLeaderboardProjectId(null);
+            setCurrentPage('leaderboard');
+          }}
           onWidgetBuilder={() => setCurrentPage('dashboard')}
           onSubmitProject={openSubmitModal}
+          onProjectDetails={(projectId) => {
+            setSelectedProjectId(projectId);
+            setCurrentPage('projectdetail');
+          }}
           initialBrowseRequest={pendingBrowseRequest}
           onBrowseHandled={() => setPendingBrowseRequest(null)}
         />
@@ -409,6 +456,7 @@ const App: React.FC = () => {
           }}
           onWidgetBuilder={() => setCurrentPage('dashboard')}
           onSubmitProject={openSubmitModal}
+          focusProjectId={leaderboardProjectId}
         />
         {isSubmitModalOpen && (
           <SubmitProject
@@ -421,6 +469,30 @@ const App: React.FC = () => {
           />
         )}
       </>
+    );
+  }
+
+  if (currentPage === 'projectdetail') {
+    if (!selectedProjectId) {
+      return (
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs uppercase tracking-widest">
+          Loading project...
+        </div>
+      );
+    }
+    return (
+      <ProjectDetail
+        projectId={selectedProjectId}
+        onBack={() => setCurrentPage('questbrowse')}
+        onOpen={({ projectId, domain }) => {
+          setPendingBrowseRequest({ projectId, url: domain || undefined });
+          setCurrentPage('questbrowse');
+        }}
+        onLeaderboard={(projectId) => {
+          setLeaderboardProjectId(projectId);
+          setCurrentPage('leaderboard');
+        }}
+      />
     );
   }
 

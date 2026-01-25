@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { fetchAllProjects, fetchProjectStats, fetchProjectDetails, fetchUserXP } from '../lib/supabase';
-import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles, BadgeCheck } from 'lucide-react';
+import { Globe, ArrowRight, Loader2, Search, Zap, ChevronLeft, ChevronRight, X, Layout, Sparkles, BadgeCheck, Sword, Info, Coins, ClipboardCheck } from 'lucide-react';
 import Widget from './Widget';
 import ProfileMenuButton from './ProfileMenuButton';
 import UnifiedHeader from './UnifiedHeader';
@@ -14,6 +14,7 @@ interface QuestBrowseProps {
   onLeaderboard: () => void;
   onWidgetBuilder?: () => void;
   onSubmitProject?: () => void;
+  onProjectDetails?: (projectId: string) => void;
   initialBrowseRequest?: { projectId?: string; url?: string } | null;
   onBrowseHandled?: () => void;
 }
@@ -112,14 +113,13 @@ const BrowseCard: React.FC<{
   project: any; 
   stats: any; 
   isOnline: boolean; 
-  onClick: () => void; 
+  onOpen: () => void;
+  onDetails: () => void;
   onImageError: (id: string) => void;
   cachedImage?: string | null;
   onImageLoad: (id: string, url: string) => void;
-}> = ({ project, stats, isOnline, onClick, onImageError, cachedImage, onImageLoad }) => {
+}> = ({ project, stats, isOnline, onOpen, onDetails, onImageError, cachedImage, onImageLoad }) => {
   const [ogImage, setOgImage] = useState<string | null>(cachedImage || null);
-  const [isClicking, setIsClicking] = useState(false);
-  const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     if (cachedImage) {
@@ -158,46 +158,21 @@ const BrowseCard: React.FC<{
     return () => { isMounted = false; };
   }, [project.domain, project.id, onImageError, cachedImage, onImageLoad]);
 
-  useEffect(() => {
-    return () => {
-      if (clickTimeoutRef.current) {
-        clearTimeout(clickTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const fallbackAccent = project.accent_color || '#6366f1';
   const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();
-  const isVerified = !!project.last_ping_at;
+  const rewardBadge = (typeof stats?.reward_xp === 'number' || typeof stats?.total_xp === 'number')
+    ? `Rewards: ${stats?.reward_xp ?? stats?.total_xp} XP`
+    : 'Rewards · Multi-chain';
   const lastCheckedLabel = project.last_ping_at
     ? new Date(project.last_ping_at).toLocaleString('en-US')
     : 'Not checked yet';
-  const handleClick = () => {
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-    }
-    setIsClicking(true);
-    onClick();
-    clickTimeoutRef.current = setTimeout(() => {
-      setIsClicking(false);
-      clickTimeoutRef.current = null;
-    }, 550);
-  };
+  const requirementsCount = (typeof stats?.requirements === 'number')
+    ? stats.requirements
+    : null;
 
   return (
     <div 
-      onClick={handleClick}
-      onPointerDown={() => {
-        if (clickTimeoutRef.current) {
-          clearTimeout(clickTimeoutRef.current);
-          clickTimeoutRef.current = null;
-        }
-        setIsClicking(true);
-      }}
-      onPointerLeave={() => setIsClicking(false)}
-      className={`group relative rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all duration-500 hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)] flex flex-col h-full hover:-translate-y-1 cursor-pointer ${
-        isClicking ? 'scale-[0.99] ring-2 ring-indigo-400/40 shadow-[0_0_30px_rgba(99,102,241,0.25)]' : ''
-      }`}
+      className="group relative rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden transition-all duration-500 hover:bg-slate-900 hover:border-indigo-500/50 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)] flex flex-col h-full hover:-translate-y-1"
     >
       <div className="relative h-48 w-full bg-slate-950/50 border-b border-white/5">
         <div className="absolute inset-0 overflow-hidden">
@@ -228,7 +203,7 @@ const BrowseCard: React.FC<{
         </div>
 
         <div className="absolute top-4 right-4 flex gap-2 items-end">
-          {isVerified && (
+          {project.last_ping_at && (
             <BadgeWithTooltip
               tooltipText={
                 <div className="flex flex-col gap-1">
@@ -315,12 +290,51 @@ const BrowseCard: React.FC<{
             </a>
           </div>
         )}
+
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="px-2 py-1 rounded-lg bg-slate-800/60 border border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-200">
+            <span className="inline-flex items-center gap-1.5">
+              <Coins size={12} className="text-amber-300" />
+              {rewardBadge}
+            </span>
+          </span>
+          {requirementsCount !== null && (
+            <span className="px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-200">
+              <span className="inline-flex items-center gap-1.5">
+                <ClipboardCheck size={12} className="text-emerald-200" />
+                Requirements: {requirementsCount}
+              </span>
+            </span>
+          )}
+        </div>
+
+        <div className="mt-auto flex gap-2">
+          <button
+            onClick={onOpen}
+            className="group flex-1 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(251,191,36,0.45)] hover:brightness-110 transition-all relative overflow-hidden"
+          >
+            <span className="absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80" />
+            <span className="relative inline-flex items-center gap-2 font-extrabold">
+              <Sword size={12} className="text-slate-950" />
+              Start Quest
+            </span>
+          </button>
+          <button
+            onClick={onDetails}
+            className="flex-1 px-3 py-2 rounded-xl border border-white/10 text-white/80 text-[10px] font-black uppercase tracking-widest hover:text-white hover:border-white/20 transition-colors"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Info size={12} />
+              Details
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidgetBuilder, onSubmitProject, initialBrowseRequest, onBrowseHandled }) => {
+const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidgetBuilder, onSubmitProject, onProjectDetails, initialBrowseRequest, onBrowseHandled }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -1316,7 +1330,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                     project={project} 
                     stats={project.stats}
                     isOnline={isProjectOnline(project)}
-                    onClick={() => handleProjectClick(project)}
+                    onOpen={() => handleProjectClick(project)}
+                    onDetails={() => onProjectDetails?.(project.id)}
                     onImageError={handleImageError} 
                     cachedImage={ogImageCache[project.id]}
                     onImageLoad={(id, url) => setOgImageCache(prev => ({ ...prev, [id]: url }))}

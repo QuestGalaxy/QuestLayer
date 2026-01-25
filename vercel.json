@@ -54,6 +54,8 @@
     { "source": "/submit/", "destination": "/submit.html" },
     { "source": "/store/submit", "destination": "/submit.html" },
     { "source": "/store/submit/", "destination": "/submit.html" },
+    { "source": "/store/:id", "destination": "/browse.html" },
+    { "source": "/store/:id/", "destination": "/browse.html" },
     { "source": "/leaderboard", "destination": "/leaderboard.html" },
     { "source": "/leaderboard/", "destination": "/leaderboard.html" },
     { "source": "/builder", "destination": "/builder.html" },

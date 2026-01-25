@@ -161,6 +161,8 @@ declare
   connected_wallets bigint;
   tasks_completed bigint;
   auw bigint; -- Active Users Weekly (Unique users who completed a task in last 7 days)
+  total_xp bigint;
+  requirements_count bigint;
 begin
   -- Total Visits
   select count(*) into total_visits 
@@ -195,6 +197,12 @@ begin
      where dcl.project_id = p_id)
   into tasks_completed;
 
+  -- Total XP and Requirements (Task count)
+  select coalesce(sum(xp_reward), 0), count(*)
+  into total_xp, requirements_count
+  from tasks
+  where project_id = p_id;
+
   -- Active Users Weekly (Unique users who completed a task OR viral boost OR daily claim in last 7 days)
   with active_users as (
     select tc.user_id
@@ -220,7 +228,9 @@ begin
     'daily_visits', daily_visits,
     'connected_wallets', connected_wallets,
     'tasks_completed', tasks_completed,
-    'auw', auw
+    'auw', auw,
+    'total_xp', total_xp,
+    'requirements', requirements_count
   );
 end;
 $$;

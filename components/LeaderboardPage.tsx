@@ -11,6 +11,7 @@ interface LeaderboardPageProps {
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
   onWidgetBuilder?: () => void;
   onSubmitProject?: () => void;
+  focusProjectId?: string | null;
 }
 
 type LeaderboardEntry = {
@@ -189,7 +190,7 @@ const ProjectCard: React.FC<{
   );
 };
 
-const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, onWidgetBuilder, onSubmitProject }) => {
+const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, onWidgetBuilder, onSubmitProject, focusProjectId }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -353,11 +354,19 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
 
   const totalXp = useMemo(() => projects.reduce((sum, project) => sum + project.userXp, 0), [projects]);
   const filteredProjects = useMemo(() => {
+    if (focusProjectId) {
+      return projects.filter(project => project.project?.id === focusProjectId);
+    }
     if (leaderboardFilter === 'mine' && isConnected) {
       return projects.filter(project => userProjectIds.has(project.project.id));
     }
     return projects;
-  }, [leaderboardFilter, isConnected, projects, userProjectIds]);
+  }, [leaderboardFilter, isConnected, projects, userProjectIds, focusProjectId]);
+  const focusedProjectName = useMemo(() => {
+    if (!focusProjectId) return null;
+    const match = projects.find(project => project.project?.id === focusProjectId);
+    return match?.project?.name || 'Project';
+  }, [projects, focusProjectId]);
   const totalPages = Math.ceil(filteredProjects.length / PROJECTS_PER_PAGE);
   const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * PROJECTS_PER_PAGE,
@@ -396,63 +405,69 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
                 <Trophy size={14} /> Leaderboard
               </div>
               <h1 className="mt-3 text-4xl md:text-6xl font-black uppercase tracking-tight">
-                QuestLayer
+                {focusProjectId ? focusedProjectName : 'QuestLayer'}
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-sky-400">
-                  {leaderboardFilter === 'mine' && isConnected ? 'Your Leaderboard' : 'Global Leaderboard'}
+                  {focusProjectId
+                    ? 'Project Leaderboard'
+                    : (leaderboardFilter === 'mine' && isConnected ? 'Your Leaderboard' : 'Global Leaderboard')}
                 </span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm text-slate-300">
-                {leaderboardFilter === 'mine' && isConnected
-                  ? 'Track your personal ranks across the projects you have joined.'
-                  : 'Explore the most active quests worldwide. Connect your wallet to highlight your XP and rank.'}
+                {focusProjectId
+                  ? 'See ranks and XP for this project.'
+                  : (leaderboardFilter === 'mine' && isConnected
+                    ? 'Track your personal ranks across the projects you have joined.'
+                    : 'Explore the most active quests worldwide. Connect your wallet to highlight your XP and rank.')}
               </p>
             </div>
-            <div className="w-full md:w-auto">
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-xl">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex flex-col gap-2">
-                    <div className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-400">Filter</div>
-                    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
-                      <button
-                        onClick={() => setLeaderboardFilter('global')}
-                        className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                          leaderboardFilter === 'global'
-                            ? 'bg-white text-black'
-                            : 'text-slate-300 hover:text-white'
-                        }`}
-                      >
-                        Global
-                      </button>
-                      {isConnected && (
+            {!focusProjectId && (
+              <div className="w-full md:w-auto">
+                <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-xl">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-2">
+                      <div className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-400">Filter</div>
+                      <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
                         <button
-                          onClick={() => setLeaderboardFilter('mine')}
+                          onClick={() => setLeaderboardFilter('global')}
                           className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                            leaderboardFilter === 'mine'
-                              ? 'bg-indigo-400 text-slate-950'
+                            leaderboardFilter === 'global'
+                              ? 'bg-white text-black'
                               : 'text-slate-300 hover:text-white'
                           }`}
                         >
-                          My Projects
+                          Global
                         </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    {isConnected && (
-                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                        <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
-                        <div className="text-xl font-black text-white">{formatNumber(totalXp)}</div>
+                        {isConnected && (
+                          <button
+                            onClick={() => setLeaderboardFilter('mine')}
+                            className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
+                              leaderboardFilter === 'mine'
+                                ? 'bg-indigo-400 text-slate-950'
+                                : 'text-slate-300 hover:text-white'
+                            }`}
+                          >
+                            My Projects
+                          </button>
+                        )}
                       </div>
-                    )}
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                      <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Projects</div>
-                      <div className="text-xl font-black text-white">{filteredProjects.length}</div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      {isConnected && (
+                        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                          <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
+                          <div className="text-xl font-black text-white">{formatNumber(totalXp)}</div>
+                        </div>
+                      )}
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Projects</div>
+                        <div className="text-xl font-black text-white">{filteredProjects.length}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
