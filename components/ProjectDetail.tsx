@@ -384,16 +384,19 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                     </a>
                     <div className="h-1 w-1 rounded-full bg-slate-700" />
                     {isVerified ? (
-                      <div className="flex items-center gap-2 text-sm text-emerald-400">
+                      <div className="relative group/verify flex items-center gap-2 text-sm text-sky-300">
                         <ShieldCheck size={16} />
-                        <span>Auto Verified</span>
+                        <span>Verified</span>
+                        <div className="hidden group-hover/verify:block absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl z-30">
+                          Auto‑verified after the widget is embedded and pings our servers.
+                        </div>
                       </div>
                     ) : (
                       <div className="relative group/verify flex items-center gap-2 text-sm text-amber-300">
                         <ShieldCheck size={16} />
                         <span>Not Verified</span>
-                        <div className="hidden group-hover/verify:block absolute top-full left-0 mt-2 w-56 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl">
-                          Embed the widget on your site and it will auto-verify on the first ping.
+                        <div className="hidden group-hover/verify:block absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl z-30">
+                          Embed the widget on your domain to get auto‑verified.
                         </div>
                       </div>
                     )}
