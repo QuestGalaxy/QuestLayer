@@ -597,6 +597,8 @@ const Editor: React.FC<EditorProps> = ({
       const isLink = resolvedKind === 'link';
       const isNftHold = resolvedKind === 'nft_hold';
       const isTokenHold = resolvedKind === 'token_hold';
+      const resolvedDesc = editForm.desc
+        || (isQuiz ? 'Answer the question to earn XP.' : '');
       // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
       const normalizedTitle = isQuiz
         ? (editForm.question?.trim() || editForm.title)
@@ -604,7 +606,7 @@ const Editor: React.FC<EditorProps> = ({
       const nextTask = {
         ...editForm,
         title: normalizedTitle,
-        desc: isQuiz ? '' : editForm.desc,
+        desc: resolvedDesc,
         link: isLink ? (editForm.link || '') : '',
         section: editForm.section ?? 'missions',
         kind: resolvedKind,

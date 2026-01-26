@@ -240,8 +240,8 @@ const Widget: React.FC<WidgetProps> = ({
 
   useEffect(() => {
     const fetchMetadata = async () => {
-      let url = state.projectUrl;
-      if (!url && state.projectDomain) {
+      let url: string | undefined;
+      if (state.projectDomain) {
         url = state.projectDomain.startsWith('http') ? state.projectDomain : `https://${state.projectDomain}`;
       }
       
@@ -265,7 +265,7 @@ const Widget: React.FC<WidgetProps> = ({
       // We will handle fallback in the render to use projectIconUrl
     };
     fetchMetadata();
-  }, [state.projectUrl, state.projectDomain]);
+  }, [state.projectDomain]);
 
   useEffect(() => {
     if (!isFreeForm || isPreview) return;
