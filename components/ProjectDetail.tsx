@@ -137,6 +137,11 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
       })
     : 'Not verified yet';
 
+  const isVerified = Boolean(project?.last_ping_at);
+  const isOnline = project?.last_ping_at
+    ? new Date(project.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
+    : false;
+
   const socialLinks = useMemo(() => {
     const socials = (project?.social_links ?? {}) as Record<string, string | undefined>;
     const entries: Array<{ key: string; label: string; href: string; icon: React.ReactNode }> = [];
@@ -378,10 +383,29 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                       </span>
                     </a>
                     <div className="h-1 w-1 rounded-full bg-slate-700" />
-                    <div className="flex items-center gap-2 text-sm text-emerald-400">
-                      <ShieldCheck size={16} />
-                      <span>Verified</span>
-                    </div>
+                    {isVerified ? (
+                      <div className="flex items-center gap-2 text-sm text-emerald-400">
+                        <ShieldCheck size={16} />
+                        <span>Auto Verified</span>
+                      </div>
+                    ) : (
+                      <div className="relative group/verify flex items-center gap-2 text-sm text-amber-300">
+                        <ShieldCheck size={16} />
+                        <span>Not Verified</span>
+                        <div className="hidden group-hover/verify:block absolute top-full left-0 mt-2 w-56 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl">
+                          Embed the widget on your site and it will auto-verify on the first ping.
+                        </div>
+                      </div>
+                    )}
+                    {isOnline && (
+                      <div className="flex items-center gap-2 text-sm text-emerald-400">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span>Online</span>
+                      </div>
+                    )}
                   </div>
 
                   {socialLinks.length > 0 && (
@@ -546,13 +570,17 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
               </h3>
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${isVerified ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
                     <CheckCircle2 size={20} />
                   </div>
                   <div>
-                    <div className="text-sm font-black text-white uppercase tracking-tight">Active Integration</div>
+                    <div className="text-sm font-black text-white uppercase tracking-tight">
+                      {isVerified ? 'Active Integration' : 'Not Verified Yet'}
+                    </div>
                     <div className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      QuestLayer widget is detected and active on {project.domain}.
+                      {isVerified
+                        ? `QuestLayer widget is detected and active on ${project.domain}.`
+                        : 'We have not detected a live widget ping for this project yet.'}
                     </div>
                   </div>
                 </div>
