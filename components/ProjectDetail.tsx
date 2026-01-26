@@ -1,5 +1,29 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ExternalLink, Globe, Loader2, ShieldCheck, Sparkles, Trophy, Sword, Zap, Users, BarChart3, Clock, CheckCircle2, Star, Share2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  ExternalLink,
+  Globe,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Trophy,
+  Sword,
+  Zap,
+  Users,
+  BarChart3,
+  Clock,
+  CheckCircle2,
+  Star,
+  Share2,
+  Twitter,
+  MessageSquare,
+  Send,
+  Github,
+  Linkedin,
+  Youtube,
+  Instagram,
+  Facebook
+} from 'lucide-react';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import { fetchProjectDetails, fetchProjectStats, fetchUserXP } from '../lib/supabase';
 import UnifiedHeader from './UnifiedHeader';
@@ -110,6 +134,26 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         minute: '2-digit'
       })
     : 'Not verified yet';
+
+  const socialLinks = useMemo(() => {
+    const socials = (project?.social_links ?? {}) as Record<string, string | undefined>;
+    const entries: Array<{ key: string; label: string; href: string; icon: React.ReactNode }> = [];
+    const add = (key: string, label: string, href?: string, icon?: React.ReactNode) => {
+      if (!href) return;
+      entries.push({ key, label, href, icon: icon ?? <ExternalLink size={16} /> });
+    };
+    add('twitter', 'Twitter / X', socials.twitter, <Twitter size={16} />);
+    add('discord', 'Discord', socials.discord, <MessageSquare size={16} />);
+    add('telegram', 'Telegram', socials.telegram, <Send size={16} />);
+    add('github', 'GitHub', socials.github, <Github size={16} />);
+    add('medium', 'Medium', socials.medium, <ExternalLink size={16} />);
+    add('linkedin', 'LinkedIn', socials.linkedin, <Linkedin size={16} />);
+    add('youtube', 'YouTube', socials.youtube, <Youtube size={16} />);
+    add('instagram', 'Instagram', socials.instagram, <Instagram size={16} />);
+    add('tiktok', 'TikTok', socials.tiktok, <ExternalLink size={16} />);
+    add('facebook', 'Facebook', socials.facebook, <Facebook size={16} />);
+    return entries;
+  }, [project]);
 
   const projectLinks = useMemo(() => {
     const links = new Map<string, string>();
@@ -291,6 +335,11 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                   <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
                     {project.name}
                   </h1>
+                  {project.description && (
+                    <p className="mt-3 max-w-2xl text-sm sm:text-base text-slate-300/90 leading-relaxed">
+                      {project.description}
+                    </p>
+                  )}
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400 text-xs sm:text-sm">
                     <a
                       href={project.domain?.startsWith('http') ? project.domain : `https://${project.domain}`}
@@ -309,6 +358,24 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                       <span>Verified</span>
                     </div>
                   </div>
+                  {socialLinks.length > 0 && (
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {socialLinks.map((link) => (
+                        <a
+                          key={link.key}
+                          href={link.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={link.label}
+                          className="group inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all"
+                        >
+                          <span className="text-indigo-300 group-hover:text-indigo-200 transition-colors">
+                            {link.icon}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
