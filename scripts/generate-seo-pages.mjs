@@ -52,9 +52,10 @@ const ensureDir = (dir) => fs.mkdir(dir, { recursive: true });
 
 const pageUrl = (pathname) => `${site.baseUrl}${pathname}`;
 
-const renderMeta = ({ title, description, path: pagePath, keywords = [] }) => {
+const renderMeta = ({ title, description, path: pagePath, keywords = [], image: overrideImage }) => {
   const url = pageUrl(pagePath);
-  const image = site.ogImage.startsWith('http') ? site.ogImage : `${site.baseUrl}${site.ogImage}`;
+  const resolvedImage = overrideImage || site.ogImage;
+  const image = resolvedImage.startsWith('http') ? resolvedImage : `${site.baseUrl}${resolvedImage}`;
   const keywordsMeta = keywords.length > 0 ? `\n    <meta name="keywords" content="${keywords.join(', ')}">` : '';
 
   return `
@@ -746,12 +747,54 @@ const renderIndexPage = ({
       })}\n      ${renderSection('Store', renderCardGrid(cards))}\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
 };
 
+const renderProjectDetailPage = (project) => {
+  const pagePath = `/store/${project.id}`;
+  const description = project.description || `Explore quests and rewards from ${project.name} on QuestLayer.`;
+  const image = project.banner_url || project.logo_url || site.ogImage;
+  const breadcrumbs = [
+    { name: 'Home', path: '/' },
+    { name: 'Store', path: '/browse' },
+    { name: project.name, path: pagePath }
+  ];
+
+  const socials = project.social_links ? Object.values(project.social_links).filter(Boolean) : [];
+  const socialList = socials.length
+    ? `<ul class="list">${socials.map((link) => `<li><a href="${link}">${link}</a></li>`).join('')}</ul>`
+    : '<p>No social links listed yet.</p>';
+
+  const schemas = renderJsonLd([
+    renderBreadcrumbSchema(breadcrumbs),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Project',
+      name: project.name,
+      description,
+      url: pageUrl(pagePath),
+      image: image ? (image.startsWith('http') ? image : `${site.baseUrl}${image}`) : undefined,
+      sameAs: socials.length ? socials : undefined
+    }
+  ]);
+
+  return `<!DOCTYPE html>\n<html lang="en">\n<head>${renderMeta({
+    title: `${project.name} | QuestLayer`,
+    description,
+    path: pagePath,
+    image
+  })}\n${schemas}\n</head>\n<body>\n  <div class="page">${renderHeader()}\n    <main>\n      ${renderHero({
+        kicker: 'Project',
+        title: project.name,
+        description,
+        secondaryHref: '/browse',
+        secondaryCta: 'Back to store'
+      })}\n      ${renderSection('Overview', `<p>${description}</p>`)}\n      ${project.domain ? renderSection('Website', `<p><a href="${project.domain.startsWith('http') ? project.domain : `https://${project.domain}`}">${project.domain}</a></p>`) : ''}\n      ${renderSection('Social links', socialList)}\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
+};
+
 const writePage = async (filePath, content) => {
   await ensureDir(path.dirname(filePath));
   await fs.writeFile(filePath, content);
 };
 
-const fetchProjectPaths = async () => {
+const fetchProjectsForSeo = async () => {
   const envFromFile = await loadEnvFile(path.join(process.cwd(), '.env.local'));
   const supabaseUrl = process.env.VITE_SUPABASE_URL || envFromFile.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || envFromFile.VITE_SUPABASE_ANON_KEY;
@@ -764,12 +807,12 @@ const fetchProjectPaths = async () => {
 
   const { data, error } = await supabase
     .from('projects')
-    .select('id')
+    .select('id, name, domain, description, logo_url, banner_url, social_links, created_at, last_ping_at')
     .order('created_at', { ascending: false })
     .limit(1000);
 
   if (error || !data) return [];
-  return data.map((project) => `/store/${project.id}`);
+  return data;
 };
 
 const generate = async () => {
@@ -887,7 +930,14 @@ const generate = async () => {
     })
   );
 
-  const projectPaths = await fetchProjectPaths();
+  const projects = await fetchProjectsForSeo();
+  const projectPaths = projects.map((project) => `/store/${project.id}`);
+
+  await Promise.all(
+    projects.map((project) =>
+      writePage(path.join(root, 'store', project.id, 'index.html'), renderProjectDetailPage(project))
+    )
+  );
   const urls = [
     '/',
     '/terms',
