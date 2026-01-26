@@ -32,6 +32,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [stats, setStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [ogImage, setOgImage] = useState<string | null>(null);
+  const [showInitial, setShowInitial] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,6 +61,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
             console.error('Failed to fetch OG image:', e);
           }
         }
+        setShowInitial(!(project?.logo_url || project?.domain));
       } catch (err) {
         if (!isMounted) return;
         setProject(null);
@@ -78,6 +80,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const rewardTotal = useMemo(() => {
     return tasks.reduce((sum, task) => sum + (task?.xp_reward || 0), 0);
   }, [tasks]);
+
+  const logoSrc = project?.logo_url || (project?.domain ? getFaviconUrl(project.domain) : '');
 
   const lastVerifiedLabel = project?.last_ping_at
     ? new Date(project.last_ping_at).toLocaleDateString('en-US', {
@@ -237,25 +241,29 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                     textShadow: `0 0 20px ${accentColor}40`
                   }}
                 >
-                  {project.domain ? (
+                  {logoSrc ? (
                     <img 
-                      src={getFaviconUrl(project.domain)}
+                      src={logoSrc}
                       alt={project.name}
                       className="w-full h-full object-cover"
                       onLoad={(e) => {
                         const img = e.target as HTMLImageElement;
                         if (img.naturalWidth < 16) {
-                          img.style.display = 'none';
+                          setShowInitial(true);
+                        } else {
+                          setShowInitial(false);
                         }
                       }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
+                      onError={() => {
+                        setShowInitial(true);
                       }}
                     />
                   ) : null}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    {project.name.charAt(0).toUpperCase()}
-                  </div>
+                  {showInitial && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      {project.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div className="relative z-20">
                   <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
