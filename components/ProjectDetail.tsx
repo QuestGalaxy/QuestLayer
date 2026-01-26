@@ -2,6 +2,23 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ExternalLink, Globe, Loader2, ShieldCheck, Sparkles, Trophy, Sword, Zap, Users, BarChart3, Clock, CheckCircle2, Star, Share2 } from 'lucide-react';
 import { fetchProjectDetails, fetchProjectStats } from '../lib/supabase';
 
+const getFaviconUrl = (link: string) => {
+  try {
+    if (!link || link.length < 4) return '';
+    let validLink = link.trim();
+    validLink = validLink.replace(/[\/.]+$/, ''); 
+    if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
+      validLink = `https://${validLink}`;
+    }
+    const url = new URL(validLink);
+    let hostname = url.hostname;
+    if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
+    return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${hostname}&size=128`;
+  } catch {
+    return '';
+  }
+};
+
 interface ProjectDetailProps {
   projectId: string;
   onBack: () => void;
@@ -14,6 +31,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [tasks, setTasks] = useState<any[]>([]);
   const [stats, setStats] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ogImage, setOgImage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,6 +44,21 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         setProject(project);
         setTasks(tasks || []);
         setStats(stats);
+
+        // Fetch OG Image if project has domain
+        if (project?.domain) {
+          try {
+            const target = project.domain.startsWith('http') ? project.domain : `https://${project.domain}`;
+            const url = `/api/og?url=${encodeURIComponent(target)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (isMounted && data?.image) {
+              setOgImage(data.image);
+            }
+          } catch (e) {
+            console.error('Failed to fetch OG image:', e);
+          }
+        }
       } catch (err) {
         if (!isMounted) return;
         setProject(null);
@@ -165,15 +198,37 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         </button>
 
         {/* Hero Section */}
-        <div className="flex flex-col lg:flex-row gap-12 items-start mb-16">
-          <div className="flex-1 space-y-8 w-full">
+        <div className="relative flex flex-col lg:flex-row gap-12 items-start mb-16 rounded-[3rem] p-8 md:p-12 overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm group">
+          {/* Banner Image Background */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            {ogImage ? (
+              <div className="absolute inset-0">
+                <img 
+                  src={ogImage} 
+                  alt="" 
+                  className="w-full h-full object-cover opacity-20 blur-md group-hover:opacity-30 group-hover:scale-105 transition-all duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+              </div>
+            ) : (
+              <div 
+                className="absolute inset-0 opacity-10"
+                style={{ 
+                  background: `radial-gradient(circle at 20% 50%, ${accentColor} 0%, transparent 70%)` 
+                }}
+              />
+            )}
+          </div>
+
+          <div className="flex-1 space-y-8 w-full relative z-10">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">
                 <Sparkles size={12} className="animate-pulse" /> Official Quest
               </div>
               <div className="flex items-center gap-6">
                 <div
-                  className="h-20 w-20 md:h-28 md:w-28 rounded-[2.5rem] flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl shrink-0"
+                  className="h-20 w-20 md:h-28 md:w-28 rounded-[2.5rem] flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl shrink-0 overflow-hidden relative z-20"
                   style={{
                     backgroundColor: `${accentColor}20`,
                     border: `2px solid ${accentColor}40`,
@@ -181,9 +236,27 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                     textShadow: `0 0 20px ${accentColor}40`
                   }}
                 >
-                  {project.name.charAt(0).toUpperCase()}
+                  {project.domain ? (
+                    <img 
+                      src={getFaviconUrl(project.domain)}
+                      alt={project.name}
+                      className="w-full h-full object-cover"
+                      onLoad={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        if (img.naturalWidth < 16) {
+                          img.style.display = 'none';
+                        }
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {project.name.charAt(0).toUpperCase()}
+                  </div>
                 </div>
-                <div>
+                <div className="relative z-20">
                   <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
                     {project.name}
                   </h1>
@@ -240,7 +313,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           </div>
 
           {/* Key Stats Sidebar */}
-          <div className="w-full lg:w-80 grid grid-cols-2 lg:grid-cols-1 gap-4">
+          <div className="w-full lg:w-80 grid grid-cols-2 lg:grid-cols-1 gap-4 relative z-10">
             <div className="p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-indigo-500/30 transition-all">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
