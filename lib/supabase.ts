@@ -47,6 +47,18 @@ const fetchOgImage = async (domain?: string | null) => {
   }
 };
 
+const fetchLogoImage = async (domain?: string | null) => {
+  if (!domain) return null;
+  try {
+    const target = domain.startsWith('http') ? domain : `https://${domain}`;
+    const res = await fetch(`/api/logo?url=${encodeURIComponent(target)}`);
+    const data = await res.json();
+    return data?.logo ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export const fetchProjects = async (ownerAddress: string) => {
   const { data, error } = await supabase
     .from('projects')
@@ -155,7 +167,9 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
       projectId = projects?.[0]?.id;
     }
 
-    const logoUrl = state.projectLogo || (state.projectDomain ? getFaviconUrl(state.projectDomain) : '');
+    const logoUrl = state.projectLogo
+      || (state.projectDomain ? await fetchLogoImage(state.projectDomain) : null)
+      || (state.projectDomain ? getFaviconUrl(state.projectDomain) : '');
     const bannerUrl = state.projectBanner || (state.projectDomain ? await fetchOgImage(state.projectDomain) : null);
 
     if (projectId) {

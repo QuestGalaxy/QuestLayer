@@ -28,6 +28,18 @@ const extractMetaContent = (html, key) => {
   return contentMatch ? contentMatch[1] : null;
 };
 
+const extractIconHref = (html, relValue) => {
+  const linkTag = new RegExp(
+    `<link[^>]+rel=[\\"'][^\\"']*${relValue}[^\\"']*[\\\"'][^>]*>`,
+    'i'
+  );
+  const match = html.match(linkTag);
+  if (!match) return null;
+  const tag = match[0];
+  const hrefMatch = tag.match(/href=[\\"']([^\\"']+)[\\"']/i);
+  return hrefMatch ? hrefMatch[1] : null;
+};
+
 const resolveUrl = (value, baseUrl) => {
   try {
     return new URL(value, baseUrl).toString();
@@ -56,6 +68,35 @@ const fetchOgImage = async (domain) => {
       extractMetaContent(html, 'twitter:image') ||
       extractMetaContent(html, 'twitter:image:src');
     return ogImage ? resolveUrl(ogImage, targetUrl) : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const fetchLogoImage = async (domain) => {
+  if (!domain) return null;
+  let targetUrl = domain.trim();
+  if (!/^https?:\/\//i.test(targetUrl)) {
+    targetUrl = `https://${targetUrl}`;
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6500);
+  try {
+    const response = await fetch(targetUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'QuestLayerPreviewBot/1.0' }
+    });
+    if (!response.ok) return null;
+    const html = (await response.text()).slice(0, MAX_HTML_SIZE);
+    const logo =
+      extractIconHref(html, 'apple-touch-icon') ||
+      extractIconHref(html, 'apple-touch-icon-precomposed') ||
+      extractIconHref(html, 'icon') ||
+      extractIconHref(html, 'shortcut icon') ||
+      extractIconHref(html, 'mask-icon');
+    return logo ? resolveUrl(logo, targetUrl) : null;
   } catch {
     return null;
   } finally {
@@ -134,7 +175,7 @@ const main = async () => {
         continue;
       }
 
-      const nextLogo = project.logo_url || getFaviconUrl(project.domain);
+      const nextLogo = project.logo_url || await fetchLogoImage(project.domain) || getFaviconUrl(project.domain);
       const nextBanner = project.banner_url || await fetchOgImage(project.domain);
       if (!nextLogo && !nextBanner) {
         skipped += 1;
