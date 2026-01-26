@@ -49,6 +49,19 @@ export interface ThemeConfig {
   font: string;
 }
 
+export interface ProjectSocialLinks {
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  github?: string;
+  medium?: string;
+  linkedin?: string;
+  youtube?: string;
+  instagram?: string;
+  tiktok?: string;
+  facebook?: string;
+}
+
 export interface AppState {
   projectId?: string;
   projectName: string;
@@ -56,6 +69,8 @@ export interface AppState {
   projectUrl?: string; // Full project URL for metadata fetching
   projectLogo?: string; // Favicon or logo URL
   projectBanner?: string; // Banner/OG image URL
+  projectDescription?: string;
+  projectSocials?: ProjectSocialLinks;
   accentColor: string;
   position: Position;
   activeTheme: ThemeType;

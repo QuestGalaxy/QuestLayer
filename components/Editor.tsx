@@ -1,7 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Task, Position, ThemeType, AppState } from '../types.ts';
+import { Task, Position, ThemeType, AppState, ProjectSocialLinks } from '../types.ts';
 import {
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
@@ -98,6 +98,9 @@ interface EditorProps {
   state: AppState;
   setProjectName: (name: string) => void;
   setProjectDomain: (domain: string) => void;
+  setProjectDescription: (description: string) => void;
+  setProjectSocials: (socials: ProjectSocialLinks | undefined) => void;
+  onFetchMetadata: () => Promise<void>;
   setAccentColor: (color: string) => void;
   setPosition: (pos: Position) => void;
   setActiveTheme: (theme: ThemeType) => void;
@@ -163,6 +166,9 @@ const Editor: React.FC<EditorProps> = ({
   state,
   setProjectName,
   setProjectDomain,
+  setProjectDescription,
+  setProjectSocials,
+  onFetchMetadata,
   setAccentColor,
   setPosition,
   setActiveTheme,
@@ -170,6 +176,68 @@ const Editor: React.FC<EditorProps> = ({
   onPublish,
   onBack
 }) => {
+  const [pendingSocialKey, setPendingSocialKey] = useState<string>('');
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+  const [metadataLoaderFailed, setMetadataLoaderFailed] = useState(false);
+  const [metadataCursor, setMetadataCursor] = useState({ x: 0, y: 0 });
+  const metadataCursorRef = useRef({ x: 0, y: 0 });
+  const metadataRafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isFetchingMetadata) return;
+    const handlePointerMove = (event: PointerEvent | MouseEvent) => {
+      metadataCursorRef.current = { x: event.clientX, y: event.clientY };
+      if (metadataRafRef.current != null) return;
+      metadataRafRef.current = window.requestAnimationFrame(() => {
+        metadataRafRef.current = null;
+        setMetadataCursor(metadataCursorRef.current);
+      });
+    };
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('mousemove', handlePointerMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('mousemove', handlePointerMove);
+      if (metadataRafRef.current != null) {
+        window.cancelAnimationFrame(metadataRafRef.current);
+        metadataRafRef.current = null;
+      }
+    };
+  }, [isFetchingMetadata]);
+
+  const SOCIAL_OPTIONS: Array<{ key: keyof ProjectSocialLinks; label: string; placeholder: string }> = [
+    { key: 'twitter', label: 'Twitter / X', placeholder: 'https://x.com/yourhandle' },
+    { key: 'discord', label: 'Discord', placeholder: 'https://discord.gg/yourserver' },
+    { key: 'telegram', label: 'Telegram', placeholder: 'https://t.me/yourchannel' },
+    { key: 'github', label: 'GitHub', placeholder: 'https://github.com/yourorg' },
+    { key: 'medium', label: 'Medium', placeholder: 'https://medium.com/@yourteam' },
+    { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/company/yourorg' },
+    { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@yourchannel' },
+    { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourhandle' },
+    { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@yourhandle' },
+    { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourpage' }
+  ];
+
+  const socials = state.projectSocials ?? {};
+  const socialKeys = Object.keys(socials) as Array<keyof ProjectSocialLinks>;
+  const availableSocials = SOCIAL_OPTIONS.filter((option) => !(option.key in socials));
+
+  const handleSocialChange = (key: keyof ProjectSocialLinks, value: string) => {
+    setProjectSocials({ ...socials, [key]: value });
+  };
+
+  const handleSocialRemove = (key: keyof ProjectSocialLinks) => {
+    const next: ProjectSocialLinks = { ...socials };
+    delete next[key];
+    setProjectSocials(Object.keys(next).length > 0 ? next : {});
+  };
+
+  const handleAddSocial = () => {
+    if (!pendingSocialKey) return;
+    const key = pendingSocialKey as keyof ProjectSocialLinks;
+    setProjectSocials({ ...socials, [key]: '' });
+    setPendingSocialKey('');
+  };
   const getFaviconUrl = (link: string) => {
     try {
       if (!link || link.length < 4) return '';
@@ -584,7 +652,39 @@ const Editor: React.FC<EditorProps> = ({
   }, [editForm?.link, editForm?.icon]);
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 border-r border-white/5 overflow-hidden">
+    <>
+      {isFetchingMetadata && createPortal(
+        <div
+          className="fixed z-[9999] pointer-events-none left-0 top-0"
+          style={{
+            transform: `translate3d(${metadataCursor.x + 18}px, ${metadataCursor.y + 18}px, 0)`
+          }}
+        >
+          <div className="flex items-center gap-3 rounded-2xl bg-slate-950/90 border border-emerald-400/30 px-4 py-2.5 shadow-2xl shadow-emerald-500/20 backdrop-blur-md animate-bounce">
+            <span className="relative flex h-12 w-12 items-center justify-center">
+              {metadataLoaderFailed ? (
+                <Loader2 className="h-8 w-8 animate-spin text-emerald-200" />
+              ) : (
+                <video
+                  src="/questLogo.webm"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  onError={() => setMetadataLoaderFailed(true)}
+                  className="h-12 w-12 rounded-full object-cover"
+                />
+              )}
+            </span>
+            <div className="flex flex-col leading-none">
+              <span className="text-[11px] font-black uppercase tracking-widest text-emerald-200">Fetching</span>
+              <span className="text-[10px] font-semibold text-slate-300">Project metadata</span>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+      <div className="flex flex-col h-full bg-slate-900 border-r border-white/5 overflow-hidden">
       {/* Fixed Header */}
       <div className="p-6 border-b border-white/5 bg-slate-900 shrink-0 z-30 shadow-xl flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -713,6 +813,98 @@ const Editor: React.FC<EditorProps> = ({
                   placeholder="e.g. my-awesome-app.com"
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Project Description</label>
+                  {state.projectDomain && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (isFetchingMetadata) return;
+                        setIsFetchingMetadata(true);
+                        try {
+                          await Promise.all([
+                            onFetchMetadata(),
+                            new Promise((resolve) => setTimeout(resolve, 650))
+                          ]);
+                        } finally {
+                          setIsFetchingMetadata(false);
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-widest text-emerald-300/90 hover:text-emerald-200 transition-colors"
+                    >
+                      {isFetchingMetadata ? 'Fetching…' : 'Fetch now'}
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={state.projectDescription || ''}
+                  onChange={(e) => setProjectDescription(e.target.value)}
+                  placeholder="Short description pulled from the website (edit if needed)."
+                  className="w-full min-h-[84px] bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors resize-y"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Social Links</label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={pendingSocialKey}
+                      onChange={(e) => setPendingSocialKey(e.target.value)}
+                      className="h-[30px] bg-slate-900 border border-white/10 rounded-lg px-2 text-[10px] font-semibold text-white outline-none focus:border-indigo-500"
+                    >
+                      <option value="">Add social...</option>
+                      {availableSocials.map((option) => (
+                        <option key={option.key} value={option.key}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleAddSocial}
+                      disabled={!pendingSocialKey}
+                      className="h-[30px] px-3 rounded-lg bg-indigo-500/80 text-[10px] font-black uppercase tracking-widest text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-500 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {socialKeys.length === 0 ? (
+                  <div className="text-[11px] text-slate-500 border border-dashed border-white/10 rounded-xl px-4 py-3">
+                    No socials found yet. Add manually or paste your domain to auto-detect.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {socialKeys.map((key) => {
+                      const meta = SOCIAL_OPTIONS.find((option) => option.key === key);
+                      return (
+                        <div key={key} className="flex items-center gap-2">
+                          <div className="w-[110px] text-[10px] font-black uppercase text-slate-500">
+                            {meta?.label ?? key}
+                          </div>
+                          <input
+                            value={socials[key] || ''}
+                            onChange={(e) => handleSocialChange(key, e.target.value)}
+                            placeholder={meta?.placeholder || 'https://'}
+                            className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSocialRemove(key)}
+                            className="w-9 h-9 rounded-xl border border-white/10 bg-slate-900 text-slate-400 hover:text-white hover:border-rose-500/60 transition-colors flex items-center justify-center"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1339,7 +1531,8 @@ const Editor: React.FC<EditorProps> = ({
         </div>,
         document.body
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

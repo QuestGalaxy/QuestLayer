@@ -9,6 +9,8 @@ create table if not exists projects (
   owner_id uuid references auth.users(id), -- Links to the admin user
   owner_wallet text, -- Store wallet address of the creator
   domain text, -- The website where this widget will be embedded
+  description text,
+  social_links jsonb,
   accent_color text default '#6366f1',
   position text default 'bottom-right',
   theme text default 'sleek',
@@ -124,6 +126,8 @@ alter table projects add column if not exists last_ping_at timestamp with time z
 -- Persisted media for project cards
 alter table projects add column if not exists logo_url text;
 alter table projects add column if not exists banner_url text;
+alter table projects add column if not exists description text;
+alter table projects add column if not exists social_links jsonb;
 
 -- Enable RLS for Analytics
 alter table analytics_events enable row level security;

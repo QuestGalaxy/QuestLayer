@@ -292,10 +292,97 @@ const App: React.FC = () => {
 
   const handleSetTasks = (newTasks: Task[]) => setState(prev => ({ ...prev, tasks: newTasks }));
   const handleSetName = (name: string) => setState(prev => ({ ...prev, projectName: name }));
-  const handleSetDomain = (domain: string) => setState(prev => ({ ...prev, projectDomain: domain }));
+  const handleSetDomain = (domain: string) => setState(prev => ({
+    ...prev,
+    projectDomain: domain,
+    projectDescription: undefined,
+    projectSocials: undefined
+  }));
+  const handleSetDescription = (description: string) => setState(prev => ({
+    ...prev,
+    projectDescription: description
+  }));
+  const handleSetSocials = (socials: AppState['projectSocials']) => setState(prev => ({
+    ...prev,
+    projectSocials: socials
+  }));
   const handleSetColor = (color: string) => setState(prev => ({ ...prev, accentColor: color }));
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
+
+  const lastMetadataDomainRef = useRef<string | null>(null);
+
+  const fetchProjectMetadata = async (domain: string, signal?: AbortSignal) => {
+    const normalized = domain.startsWith('http') ? domain : `https://${domain}`;
+    const res = await fetch(`/api/metadata?url=${encodeURIComponent(normalized)}`, { signal });
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await res.text();
+      console.warn('Metadata endpoint returned non-JSON response.', text.slice(0, 120));
+      return null;
+    }
+    const data = await res.json();
+    return data ?? null;
+  };
+
+  const handleFetchMetadata = async () => {
+    const rawDomain = state.projectDomain?.trim();
+    if (!rawDomain || rawDomain.length < 4 || !rawDomain.includes('.')) return;
+
+    try {
+      const data = await fetchProjectMetadata(rawDomain);
+      if (!data) return;
+      lastMetadataDomainRef.current = rawDomain.startsWith('http') ? rawDomain : `https://${rawDomain}`;
+      setState(prev => ({
+        ...prev,
+        projectDescription: (data.description || prev.projectDescription || undefined),
+        projectSocials: (data.socials && Object.keys(data.socials).length > 0)
+          ? data.socials
+          : (prev.projectSocials || undefined)
+      }));
+    } catch (err) {
+      console.warn('Failed to fetch project metadata:', err);
+    }
+  };
+
+  useEffect(() => {
+    const rawDomain = state.projectDomain?.trim();
+    if (!rawDomain || rawDomain.length < 4 || !rawDomain.includes('.')) return;
+
+    const normalized = rawDomain.startsWith('http') ? rawDomain : `https://${rawDomain}`;
+    const needsDescription = state.projectDescription == null;
+    const needsSocials = state.projectSocials == null;
+
+    if (!needsDescription && !needsSocials) return;
+    if (lastMetadataDomainRef.current === normalized) return;
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+      try {
+        const data = await fetchProjectMetadata(rawDomain, controller.signal);
+        if (!data) return;
+
+        lastMetadataDomainRef.current = normalized;
+        setState(prev => ({
+          ...prev,
+          projectDescription: (data.description || prev.projectDescription || undefined),
+          projectSocials: (data.socials && Object.keys(data.socials).length > 0)
+            ? data.socials
+            : (prev.projectSocials || undefined)
+        }));
+      } catch (err) {
+        if ((err as any)?.name !== 'AbortError') {
+          console.warn('Failed to fetch project metadata:', err);
+        }
+      }
+    }, 600);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [state.projectDomain, state.projectDescription, state.projectSocials]);
 
   const { open } = useAppKit();
   const { address, isConnected, status } = useAppKitAccount();
@@ -324,6 +411,8 @@ const App: React.FC = () => {
       projectId: snapshotState.projectId ?? null,
       projectName: snapshotState.projectName,
       projectDomain: snapshotState.projectDomain ?? null,
+      projectDescription: snapshotState.projectDescription ?? null,
+      projectSocials: snapshotState.projectSocials ?? null,
       accentColor: snapshotState.accentColor,
       position: snapshotState.position,
       activeTheme: snapshotState.activeTheme,
@@ -519,6 +608,8 @@ const App: React.FC = () => {
                 projectId: project.id,
                 projectName: project.name,
                 projectDomain: project.domain,
+                projectDescription: project.description ?? undefined,
+                projectSocials: project.social_links ?? undefined,
                 projectLogo: project.logo_url ?? undefined,
                 projectBanner: project.banner_url ?? undefined,
                 accentColor: project.accent_color,
@@ -550,6 +641,8 @@ const App: React.FC = () => {
                 projectId: project.id,
                 projectName: project.name,
                 projectDomain: project.domain, // Load domain
+                projectDescription: project.description ?? undefined,
+                projectSocials: project.social_links ?? undefined,
                 projectLogo: project.logo_url ?? undefined,
                 projectBanner: project.banner_url ?? undefined,
                 accentColor: project.accent_color,
@@ -651,6 +744,9 @@ const App: React.FC = () => {
             state={state}
             setProjectName={handleSetName}
             setProjectDomain={handleSetDomain}
+            setProjectDescription={handleSetDescription}
+            setProjectSocials={handleSetSocials}
+            onFetchMetadata={handleFetchMetadata}
             setAccentColor={handleSetColor}
             setPosition={handleSetPos}
             setActiveTheme={handleSetTheme}

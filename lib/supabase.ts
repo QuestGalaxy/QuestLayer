@@ -62,7 +62,7 @@ const fetchLogoImage = async (domain?: string | null) => {
 export const fetchProjects = async (ownerAddress: string) => {
   const { data, error } = await supabase
     .from('projects')
-    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at, logo_url, banner_url')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, description, social_links, accent_color, position, theme, last_ping_at, logo_url, banner_url')
     .eq('owner_wallet', ownerAddress)
     .order('created_at', { ascending: false });
 
@@ -73,7 +73,7 @@ export const fetchProjects = async (ownerAddress: string) => {
 export const fetchAllProjects = async () => {
   const { data, error } = await supabase
     .from('projects')
-    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at, logo_url, banner_url')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, description, social_links, accent_color, position, theme, last_ping_at, logo_url, banner_url')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -83,7 +83,7 @@ export const fetchAllProjects = async () => {
 export const fetchProjectDetails = async (projectId: string) => {
   const { data: project, error: projectError } = await supabase
     .from('projects')
-    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at, logo_url, banner_url')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, description, social_links, accent_color, position, theme, last_ping_at, logo_url, banner_url')
     .eq('id', projectId)
     .single();
 
@@ -176,6 +176,8 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
       const updatePayload: Record<string, any> = {
         name: state.projectName,
         domain: state.projectDomain,
+        description: state.projectDescription ?? null,
+        social_links: state.projectSocials ?? null,
         accent_color: state.accentColor,
         position: state.position,
         theme: state.activeTheme,
@@ -197,6 +199,8 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
         .insert({
           name: state.projectName,
           domain: state.projectDomain, // Save domain
+          description: state.projectDescription ?? null,
+          social_links: state.projectSocials ?? null,
           accent_color: state.accentColor,
           position: state.position,
           theme: state.activeTheme,
