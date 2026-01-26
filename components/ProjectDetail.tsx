@@ -122,6 +122,88 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     };
   }, [projectId]);
 
+  useEffect(() => {
+    if (!project) return;
+    const setMetaTag = (selector: string, attributes: Record<string, string>) => {
+      let tag = document.querySelector<HTMLMetaElement>(selector);
+      if (!tag) {
+        tag = document.createElement('meta');
+        Object.entries(attributes).forEach(([key, value]) => tag!.setAttribute(key, value));
+        document.head.appendChild(tag);
+      }
+      if (attributes.content) {
+        tag.setAttribute('content', attributes.content);
+      }
+    };
+
+    const setLinkTag = (rel: string, href: string) => {
+      let tag = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+      if (!tag) {
+        tag = document.createElement('link');
+        tag.setAttribute('rel', rel);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('href', href);
+    };
+
+    const setJsonLd = (payload: Record<string, any>) => {
+      let script = document.querySelector<HTMLScriptElement>('script[data-schema="project"]');
+      if (!script) {
+        script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-schema', 'project');
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(payload);
+    };
+
+    const baseUrl = window.location.origin;
+    const canonicalUrl = `${baseUrl}/store/${project.id}`;
+    const description = project.description || `Explore quests and rewards from ${project.name} on QuestLayer.`;
+    const imageUrl = ogImage || project.banner_url || project.logo_url || '';
+    const pageTitle = `${project.name} · QuestLayer`;
+
+    document.title = pageTitle;
+    setLinkTag('canonical', canonicalUrl);
+    setMetaTag('meta[name="description"]', { name: 'description', content: description });
+    setMetaTag('meta[property="og:title"]', { property: 'og:title', content: pageTitle });
+    setMetaTag('meta[property="og:description"]', { property: 'og:description', content: description });
+    setMetaTag('meta[property="og:url"]', { property: 'og:url', content: canonicalUrl });
+    if (imageUrl) {
+      setMetaTag('meta[property="og:image"]', { property: 'og:image', content: imageUrl });
+    }
+    setMetaTag('meta[name="twitter:card"]', { name: 'twitter:card', content: imageUrl ? 'summary_large_image' : 'summary' });
+    setMetaTag('meta[name="twitter:title"]', { name: 'twitter:title', content: pageTitle });
+    setMetaTag('meta[name="twitter:description"]', { name: 'twitter:description', content: description });
+    if (imageUrl) {
+      setMetaTag('meta[name="twitter:image"]', { name: 'twitter:image', content: imageUrl });
+    }
+
+    const socialLinks = project.social_links ? Object.values(project.social_links).filter(Boolean) : [];
+    setJsonLd({
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: pageTitle,
+      url: canonicalUrl,
+      description,
+      image: imageUrl || undefined,
+      dateModified: project.last_ping_at || project.created_at,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'QuestLayer',
+        url: baseUrl
+      },
+      mainEntity: {
+        '@type': 'Project',
+        name: project.name,
+        url: canonicalUrl,
+        description,
+        image: imageUrl || undefined,
+        sameAs: socialLinks.length > 0 ? socialLinks : undefined
+      }
+    });
+  }, [project, ogImage]);
+
   const rewardTotal = useMemo(() => {
     return tasks.reduce((sum, task) => sum + (task?.xp_reward || 0), 0);
   }, [tasks]);

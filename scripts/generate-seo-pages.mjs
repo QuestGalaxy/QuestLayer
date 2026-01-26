@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { createClient } from '@supabase/supabase-js';
 import {
   site,
   corePages,
@@ -12,6 +13,29 @@ import {
 } from '../seo/seo-content.mjs';
 
 const root = path.resolve(process.cwd(), 'public');
+
+const loadEnvFile = async (filepath) => {
+  try {
+    const raw = await fs.readFile(filepath, 'utf8');
+    const entries = raw.split('\n');
+    const env = {};
+    for (const line of entries) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex === -1) continue;
+      const key = trimmed.slice(0, eqIndex).trim();
+      let value = trimmed.slice(eqIndex + 1).trim();
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      env[key] = value;
+    }
+    return env;
+  } catch {
+    return {};
+  }
+};
 
 const toMap = (list) =>
   list.reduce((acc, item) => {
@@ -727,6 +751,27 @@ const writePage = async (filePath, content) => {
   await fs.writeFile(filePath, content);
 };
 
+const fetchProjectPaths = async () => {
+  const envFromFile = await loadEnvFile(path.join(process.cwd(), '.env.local'));
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || envFromFile.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || envFromFile.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) return [];
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false }
+  });
+
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id')
+    .order('created_at', { ascending: false })
+    .limit(1000);
+
+  if (error || !data) return [];
+  return data.map((project) => `/store/${project.id}`);
+};
+
 const generate = async () => {
   await Promise.all(
     corePages.map((page) =>
@@ -842,10 +887,12 @@ const generate = async () => {
     })
   );
 
+  const projectPaths = await fetchProjectPaths();
   const urls = [
     '/',
     '/terms',
     '/privacy',
+    '/browse',
     ...corePages.map((page) => `/${page.slug}`),
     '/features',
     ...featurePages.map((page) => `/features/${page.slug}`),
@@ -858,7 +905,8 @@ const generate = async () => {
     '/integrations',
     ...integrationPages.map((page) => `/integrations/${page.slug}`),
     '/comparisons',
-    ...comparisonPages.map((page) => `/comparisons/${page.slug}`)
+    ...comparisonPages.map((page) => `/comparisons/${page.slug}`),
+    ...projectPaths
   ];
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
