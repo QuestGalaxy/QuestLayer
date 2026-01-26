@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ExternalLink, Globe, Loader2, ShieldCheck, Sparkles, Trophy, Sword, Zap, Users, BarChart3, Clock, CheckCircle2, Star, Share2 } from 'lucide-react';
-import { fetchProjectDetails, fetchProjectStats } from '../lib/supabase';
+import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
+import { fetchProjectDetails, fetchProjectStats, fetchUserXP } from '../lib/supabase';
+import UnifiedHeader from './UnifiedHeader';
+import GlobalFooter from './GlobalFooter';
 
 const getFaviconUrl = (link: string) => {
   try {
@@ -33,6 +36,22 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [loading, setLoading] = useState(true);
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [showInitial, setShowInitial] = useState(true);
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
+  const { disconnect } = useDisconnect();
+  const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
+  const [nextLevelXP, setNextLevelXP] = useState(3000);
+
+  useEffect(() => {
+    const loadUserStats = async () => {
+      if (address) {
+        const stats = await fetchUserXP(address);
+        setUserStats(stats);
+        setNextLevelXP(stats.level * 3000);
+      }
+    };
+    loadUserStats();
+  }, [address]);
 
   useEffect(() => {
     let isMounted = true;
@@ -176,7 +195,21 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const accentColor = project.accent_color || '#6366f1';
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white overflow-y-auto custom-scroll selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#020617] text-white overflow-y-auto custom-scroll selection:bg-indigo-500/30 flex flex-col">
+      <UnifiedHeader
+        onBack={onBack}
+        onHome={onBack}
+        isConnected={isConnected}
+        address={address}
+        userStats={userStats}
+        nextLevelXP={nextLevelXP}
+        onConnect={() => open()}
+        onDisconnect={() => disconnect()}
+        onLeaderboard={() => {
+          if (project?.id) onLeaderboard(project.id);
+        }}
+      />
+
       {/* Dynamic Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
@@ -190,20 +223,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 py-10">
-        {/* Header Navigation */}
-        <button
-          onClick={onBack}
-          className="group inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-all mb-10"
-        >
-          <div className="p-2 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-white/20 transition-all">
-            <ArrowLeft size={14} />
-          </div>
-          Back to Store
-        </button>
-
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-10 pt-24 md:pt-32 flex-1 w-full">
         {/* Hero Section */}
-        <div className="relative flex flex-col lg:flex-row gap-12 items-start mb-16 rounded-[3rem] p-8 md:p-12 overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm group">
+        <div className="relative flex flex-col lg:flex-row gap-6 md:gap-12 items-start mb-16 rounded-[2rem] md:rounded-[3rem] p-5 sm:p-6 md:p-12 overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm group">
           {/* Banner Image Background */}
           <div className="absolute inset-0 z-0 overflow-hidden">
             {ogImage ? (
@@ -228,12 +250,12 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
 
           <div className="flex-1 space-y-8 w-full relative z-10">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300">
                 <Sparkles size={12} className="animate-pulse" /> Official Quest
               </div>
               <div className="flex items-center gap-6">
                 <div
-                  className="h-20 w-20 md:h-28 md:w-28 rounded-[2.5rem] flex items-center justify-center text-4xl md:text-5xl font-black shadow-2xl shrink-0 overflow-hidden relative z-20"
+                  className="h-16 w-16 sm:h-20 sm:w-20 md:h-28 md:w-28 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-2xl shrink-0 overflow-hidden relative z-20"
                   style={{
                     backgroundColor: `${accentColor}20`,
                     border: `2px solid ${accentColor}40`,
@@ -266,18 +288,18 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                   )}
                 </div>
                 <div className="relative z-20">
-                  <h1 className="text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
+                  <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
                     {project.name}
                   </h1>
-                  <div className="mt-4 flex items-center gap-4 text-slate-400">
+                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400 text-xs sm:text-sm">
                     <a
                       href={project.domain?.startsWith('http') ? project.domain : `https://${project.domain}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 text-sm hover:text-white transition-colors group"
+                      className="flex items-center gap-2 hover:text-white transition-colors group min-w-0"
                     >
                       <Globe size={16} className="text-indigo-400 group-hover:rotate-12 transition-transform" />
-                      <span className="border-b border-transparent group-hover:border-slate-500 transition-all">
+                      <span className="border-b border-transparent group-hover:border-slate-500 transition-all truncate">
                         {project.domain || 'No domain provided'}
                       </span>
                     </a>
@@ -291,58 +313,59 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2 flex-nowrap overflow-x-auto">
               <button
                 onClick={() => onOpen({ projectId: project.id, domain: project.domain })}
-                className="group relative px-8 py-4 rounded-2xl bg-indigo-500 text-white text-sm font-black uppercase tracking-widest overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(99,102,241,0.4)]"
+                className="group relative px-5 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-indigo-500 text-white text-xs sm:text-sm font-black uppercase tracking-[0.25em] sm:tracking-widest overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(99,102,241,0.4)]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                <span className="relative inline-flex items-center gap-3">
-                  <Sword size={18} />
+                <span className="relative inline-flex items-center gap-2 sm:gap-3">
+                  <Sword size={16} />
                   Start Quest
                 </span>
               </button>
               <button
                 onClick={() => onLeaderboard(project.id)}
-                className="px-8 py-4 rounded-2xl border border-white/10 bg-white/5 text-white/80 text-sm font-black uppercase tracking-widest hover:text-white hover:border-white/20 hover:bg-white/10 transition-all active:scale-95"
+                className="px-4 py-2.5 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl border border-white/10 bg-white/5 text-white/80 text-xs sm:text-sm font-black uppercase tracking-[0.25em] sm:tracking-widest hover:text-white hover:border-white/20 hover:bg-white/10 transition-all active:scale-95"
               >
-                <span className="inline-flex items-center gap-3">
-                  <Trophy size={18} className="text-amber-400" />
+                <span className="inline-flex items-center gap-2 sm:gap-3">
+                  <Trophy size={16} className="text-amber-400" />
                   Leaderboard
                 </span>
-              </button>
-              <button
-                onClick={handleShare}
-                className="p-4 rounded-2xl border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:border-white/20 hover:bg-white/10 transition-all active:scale-95"
-                title="Share Project"
-              >
-                <Share2 size={18} />
               </button>
             </div>
           </div>
 
+          <button
+            onClick={handleShare}
+            className="absolute right-4 top-4 md:right-6 md:top-6 p-2.5 md:p-3 rounded-xl border border-white/10 bg-slate-950/40 text-slate-300 hover:text-white hover:border-white/20 hover:bg-slate-900/60 transition-all active:scale-95 shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+            title="Share Project"
+          >
+            <Share2 size={16} />
+          </button>
+
           {/* Key Stats Sidebar */}
           <div className="w-full lg:w-80 grid grid-cols-2 lg:grid-cols-1 gap-4 relative z-10">
-            <div className="p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-indigo-500/30 transition-all">
+            <div className="p-4 sm:p-5 md:p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-indigo-500/30 transition-all">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
                   <Zap size={16} />
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black">Total Reward</div>
+                <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black truncate">Total Reward</div>
               </div>
-              <div className="text-3xl font-black text-white group-hover:text-indigo-400 transition-colors">{rewardTotal} XP</div>
-              <div className="mt-1 text-[10px] text-slate-500 uppercase font-bold tracking-wider">Across {tasks.length} missions</div>
+              <div className="text-2xl sm:text-3xl font-black text-white group-hover:text-indigo-400 transition-colors">{rewardTotal} XP</div>
+              <div className="mt-1 text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-wider leading-snug">Across {tasks.length} missions</div>
             </div>
 
-            <div className="p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-emerald-500/30 transition-all">
+            <div className="p-4 sm:p-5 md:p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl group hover:border-emerald-500/30 transition-all">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
                   <Users size={16} />
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black">Participants</div>
+                <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black min-w-0 truncate">Participants</div>
               </div>
-              <div className="text-3xl font-black text-white group-hover:text-emerald-400 transition-colors">{stats?.connected_wallets ?? 0}</div>
-              <div className="mt-1 text-[10px] text-slate-500 uppercase font-bold tracking-wider">{stats?.auw ?? 0} active this week</div>
+              <div className="text-2xl sm:text-3xl font-black text-white group-hover:text-emerald-400 transition-colors">{stats?.connected_wallets ?? 0}</div>
+              <div className="mt-1 text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-wider leading-snug">{stats?.auw ?? 0} active this week</div>
             </div>
           </div>
         </div>
@@ -401,9 +424,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           </div>
 
           {/* Sidebar Info */}
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {/* Project Links */}
-            <div className="rounded-[2.5rem] border border-white/10 bg-white/5 backdrop-blur-xl p-8">
+            <div className="rounded-[2.5rem] border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8 order-2 lg:order-1">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 flex items-center gap-2">
                 <Globe size={14} /> Ecosystem Links
               </h3>
@@ -428,7 +451,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
             </div>
 
             {/* Trust & Verification */}
-            <div className="rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-emerald-500/10 to-transparent p-8">
+            <div className="rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-emerald-500/10 to-transparent p-6 md:p-8 order-3 lg:order-2">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 flex items-center gap-2">
                 <ShieldCheck size={14} /> Trust & Verification
               </h3>
@@ -457,7 +480,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
             </div>
 
             {/* Stats Overview */}
-            <div className="rounded-[2.5rem] border border-white/10 bg-white/5 backdrop-blur-xl p-8">
+            <div className="rounded-[2.5rem] border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8 order-1 lg:order-3">
               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 flex items-center gap-2">
                 <BarChart3 size={14} /> Activity Feed
               </h3>
@@ -483,6 +506,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           </div>
         </div>
       </div>
+      <GlobalFooter className="mt-8" />
     </div>
   );
 };
