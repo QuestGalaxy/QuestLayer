@@ -313,22 +313,22 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-nowrap overflow-x-auto">
+            <div className="flex items-center gap-2 w-full">
               <button
                 onClick={() => onOpen({ projectId: project.id, domain: project.domain })}
-                className="group relative px-5 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-indigo-500 text-white text-xs sm:text-sm font-black uppercase tracking-[0.25em] sm:tracking-widest overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(99,102,241,0.4)]"
+                className="group relative flex-1 min-w-0 px-3 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-indigo-500 text-white text-[11px] sm:text-sm font-black uppercase tracking-[0.12em] sm:tracking-widest whitespace-nowrap transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(99,102,241,0.4)]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                <span className="relative inline-flex items-center gap-2 sm:gap-3">
+                <span className="relative inline-flex items-center justify-center gap-2 sm:gap-3 w-full">
                   <Sword size={16} />
                   Start Quest
                 </span>
               </button>
               <button
                 onClick={() => onLeaderboard(project.id)}
-                className="px-4 py-2.5 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl border border-white/10 bg-white/5 text-white/80 text-xs sm:text-sm font-black uppercase tracking-[0.25em] sm:tracking-widest hover:text-white hover:border-white/20 hover:bg-white/10 transition-all active:scale-95"
+                className="flex-1 min-w-0 px-3 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl border border-white/10 bg-white/5 text-white/80 text-[11px] sm:text-sm font-black uppercase tracking-[0.12em] sm:tracking-widest hover:text-white hover:border-white/20 hover:bg-white/10 transition-all active:scale-95"
               >
-                <span className="inline-flex items-center gap-2 sm:gap-3">
+                <span className="inline-flex items-center justify-center gap-2 sm:gap-3 w-full">
                   <Trophy size={16} className="text-amber-400" />
                   Leaderboard
                 </span>
