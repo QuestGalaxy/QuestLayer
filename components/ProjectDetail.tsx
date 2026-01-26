@@ -51,9 +51,11 @@ interface ProjectDetailProps {
   onBack: () => void;
   onOpen: (payload: { projectId: string; domain?: string | null }) => void;
   onLeaderboard: (projectId: string) => void;
+  onWidgetBuilder?: () => void;
+  onSubmitProject?: () => void;
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen, onLeaderboard }) => {
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen, onLeaderboard, onWidgetBuilder, onSubmitProject }) => {
   const [project, setProject] = useState<any | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [stats, setStats] = useState<any | null>(null);
@@ -252,6 +254,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         onLeaderboard={() => {
           if (project?.id) onLeaderboard(project.id);
         }}
+        onWidgetBuilder={onWidgetBuilder}
+        onSubmitProject={onSubmitProject}
       />
 
       {/* Dynamic Background */}
@@ -277,9 +281,11 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                 <img 
                   src={ogImage} 
                   alt="" 
-                  className="w-full h-full object-cover opacity-40 blur-[2px] group-hover:opacity-50 group-hover:scale-105 transition-all duration-700"
+                  className="w-full h-full object-cover opacity-30 blur-[1px] group-hover:opacity-40 group-hover:scale-105 transition-all duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/90 via-[#020617]/40 to-transparent" />
+                {/* Stronger left-to-right gradient for text readability */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent" />
+                {/* Bottom-to-top gradient to blend with the page background */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
               </div>
             ) : (
@@ -293,54 +299,73 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           </div>
 
           <div className="flex-1 space-y-8 w-full relative z-10">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300">
-                <Sparkles size={12} className="animate-pulse" /> Official Quest
-              </div>
-              <div className="flex items-center gap-6">
-                <div
-                  className="h-16 w-16 sm:h-20 sm:w-20 md:h-28 md:w-28 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-2xl shrink-0 overflow-hidden relative z-20"
-                  style={{
-                    backgroundColor: `${accentColor}20`,
-                    border: `2px solid ${accentColor}40`,
-                    color: accentColor,
-                    textShadow: `0 0 20px ${accentColor}40`
-                  }}
-                >
-                  {logoSrc ? (
-                    <img 
-                      src={logoSrc}
-                      alt={project.name}
-                      className="w-full h-full object-cover"
-                      onLoad={(e) => {
-                        const img = e.target as HTMLImageElement;
-                        if (img.naturalWidth < 16) {
-                          setShowInitial(true);
-                        } else {
-                          setShowInitial(false);
-                        }
-                      }}
-                      onError={() => {
-                        setShowInitial(true);
-                      }}
-                    />
-                  ) : null}
-                  {showInitial && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      {project.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300">
+                  <Sparkles size={12} className="animate-pulse" /> Official Quest
                 </div>
-                <div className="relative z-20">
+                <button
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300 hover:text-white hover:border-indigo-500/60 hover:bg-indigo-500/20 transition-all"
+                  title="Share Project"
+                >
+                  <Share2 size={12} className="animate-pulse" /> Share Quest
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Logo and Title side by side */}
+                <div className="flex items-center gap-4 sm:gap-6">
+                  <div
+                    className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 rounded-2xl md:rounded-3xl flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-2xl shrink-0 overflow-hidden relative"
+                    style={{
+                      backgroundColor: `${accentColor}20`,
+                      border: `2px solid ${accentColor}40`,
+                      color: accentColor,
+                      textShadow: `0 0 20px ${accentColor}40`
+                    }}
+                  >
+                    {logoSrc ? (
+                      <img 
+                        src={logoSrc}
+                        alt={project.name}
+                        className="w-full h-full object-cover"
+                        onLoad={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          if (img.naturalWidth < 16) {
+                            setShowInitial(true);
+                          } else {
+                            setShowInitial(false);
+                          }
+                        }}
+                        onError={() => {
+                          setShowInitial(true);
+                        }}
+                      />
+                    ) : null}
+                    {showInitial && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        {project.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  
                   <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
                     {project.name}
                   </h1>
+                </div>
+
+                {/* Description and Info below */}
+                <div className="space-y-4 max-w-3xl">
                   {project.description && (
-                    <p className="mt-3 max-w-2xl text-sm sm:text-base text-slate-300/90 leading-relaxed">
-                      {project.description}
-                    </p>
+                    <div className="group/desc relative">
+                      <p className="text-sm sm:text-base text-slate-300/80 leading-relaxed line-clamp-2 md:line-clamp-3 group-hover/desc:line-clamp-none transition-all duration-300">
+                        {project.description}
+                      </p>
+                    </div>
                   )}
-                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400 text-xs sm:text-sm">
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-slate-400 text-xs sm:text-sm">
                     <a
                       href={project.domain?.startsWith('http') ? project.domain : `https://${project.domain}`}
                       target="_blank"
@@ -358,22 +383,25 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                       <span>Verified</span>
                     </div>
                   </div>
+
                   {socialLinks.length > 0 && (
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {socialLinks.map((link) => (
-                        <a
-                          key={link.key}
-                          href={link.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          title={link.label}
-                          className="group inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all"
-                        >
-                          <span className="text-indigo-300 group-hover:text-indigo-200 transition-colors">
-                            {link.icon}
-                          </span>
-                        </a>
-                      ))}
+                    <div className="pt-2 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {socialLinks.map((link) => (
+                          <a
+                            key={link.key}
+                            href={link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={link.label}
+                            className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:border-white/20 hover:bg-white/10 hover:-translate-y-1 transition-all duration-300 shadow-lg"
+                          >
+                            <span className="text-slate-400 group-hover:text-indigo-400 transition-colors">
+                              {link.icon}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -403,13 +431,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
             </div>
           </div>
 
-          <button
-            onClick={handleShare}
-            className="absolute right-4 top-4 md:right-6 md:top-6 p-2.5 md:p-3 rounded-xl border border-white/10 bg-slate-950/40 text-slate-300 hover:text-white hover:border-white/20 hover:bg-slate-900/60 transition-all active:scale-95 shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
-            title="Share Project"
-          >
-            <Share2 size={16} />
-          </button>
+          
 
           {/* Key Stats Sidebar */}
           <div className="w-full lg:w-80 grid grid-cols-2 lg:grid-cols-1 gap-4 relative z-10">

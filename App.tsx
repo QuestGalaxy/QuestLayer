@@ -581,6 +581,8 @@ const App: React.FC = () => {
           setLeaderboardProjectId(projectId);
           setCurrentPage('leaderboard');
         }}
+        onWidgetBuilder={() => setCurrentPage('builder')}
+        onSubmitProject={() => setCurrentPage('submit')}
       />
     );
   }
