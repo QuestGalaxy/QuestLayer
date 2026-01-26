@@ -10,6 +10,7 @@ interface DashboardProps {
   onDisconnect: () => void;
   onBrowse: () => void;
   onDeleteProject: (projectId: string) => void;
+  onOpenProjectDetails: (projectId: string) => void;
 }
 
 const GlobalStats: React.FC<{ ownerAddress: string }> = ({ ownerAddress }) => {
@@ -70,7 +71,7 @@ const GlobalStats: React.FC<{ ownerAddress: string }> = ({ ownerAddress }) => {
   );
 };
 
-const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () => void }> = ({ project, onSelect, onDelete }) => {
+const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () => void; onOpenDetails: () => void }> = ({ project, onSelect, onDelete, onOpenDetails }) => {
   const [ogImage, setOgImage] = useState<string | null>(project.banner_url ?? null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -321,6 +322,17 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
             <Calendar size={12} />
             {new Date(project.created_at).toLocaleDateString()}
           </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenDetails();
+            }}
+            className="flex items-center gap-1.5 text-indigo-300 hover:text-indigo-200 transition-colors"
+            title="Open Project Details"
+          >
+            Details <ExternalLink size={12} />
+          </button>
           <span className="flex items-center gap-1.5 ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform">
             Edit <ArrowRight size={12} />
           </span>
@@ -369,7 +381,7 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect, onBrowse, onDeleteProject }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject, onDisconnect, onBrowse, onDeleteProject, onOpenProjectDetails }) => {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -505,6 +517,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSelectProject, onCreateProject,
                   key={p.id}
                   project={p}
                   onSelect={() => onSelectProject(p.id)}
+                  onOpenDetails={() => onOpenProjectDetails(p.id)}
                   onDelete={() => onDeleteProject(p.id)}
                 />
               ))}

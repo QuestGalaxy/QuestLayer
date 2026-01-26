@@ -701,6 +701,11 @@ const App: React.FC = () => {
         onBrowse={() => {
           setCurrentPage('questbrowse');
         }}
+        onOpenProjectDetails={(projectId) => {
+          setSelectedProjectId(projectId);
+          setCurrentPage('projectdetail');
+          window.history.pushState(null, '', `/store/${projectId}`);
+        }}
         onDeleteProject={async (id) => {
           try {
             await deleteProject(id);
