@@ -383,6 +383,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
   const isDev = (import.meta as any).env?.DEV ?? false;
   const NEW_WIDGET_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
+  const TRENDING_COOLDOWN_MS = 1000 * 60 * 60 * 12;
   
   const handleNextProject = () => {
     if (projects.length === 0) return;
@@ -812,6 +813,113 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     return createdAt >= Date.now() - NEW_WIDGET_WINDOW_MS;
   };
 
+  const hashSeed = (value: string) => {
+    let hash = 2166136261;
+    for (let i = 0; i < value.length; i += 1) {
+      hash ^= value.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  };
+
+  const mulberry32 = (seed: number) => {
+    return () => {
+      let t = (seed += 0x6d2b79f5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+
+  const shuffleWithSeed = (list: any[], seedKey: string) => {
+    const result = [...list];
+    const rand = mulberry32(hashSeed(seedKey));
+    for (let i = result.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rand() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  };
+
+  const getCooldownMap = () => {
+    if (typeof window === 'undefined') return {} as Record<string, number>;
+    try {
+      const raw = window.localStorage.getItem('questlayer_trending_cooldown');
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return typeof parsed === 'object' && parsed ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const setCooldownMap = (map: Record<string, number>) => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem('questlayer_trending_cooldown', JSON.stringify(map));
+    } catch {
+      // Ignore storage errors to avoid breaking browsing.
+    }
+  };
+
+  const applyCooldown = (list: any[]) => {
+    const now = Date.now();
+    const cooldownMap = getCooldownMap();
+    const active = new Set(
+      Object.entries(cooldownMap)
+        .filter(([, ts]) => typeof ts === 'number' && now - ts < TRENDING_COOLDOWN_MS)
+        .map(([id]) => id)
+    );
+    if (active.size === 0) return list;
+    const fresh: any[] = [];
+    const cooled: any[] = [];
+    list.forEach((project) => {
+      const key = String(project.id ?? '');
+      if (key && active.has(key)) {
+        cooled.push(project);
+      } else {
+        fresh.push(project);
+      }
+    });
+    return [...fresh, ...cooled];
+  };
+
+  const recordTrendingShown = (list: any[]) => {
+    if (typeof window === 'undefined') return;
+    const now = Date.now();
+    const next = getCooldownMap();
+    list.forEach((project) => {
+      if (project?.id == null) return;
+      next[String(project.id)] = now;
+    });
+    setCooldownMap(next);
+  };
+
+  const getTrendingPage = (list: any[], page: number, perPage: number) => {
+    if (list.length === 0) return [];
+    const cooledList = applyCooldown(list);
+    const start = (page - 1) * perPage;
+    const end = Math.min(start + perPage, list.length);
+    const primary = cooledList.slice(start, end);
+    if (primary.length <= 1) return primary;
+
+    const exploreCount = Math.max(1, Math.round(primary.length * 0.2));
+    const explorePool = cooledList.slice(end);
+    if (explorePool.length === 0) return primary;
+
+    const dayKey = new Date().toISOString().slice(0, 10);
+    const shuffledExplore = shuffleWithSeed(explorePool, `${dayKey}-trending-${page}`);
+    const explorePick = shuffledExplore.slice(0, exploreCount);
+
+    const next = [...primary];
+    for (let i = 0; i < explorePick.length; i += 1) {
+      const replaceIndex = next.length - 1 - i;
+      if (replaceIndex < 0) break;
+      next[replaceIndex] = explorePick[i];
+    }
+    return next;
+  };
+
   const filteredProjects = projects
     .filter(p =>
       p.domain && (
@@ -857,10 +965,18 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     });
 
   const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
-  const paginatedProjects = filteredProjects.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const paginatedProjects = browseFilter === 'trending'
+    ? getTrendingPage(filteredProjects, currentPage, ITEMS_PER_PAGE)
+    : filteredProjects.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      );
+
+  useEffect(() => {
+    if (browseFilter !== 'trending') return;
+    if (paginatedProjects.length === 0) return;
+    recordTrendingShown(paginatedProjects);
+  }, [browseFilter, paginatedProjects]);
   const currentProjectOnline = currentProjectIndex >= 0 && projects[currentProjectIndex]
     ? isProjectOnline(projects[currentProjectIndex])
     : false;
