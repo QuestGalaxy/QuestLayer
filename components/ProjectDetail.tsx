@@ -45,8 +45,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         setTasks(tasks || []);
         setStats(stats);
 
-        // Fetch OG Image if project has domain
-        if (project?.domain) {
+        if (project?.banner_url) {
+          setOgImage(project.banner_url);
+        } else if (project?.domain) {
           try {
             const target = project.domain.startsWith('http') ? project.domain : `https://${project.domain}`;
             const url = `/api/og?url=${encodeURIComponent(target)}`;
@@ -206,9 +207,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                 <img 
                   src={ogImage} 
                   alt="" 
-                  className="w-full h-full object-cover opacity-20 blur-md group-hover:opacity-30 group-hover:scale-105 transition-all duration-700"
+                  className="w-full h-full object-cover opacity-40 blur-[2px] group-hover:opacity-50 group-hover:scale-105 transition-all duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#020617] via-[#020617]/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/90 via-[#020617]/40 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
               </div>
             ) : (

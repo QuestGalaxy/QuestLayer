@@ -120,6 +120,7 @@ const BrowseCard: React.FC<{
   onImageLoad: (id: string, url: string) => void;
 }> = ({ project, stats, isOnline, onOpen, onDetails, onImageError, cachedImage, onImageLoad }) => {
   const [ogImage, setOgImage] = useState<string | null>(cachedImage || null);
+  const isDev = (import.meta as any).env?.DEV ?? false;
   
   useEffect(() => {
     if (cachedImage) {
@@ -143,13 +144,31 @@ const BrowseCard: React.FC<{
             if (data?.image) {
                 setOgImage(data.image);
                 onImageLoad(project.id, data.image);
+            } else if (isDev) {
+                const fallbackImage = getFaviconUrl(project.domain);
+                if (fallbackImage) {
+                  setOgImage(fallbackImage);
+                  onImageLoad(project.id, fallbackImage);
+                } else {
+                  onImageError(project.id);
+                }
             } else {
-                onImageError(project.id);
+              onImageError(project.id);
             }
         }
       } catch (e) {
         if (isMounted) {
-            onImageError(project.id);
+            if (isDev) {
+              const fallbackImage = getFaviconUrl(project.domain);
+              if (fallbackImage) {
+                setOgImage(fallbackImage);
+                onImageLoad(project.id, fallbackImage);
+              } else {
+                onImageError(project.id);
+              }
+            } else {
+              onImageError(project.id);
+            }
         }
       }
     };
@@ -1333,7 +1352,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                     onOpen={() => handleProjectClick(project)}
                     onDetails={() => onProjectDetails?.(project.id)}
                     onImageError={handleImageError} 
-                    cachedImage={ogImageCache[project.id]}
+                    cachedImage={ogImageCache[project.id] || project.banner_url}
                     onImageLoad={(id, url) => setOgImageCache(prev => ({ ...prev, [id]: url }))}
                   />
                 ))}

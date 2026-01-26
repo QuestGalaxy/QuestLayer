@@ -8,9 +8,10 @@ interface ExplorePageProps {
 }
 
 const ExploreCard: React.FC<{ project: any; stats: any; onImageError: (id: string) => void }> = ({ project, stats, onImageError }) => {
-  const [ogImage, setOgImage] = useState<string | null>(null);
+  const [ogImage, setOgImage] = useState<string | null>(project.banner_url ?? null);
   
   useEffect(() => {
+    if (project.banner_url) return;
     if (!project.domain) {
         onImageError(project.id);
         return;
@@ -39,7 +40,7 @@ const ExploreCard: React.FC<{ project: any; stats: any; onImageError: (id: strin
 
     fetchOg();
     return () => { isMounted = false; };
-  }, [project.domain, project.id, onImageError]);
+  }, [project.domain, project.id, onImageError, project.banner_url]);
 
   const fallbackAccent = project.accent_color || '#6366f1';
   const fallbackLabel = (project.name || 'QL').slice(0, 2).toUpperCase();

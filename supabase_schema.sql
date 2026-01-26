@@ -121,6 +121,9 @@ create table if not exists analytics_events (
 
 -- Add last_ping_at to projects for Online status
 alter table projects add column if not exists last_ping_at timestamp with time zone;
+-- Persisted media for project cards
+alter table projects add column if not exists logo_url text;
+alter table projects add column if not exists banner_url text;
 
 -- Enable RLS for Analytics
 alter table analytics_events enable row level security;

@@ -519,6 +519,8 @@ const App: React.FC = () => {
                 projectId: project.id,
                 projectName: project.name,
                 projectDomain: project.domain,
+                projectLogo: project.logo_url ?? undefined,
+                projectBanner: project.banner_url ?? undefined,
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,
@@ -548,6 +550,8 @@ const App: React.FC = () => {
                 projectId: project.id,
                 projectName: project.name,
                 projectDomain: project.domain, // Load domain
+                projectLogo: project.logo_url ?? undefined,
+                projectBanner: project.banner_url ?? undefined,
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,

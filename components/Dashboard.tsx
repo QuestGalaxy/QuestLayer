@@ -71,7 +71,7 @@ const GlobalStats: React.FC<{ ownerAddress: string }> = ({ ownerAddress }) => {
 };
 
 const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () => void }> = ({ project, onSelect, onDelete }) => {
-  const [ogImage, setOgImage] = useState<string | null>(null);
+  const [ogImage, setOgImage] = useState<string | null>(project.banner_url ?? null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -109,6 +109,7 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
 
   // Fetch OG Image
   useEffect(() => {
+    if (project.banner_url) return;
     if (!project.domain) return;
     let isMounted = true;
     setLoadingImage(true);
@@ -131,7 +132,7 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
 
     fetchOg();
     return () => { isMounted = false; };
-  }, [project.domain]);
+  }, [project.domain, project.banner_url]);
 
   // Fetch Analytics Stats
   useEffect(() => {
@@ -173,7 +174,7 @@ const ProjectCard: React.FC<{ project: any; onSelect: () => void; onDelete: () =
     }
   };
 
-  const projectIconUrl = project.logo || (project.domain ? getFaviconUrl(project.domain) : '');
+  const projectIconUrl = project.logo_url || (project.domain ? getFaviconUrl(project.domain) : '');
 
   return (
     <div

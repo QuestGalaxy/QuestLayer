@@ -16,10 +16,41 @@ if (supabaseUrl.includes('your_supabase_url') || supabaseAnonKey.includes('your_
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+const getFaviconUrl = (link: string) => {
+  try {
+    if (!link || link.length < 4) return '';
+    let validLink = link.trim();
+    validLink = validLink.replace(/[\/.]+$/, '');
+    if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
+      validLink = `https://${validLink}`;
+    }
+    const url = new URL(validLink);
+    let hostname = url.hostname;
+    if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
+    const parts = hostname.split('.');
+    if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
+    return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${hostname}&size=128`;
+  } catch {
+    return '';
+  }
+};
+
+const fetchOgImage = async (domain?: string | null) => {
+  if (!domain) return null;
+  try {
+    const target = domain.startsWith('http') ? domain : `https://${domain}`;
+    const res = await fetch(`/api/og?url=${encodeURIComponent(target)}`);
+    const data = await res.json();
+    return data?.image ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export const fetchProjects = async (ownerAddress: string) => {
   const { data, error } = await supabase
     .from('projects')
-    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at, logo_url, banner_url')
     .eq('owner_wallet', ownerAddress)
     .order('created_at', { ascending: false });
 
@@ -30,7 +61,7 @@ export const fetchProjects = async (ownerAddress: string) => {
 export const fetchAllProjects = async () => {
   const { data, error } = await supabase
     .from('projects')
-    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at, logo_url, banner_url')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -40,7 +71,7 @@ export const fetchAllProjects = async () => {
 export const fetchProjectDetails = async (projectId: string) => {
   const { data: project, error: projectError } = await supabase
     .from('projects')
-    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at')
+    .select('id, created_at, name, owner_id, owner_wallet, domain, accent_color, position, theme, last_ping_at, logo_url, banner_url')
     .eq('id', projectId)
     .single();
 
@@ -124,17 +155,24 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
       projectId = projects?.[0]?.id;
     }
 
+    const logoUrl = state.projectLogo || (state.projectDomain ? getFaviconUrl(state.projectDomain) : '');
+    const bannerUrl = state.projectBanner || (state.projectDomain ? await fetchOgImage(state.projectDomain) : null);
+
     if (projectId) {
+      const updatePayload: Record<string, any> = {
+        name: state.projectName,
+        domain: state.projectDomain,
+        accent_color: state.accentColor,
+        position: state.position,
+        theme: state.activeTheme,
+        logo_url: logoUrl || null,
+        banner_url: bannerUrl || null
+      };
+
       // Update existing project
       const { error: updateError } = await supabase
         .from('projects')
-        .update({
-          name: state.projectName, // Allow renaming
-          domain: state.projectDomain, // Save domain
-          accent_color: state.accentColor,
-          position: state.position,
-          theme: state.activeTheme
-        })
+        .update(updatePayload)
         .eq('id', projectId);
 
       if (updateError) throw updateError;
@@ -148,7 +186,9 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
           accent_color: state.accentColor,
           position: state.position,
           theme: state.activeTheme,
-          owner_wallet: ownerAddress // Save owner
+          owner_wallet: ownerAddress, // Save owner
+          logo_url: logoUrl || null,
+          banner_url: bannerUrl || null
         })
         .select()
         .single();
