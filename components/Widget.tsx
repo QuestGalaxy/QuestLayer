@@ -1277,7 +1277,7 @@ const Widget: React.FC<WidgetProps> = ({
   const shouldPortal = Boolean(portalContainer) && isFreeForm && !isPreview;
   const wrapperClasses = [
     isPreview ? overlayPositionClasses : (isFreeForm ? 'relative' : overlayPositionClasses),
-    'z-[2147483000]',
+    isPreview ? (isOpen ? 'z-[120]' : 'z-[90]') : 'z-[2147483000]',
     isPreview ? 'flex' : (isFreeForm ? 'inline-flex' : 'flex'),
     activeTheme.font,
     isPreview ? previewStackClass : (isFreeForm ? 'flex-col' : (isBottom ? 'flex-col-reverse' : 'flex-col')),
@@ -1350,7 +1350,7 @@ const Widget: React.FC<WidgetProps> = ({
 
   const overlayElement = (
     <div
-      className={`${overlayPositionClasses} inset-0 bg-black/60 ${isFreeForm ? 'z-[2147482990]' : 'md:hidden z-[45]'}`}
+      className={`${overlayPositionClasses} inset-0 bg-black/60 ${isFreeForm ? (isPreview ? 'z-[45]' : 'z-[2147482990]') : 'md:hidden z-[45]'}`}
       onClick={() => setIsOpen(false)}
     />
   );
@@ -1375,6 +1375,7 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const projectIconUrl = state.projectLogo || (state.projectDomain ? getFaviconUrl(state.projectDomain) : '');
+  const hasCustomLogo = Boolean(state.projectLogo);
   const resolveTaskSection = (task: Task) => task.section ?? 'missions';
   const resolveTaskKind = (task: Task) => {
     const rawKind = (task.kind ?? 'link') as string;
@@ -1998,7 +1999,7 @@ const Widget: React.FC<WidgetProps> = ({
 
   const popupContent = (
     <div
-      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col overflow-hidden theme-transition ${isFreeForm ? `${isPreview ? 'relative' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2`} z-[2147483001]` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
+      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col overflow-hidden theme-transition ${isFreeForm ? `${isPreview ? 'relative z-[130]' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]`}` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
       style={{
         maxHeight: (isOpen && maxPanelHeight)
           ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
@@ -2026,11 +2027,12 @@ const Widget: React.FC<WidgetProps> = ({
                 src={projectIconUrl}
                 alt={state.projectName}
                 className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
                 onLoad={(e) => {
                   const img = e.target as HTMLImageElement;
                   // Google's fallback "globe" is usually 16x16 or 32x32
                   // If it's too small and we requested 128, it's likely a fallback or low quality
-                  if (img.naturalWidth < 32) {
+                  if (!hasCustomLogo && img.naturalWidth < 32) {
                     img.style.display = 'none';
                     const zapIcon = img.nextElementSibling as HTMLElement;
                     if (zapIcon) zapIcon.style.display = 'flex';
@@ -2042,8 +2044,13 @@ const Widget: React.FC<WidgetProps> = ({
                   }
                 }}
                 onError={(e) => {
-                  // If favicon fails, fallback to Zap icon
                   const img = e.target as HTMLImageElement;
+                  if (hasCustomLogo && state.projectDomain && !img.dataset.fallbackTried) {
+                    img.dataset.fallbackTried = 'true';
+                    img.src = getFaviconUrl(state.projectDomain);
+                    return;
+                  }
+                  // If favicon fails, fallback to Zap icon
                   img.style.display = 'none';
                   const zapIcon = img.nextElementSibling as HTMLElement;
                   if (zapIcon) zapIcon.style.display = 'flex';
@@ -2452,7 +2459,7 @@ const Widget: React.FC<WidgetProps> = ({
     </div>
   );
 
-  const shouldShowTrigger = !(isPreviewStatePosition && isFreeForm && isOpen);
+  const shouldShowTrigger = !(isFreeForm && isOpen && !isPreview);
 
   return (
     <>
@@ -2469,7 +2476,7 @@ const Widget: React.FC<WidgetProps> = ({
               setIsOpen(prev => !prev);
             }}
             style={triggerStyle}
-            className={`z-40 flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
+            className={`${isPreview ? (isOpen ? 'relative z-[40]' : 'relative z-[120]') : 'z-40'} flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${isPreview && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
           >
             {!effectiveConnected ? (
               <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">

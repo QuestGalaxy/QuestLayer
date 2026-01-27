@@ -20,6 +20,16 @@ const resolveUrl = (value: string, baseUrl: string) => {
   }
 };
 
+const getFaviconUrl = (url: string) => {
+  try {
+    const hostname = new URL(url).hostname.replace(/^www\./, '');
+    if (!hostname) return null;
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=256`;
+  } catch {
+    return null;
+  }
+};
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -70,8 +80,9 @@ export default async function handler(req: any, res: any) {
       extractIconHref(html, 'mask-icon');
 
     const resolved = logo ? resolveUrl(logo, targetUrl) : null;
+    const fallback = resolved || getFaviconUrl(targetUrl);
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
-    res.status(200).json({ logo: resolved });
+    res.status(200).json({ logo: fallback });
   } catch {
     res.status(200).json({ logo: null });
   }

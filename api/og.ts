@@ -20,6 +20,18 @@ const resolveUrl = (value: string, baseUrl: string) => {
   }
 };
 
+const fetchMicrolinkImage = async (targetUrl: string) => {
+  try {
+    const apiUrl = `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}`;
+    const response = await fetch(apiUrl);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.status === 'success' ? data?.data?.image?.url ?? null : null;
+  } catch {
+    return null;
+  }
+};
+
 export default async function handler(req: any, res: any) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -68,7 +80,10 @@ export default async function handler(req: any, res: any) {
       extractMetaContent(html, 'twitter:image') ||
       extractMetaContent(html, 'twitter:image:src');
 
-    const resolved = ogImage ? resolveUrl(ogImage, targetUrl) : null;
+    let resolved = ogImage ? resolveUrl(ogImage, targetUrl) : null;
+    if (!resolved) {
+      resolved = await fetchMicrolinkImage(targetUrl);
+    }
 
     res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
     res.status(200).json({ image: resolved });

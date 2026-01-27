@@ -877,17 +877,22 @@ const App: React.FC = () => {
             )}
 
             {/* View Switcher Overlay (Desktop Only) */}
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md p-1 rounded-full border border-white/10 z-[60] opacity-0 group-hover:opacity-100 transition-opacity">
+            <div
+              className={`absolute top-20 left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2 bg-black/60 backdrop-blur-md p-1 rounded-full border border-white/10 z-[110] transition-opacity pointer-events-none ${state.position === 'free-form'
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100'
+                }`}
+            >
               <button
                 onClick={() => setPreviewMode('desktop')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewMode === 'desktop' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                className={`pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewMode === 'desktop' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                   }`}
               >
                 <Monitor size={12} /> Live Preview
               </button>
               <button
                 onClick={() => setPreviewMode('mobile')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewMode === 'mobile' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                className={`pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewMode === 'mobile' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                   }`}
               >
                 <Smartphone size={12} /> Responsive
@@ -895,14 +900,14 @@ const App: React.FC = () => {
               <div className="w-px h-3 bg-white/20" />
               <button
                 onClick={() => setPreviewTheme('dark')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewTheme === 'dark' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                className={`pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewTheme === 'dark' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                   }`}
               >
                 Dark
               </button>
               <button
                 onClick={() => setPreviewTheme('light')}
-                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewTheme === 'light' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                className={`pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight transition-all ${previewTheme === 'light' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
                   }`}
               >
                 Light
@@ -910,7 +915,7 @@ const App: React.FC = () => {
               <div className="w-px h-3 bg-white/20" />
               <button
                 onClick={toggleFullscreen}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight text-white/70 transition-all hover:text-white"
+                className="pointer-events-auto flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tight text-white/70 transition-all hover:text-white"
               >
                 <Layout size={12} /> {isFullscreen ? 'Exit' : 'Fullscreen'}
               </button>
@@ -918,7 +923,7 @@ const App: React.FC = () => {
 
             {/* Focus Mask */}
             <div
-              className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] z-[50] transition-all duration-500 opacity-100 ${isWidgetOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+              className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] z-[30] transition-all duration-500 opacity-100 ${isWidgetOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
               onClick={() => setIsWidgetOpen(false)}
             />
 

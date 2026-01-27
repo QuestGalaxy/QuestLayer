@@ -207,6 +207,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string | number>>(new Set());
   const [autoSummary, setAutoSummary] = useState<string>('');
   const [autoItems, setAutoItems] = useState<Array<{ id: string; label: string; icon: React.ReactNode; status: 'pending' | 'done' }>>([]);
+  const [autoLogo, setAutoLogo] = useState<string>('');
+  const [autoBanner, setAutoBanner] = useState<string>('');
   const autoTimeoutsRef = useRef<number[]>([]);
   const [applyMessage, setApplyMessage] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -558,8 +560,14 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         setProjectSocials(metadata.socials);
       }
 
-      if (logoData?.logo) setProjectLogo(logoData.logo);
-      if (ogData?.image) setProjectBanner(ogData.image);
+      if (logoData?.logo) {
+        setProjectLogo(logoData.logo);
+        setAutoLogo(logoData.logo);
+      }
+      if (ogData?.image) {
+        setProjectBanner(ogData.image);
+        setAutoBanner(ogData.image);
+      }
 
       const socials = (metadata?.socials as ProjectSocialLinks) || state.projectSocials || {};
       const nameForTasks = shouldSetName ? (nameCandidate || state.projectName) : state.projectName;
@@ -752,11 +760,11 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
             <h3>Review Details</h3>
           </div>
         <div className="relative overflow-hidden bg-slate-950/50 rounded-3xl border border-white/5">
-          {!detailsOpen && state.projectBanner && (
+          {!detailsOpen && (state.projectBanner || autoBanner) && (
             <div
               className="absolute inset-0 opacity-40"
               style={{
-                backgroundImage: `url(${state.projectBanner})`,
+                backgroundImage: `url(${state.projectBanner || autoBanner})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center'
               }}
@@ -766,9 +774,9 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
 
           {detailsOpen && (
             <div className="relative h-32 w-full overflow-hidden border-b border-white/5">
-              {state.projectBanner && (
+              {(state.projectBanner || autoBanner) && (
                 <img
-                  src={state.projectBanner}
+                  src={state.projectBanner || autoBanner}
                   alt=""
                   className="h-full w-full object-cover object-center"
                 />
@@ -785,8 +793,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                 <div className="w-full p-5">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl border border-white/10 bg-slate-900/80 overflow-hidden flex items-center justify-center shadow-[0_0_24px_rgba(15,23,42,0.45)]">
-                      {state.projectLogo ? (
-                        <img src={state.projectLogo} alt="Project logo" className="w-full h-full object-cover" />
+                      {(state.projectLogo || autoLogo) ? (
+                        <img src={state.projectLogo || autoLogo} alt="Project logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
                         <Globe size={20} className="text-slate-500" />
                       )}
@@ -826,8 +834,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                 Edit
               </button>
               <div className="w-16 h-16 rounded-2xl border border-white/10 bg-slate-900 overflow-hidden flex items-center justify-center shadow-[0_0_24px_rgba(15,23,42,0.45)]">
-                {state.projectLogo ? (
-                  <img src={state.projectLogo} alt="Project logo" className="w-full h-full object-cover" />
+                {(state.projectLogo || autoLogo) ? (
+                  <img src={state.projectLogo || autoLogo} alt="Project logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
                   <Globe size={20} className="text-slate-500" />
                 )}
@@ -1047,16 +1055,14 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                         <div className="text-[11px] font-bold text-white">{task.title}</div>
                         <div className="text-[10px] text-slate-500">{task.section === 'onboarding' ? 'Onboarding' : 'Mission'}</div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-[10px] text-slate-400">{task.xp} XP</div>
-                        {selected && (
-                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                            Selected
-                          </span>
-                        )}
-                      </div>
+                      <div className="text-[10px] text-slate-400">{task.xp} XP</div>
                     </div>
                     <div className="text-[10px] text-slate-500 mt-1">{task.desc}</div>
+                    {selected && (
+                      <span className="absolute bottom-2 right-2 text-[8px] font-black uppercase tracking-widest text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                        Selected
+                      </span>
+                    )}
                   </button>
                 );
               })}
