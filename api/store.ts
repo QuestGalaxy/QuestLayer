@@ -35,6 +35,8 @@ export default async function handler(req: any, res: any) {
     return res.status(405).end('Method not allowed');
   }
 
+  res.setHeader('Vary', 'User-Agent');
+
   const projectId = Array.isArray(req.query?.id) ? req.query.id[0] : req.query?.id;
   if (!projectId || typeof projectId !== 'string') {
     return res.status(400).end('Missing project id');
@@ -42,7 +44,7 @@ export default async function handler(req: any, res: any) {
 
   const ua = req.headers['user-agent'] || '';
   if (!isBot(ua)) {
-    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Cache-Control', 'no-store, must-revalidate');
     res.setHeader('Location', `/browse?projectId=${encodeURIComponent(projectId)}`);
     return res.status(302).end();
   }
@@ -110,6 +112,6 @@ export default async function handler(req: any, res: any) {
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  res.setHeader('Cache-Control', 'no-store, must-revalidate');
   return res.status(200).end(html);
 }
