@@ -100,6 +100,8 @@ interface EditorProps {
   setProjectDomain: (domain: string) => void;
   setProjectDescription: (description: string) => void;
   setProjectSocials: (socials: ProjectSocialLinks | undefined) => void;
+  setProjectLogo: (logo: string) => void;
+  setProjectBanner: (banner: string) => void;
   onFetchMetadata: () => Promise<void>;
   setAccentColor: (color: string) => void;
   setPosition: (pos: Position) => void;
@@ -161,6 +163,772 @@ const AnimatedNumber = ({ value }: { value: number }) => {
   return <>{displayValue}</>;
 };
 
+type BasicBuilderProps = {
+  state: AppState;
+  setProjectName: (name: string) => void;
+  setProjectDomain: (domain: string) => void;
+  setProjectDescription: (description: string) => void;
+  setProjectSocials: (socials: ProjectSocialLinks | undefined) => void;
+  setProjectLogo: (logo: string) => void;
+  setProjectBanner: (banner: string) => void;
+  setAccentColor: (color: string) => void;
+  setPosition: (pos: Position) => void;
+  setActiveTheme: (theme: ThemeType) => void;
+  setTasks: (tasks: Task[]) => void;
+  isConnected: boolean;
+  onPublishClick: () => void;
+  onEditTask: (task: Task) => void;
+};
+
+const BasicBuilder: React.FC<BasicBuilderProps> = ({
+  state,
+  setProjectName,
+  setProjectDomain,
+  setProjectDescription,
+  setProjectSocials,
+  setProjectLogo,
+  setProjectBanner,
+  setAccentColor,
+  setPosition,
+  setActiveTheme,
+  setTasks,
+  isConnected,
+  onPublishClick,
+  onEditTask
+}) => {
+  const [domainInput, setDomainInput] = useState(state.projectDomain || '');
+  const [autoStatus, setAutoStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [suggestedTasks, setSuggestedTasks] = useState<Task[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string | number>>(new Set());
+  const [autoSummary, setAutoSummary] = useState<string>('');
+  const [applyMessage, setApplyMessage] = useState<string>('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [appliedTasks, setAppliedTasks] = useState<Task[]>([]);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const applyTimeoutsRef = useRef<number[]>([]);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
+  const [appliedIds, setAppliedIds] = useState<Set<string | number>>(new Set());
+
+  useEffect(() => {
+    setDomainInput(state.projectDomain || '');
+  }, [state.projectDomain]);
+  useEffect(() => () => {
+    applyTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+  }, []);
+
+  const normalizeHost = (value: string) => {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) return '';
+    try {
+      const withScheme = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+      return new URL(withScheme).hostname.replace(/^www\./, '');
+    } catch {
+      return trimmed.split('/')[0].replace(/^www\./, '');
+    }
+  };
+
+  const toTitleCase = (value: string) => value
+    .replace(/[-_]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  const getNameFromDomain = (domain: string) => {
+    const host = normalizeHost(domain);
+    const base = host.split('.')[0] || host;
+    return toTitleCase(base);
+  };
+
+  const fetchJson = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) return null;
+    try {
+      const data = await res.json();
+      return data ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  const getApiUrl = (path: string) => {
+    if (!apiBaseUrl) return path;
+    const base = apiBaseUrl.replace(/\/$/, '');
+    const endpoint = path.replace(/^\//, '');
+    return `${base}/${endpoint}`;
+  };
+
+  const buildSuggestedTasks = (payload: {
+    name: string;
+    projectUrl: string;
+    hostname: string;
+    socials: ProjectSocialLinks;
+  }) => {
+    const stamp = Date.now();
+    const tasks: Task[] = [];
+    const { name, projectUrl, hostname, socials } = payload;
+
+    const addTask = (partial: Omit<Task, 'id'>) => {
+      tasks.push({
+        id: `basic-${stamp}-${tasks.length}`,
+        ...partial
+      });
+    };
+
+    addTask({
+      title: 'Visit Website',
+      desc: `Explore the official ${name} website.`,
+      link: projectUrl,
+      icon: 'icon:globe',
+      xp: 20,
+      section: 'missions',
+      kind: 'link'
+    });
+
+    if (socials.twitter) {
+      addTask({
+        title: 'Follow on X',
+        desc: `Follow ${name} on X for updates.`,
+        link: socials.twitter,
+        icon: 'icon:twitter',
+        xp: 50,
+        section: 'missions',
+        kind: 'link'
+      });
+      addTask({
+        title: 'Like a Post',
+        desc: `Like a recent ${name} post on X.`,
+        link: socials.twitter,
+        icon: 'icon:heart',
+        xp: 30,
+        section: 'missions',
+        kind: 'link'
+      });
+      addTask({
+        title: 'Repost a Post',
+        desc: `Repost a recent ${name} announcement on X.`,
+        link: socials.twitter,
+        icon: 'icon:repost',
+        xp: 80,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.discord) {
+      addTask({
+        title: 'Join Discord',
+        desc: `Join the ${name} Discord community.`,
+        link: socials.discord,
+        icon: 'icon:discord',
+        xp: 120,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.telegram) {
+      addTask({
+        title: 'Join Telegram',
+        desc: `Join the official ${name} Telegram.`,
+        link: socials.telegram,
+        icon: 'icon:telegram',
+        xp: 60,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.github) {
+      addTask({
+        title: 'Check GitHub',
+        desc: `Explore the ${name} GitHub repositories.`,
+        link: socials.github,
+        icon: 'icon:globe',
+        xp: 40,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.medium) {
+      addTask({
+        title: 'Read Blog',
+        desc: `Read the latest ${name} updates.`,
+        link: socials.medium,
+        icon: 'icon:globe',
+        xp: 40,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.youtube) {
+      addTask({
+        title: 'Subscribe on YouTube',
+        desc: `Subscribe to the ${name} YouTube channel.`,
+        link: socials.youtube,
+        icon: 'icon:globe',
+        xp: 60,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.instagram) {
+      addTask({
+        title: 'Follow on Instagram',
+        desc: `Follow ${name} on Instagram.`,
+        link: socials.instagram,
+        icon: 'icon:globe',
+        xp: 40,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.tiktok) {
+      addTask({
+        title: 'Follow on TikTok',
+        desc: `Follow ${name} on TikTok.`,
+        link: socials.tiktok,
+        icon: 'icon:globe',
+        xp: 40,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.linkedin) {
+      addTask({
+        title: 'Follow on LinkedIn',
+        desc: `Follow ${name} on LinkedIn.`,
+        link: socials.linkedin,
+        icon: 'icon:globe',
+        xp: 40,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    if (socials.facebook) {
+      addTask({
+        title: 'Like the Page',
+        desc: `Follow the ${name} Facebook page.`,
+        link: socials.facebook,
+        icon: 'icon:globe',
+        xp: 40,
+        section: 'missions',
+        kind: 'link'
+      });
+    }
+
+    const community = socials.discord
+      ? 'discord'
+      : socials.twitter
+        ? 'twitter'
+        : socials.telegram
+          ? 'telegram'
+          : socials.github
+            ? 'github'
+            : 'community';
+
+    tasks.push(
+      {
+        id: `basic-${stamp}-onboard-0`,
+        title: 'Project Name',
+        desc: 'Answer the project name to continue.',
+        link: '',
+        icon: 'icon:gem',
+        xp: 120,
+        section: 'onboarding',
+        kind: 'quiz',
+        question: 'What is this project called?',
+        answer: name
+      },
+      {
+        id: `basic-${stamp}-onboard-1`,
+        title: 'Official Domain',
+        desc: 'Type the main domain of the project.',
+        link: '',
+        icon: 'icon:globe',
+        xp: 120,
+        section: 'onboarding',
+        kind: 'quiz',
+        question: 'Which domain hosts the official site?',
+        answer: hostname
+      },
+      {
+        id: `basic-${stamp}-onboard-2`,
+        title: 'Community Channel',
+        desc: 'Answer with a community channel (e.g. Discord).',
+        link: '',
+        icon: 'icon:crown',
+        xp: 120,
+        section: 'onboarding',
+        kind: 'quiz',
+        question: 'Name one official community channel.',
+        answer: community
+      }
+    );
+
+    return tasks;
+  };
+
+  const runAutoSetup = async () => {
+    const raw = domainInput.trim();
+    if (!raw) return;
+    setAutoStatus('running');
+    setAutoSummary('');
+
+    const normalized = raw.startsWith('http') ? raw : `https://${raw}`;
+    const hostname = normalizeHost(normalized);
+
+    try {
+      setProjectDomain(raw);
+      const [metadata, ogData, logoData] = await Promise.all([
+        fetchJson(getApiUrl(`/api/metadata?url=${encodeURIComponent(normalized)}`)),
+        fetchJson(getApiUrl(`/api/og?url=${encodeURIComponent(normalized)}`)),
+        fetchJson(getApiUrl(`/api/logo?url=${encodeURIComponent(normalized)}`))
+      ]);
+
+      const nameCandidate = (metadata?.title as string | null) || getNameFromDomain(hostname);
+      const placeholderNames = new Set(['', 'Vortex Protocol', 'New Project']);
+      const shouldSetName = placeholderNames.has(state.projectName?.trim() || '');
+      if (shouldSetName && nameCandidate) setProjectName(nameCandidate);
+
+      if (metadata?.description) setProjectDescription(metadata.description);
+      if (metadata?.socials && Object.keys(metadata.socials).length > 0) {
+        setProjectSocials(metadata.socials);
+      }
+
+      if (logoData?.logo) setProjectLogo(logoData.logo);
+      if (ogData?.image) setProjectBanner(ogData.image);
+
+      const socials = (metadata?.socials as ProjectSocialLinks) || state.projectSocials || {};
+      const nameForTasks = shouldSetName ? (nameCandidate || state.projectName) : state.projectName;
+      const tasks = buildSuggestedTasks({
+        name: nameForTasks || getNameFromDomain(hostname),
+        projectUrl: normalized,
+        hostname,
+        socials
+      });
+
+      setSuggestedTasks(tasks);
+      setSelectedTaskIds(new Set(tasks.map(task => task.id)));
+
+      const foundSocials = Object.keys(socials).length;
+      const summaryParts = [
+        nameCandidate ? 'Name' : null,
+        metadata?.description ? 'Description' : null,
+        foundSocials ? `${foundSocials} socials` : null,
+        logoData?.logo ? 'Logo' : null,
+        ogData?.image ? 'Banner' : null
+      ].filter(Boolean);
+      setAutoSummary(summaryParts.length > 0 ? summaryParts.join(' • ') : 'No metadata found');
+      setAutoStatus('done');
+    } catch {
+      setAutoStatus('error');
+    }
+  };
+
+  const toggleTaskSelection = (taskId: string | number) => {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  const applySelectedTasks = () => {
+    const selected = suggestedTasks.filter((task) => selectedTaskIds.has(task.id));
+    setTasks(selected);
+    setApplyMessage(selected.length ? `Applied ${selected.length} tasks to your widget.` : 'Select at least one task to apply.');
+    if (!selected.length) return;
+    applyTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+    applyTimeoutsRef.current = [];
+    setAppliedTasks(selected);
+    setAppliedIds(new Set(selected.map((task) => task.id)));
+    setVisibleCount(0);
+    setDrawerOpen(true);
+    setIsAnimating(true);
+    selected.forEach((_, idx) => {
+      const timeoutId = window.setTimeout(() => {
+        setVisibleCount((count) => Math.max(count, idx + 1));
+      }, 220 * idx);
+      applyTimeoutsRef.current.push(timeoutId);
+    });
+    const finalTimeout = window.setTimeout(() => setIsAnimating(false), 220 * selected.length + 300);
+    applyTimeoutsRef.current.push(finalTimeout);
+  };
+
+  const selectedCount = selectedTaskIds.size;
+  const missionCount = state.tasks.filter((task) => task.section === 'missions').length;
+  const onboardingCount = state.tasks.filter((task) => task.section === 'onboarding').length;
+  const missionPreview = state.tasks.filter((task) => task.section === 'missions').slice(0, 3);
+  const onboardingPreview = state.tasks.filter((task) => task.section === 'onboarding').slice(0, 3);
+
+  return (
+    <div className="space-y-8">
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <Sparkles size={12} className="text-indigo-400" />
+          <h3>Auto Setup</h3>
+        </div>
+        <div className="space-y-4 bg-slate-950/50 p-5 rounded-3xl border border-white/5">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Paste your domain</label>
+            <div className="flex flex-col md:flex-row gap-3">
+              <input
+                value={domainInput}
+                onChange={(e) => setDomainInput(e.target.value)}
+                placeholder="my-awesome-app.com"
+                className="flex-1 bg-slate-900 border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={runAutoSetup}
+                disabled={!domainInput.trim() || autoStatus === 'running'}
+                className="h-[44px] px-5 rounded-2xl bg-indigo-500/90 text-[11px] font-black uppercase tracking-widest text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-500 transition-colors flex items-center justify-center gap-2"
+              >
+                {autoStatus === 'running' ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+                {autoStatus === 'running' ? 'Scanning...' : 'Auto-Setup'}
+              </button>
+            </div>
+            {autoStatus === 'done' && (
+              <div className="text-[11px] text-emerald-200/90 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-2">
+                Setup completed. {autoSummary}
+              </div>
+            )}
+            {autoStatus === 'error' && (
+              <div className="text-[11px] text-rose-200/90 bg-rose-500/10 border border-rose-500/20 rounded-2xl px-4 py-2">
+                Could not fetch metadata. You can fill the details manually below.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <Info size={12} />
+            <h3>Review Details</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDetailsOpen((prev) => !prev)}
+            className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 hover:text-indigo-200 transition-colors"
+          >
+            {detailsOpen ? 'Hide' : 'Edit'}
+          </button>
+        </div>
+        <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl border border-white/10 bg-slate-900 overflow-hidden flex items-center justify-center">
+              {state.projectLogo ? (
+                <img src={state.projectLogo} alt="Project logo" className="w-full h-full object-cover" />
+              ) : (
+                <Globe size={20} className="text-slate-500" />
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold text-white">{state.projectName || 'Unnamed Project'}</div>
+              <div className="text-[11px] text-slate-500">{state.projectDomain || 'No domain yet'}</div>
+            </div>
+          </div>
+
+          {detailsOpen && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-500">Project Name</label>
+                <input
+                  value={state.projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-500">Description</label>
+                <textarea
+                  value={state.projectDescription || ''}
+                  onChange={(e) => setProjectDescription(e.target.value)}
+                  className="w-full min-h-[84px] bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors resize-y"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-slate-500">Logo URL</label>
+                  <input
+                    value={state.projectLogo || ''}
+                    onChange={(e) => setProjectLogo(e.target.value)}
+                    placeholder="https://"
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-slate-500">Banner URL</label>
+                  <input
+                    value={state.projectBanner || ''}
+                    onChange={(e) => setProjectBanner(e.target.value)}
+                    placeholder="https://"
+                    className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-500">Social Links</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {(['twitter', 'discord', 'telegram', 'github', 'medium', 'linkedin', 'youtube', 'instagram', 'tiktok', 'facebook'] as Array<keyof ProjectSocialLinks>).map((key) => (
+                    <input
+                      key={key}
+                      value={state.projectSocials?.[key] || ''}
+                      onChange={(e) => setProjectSocials({ ...(state.projectSocials || {}), [key]: e.target.value })}
+                      placeholder={`${key} URL`}
+                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <Target size={12} />
+            <h3>Recommended Tasks</h3>
+          </div>
+          <button
+            type="button"
+            onClick={applySelectedTasks}
+            disabled={selectedCount === 0}
+            className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 hover:text-emerald-200 disabled:opacity-40 transition-colors"
+          >
+            Apply {selectedCount}
+          </button>
+        </div>
+        <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-3">
+          {suggestedTasks.length === 0 ? (
+            <div className="text-[11px] text-slate-500">Run auto-setup to generate task suggestions.</div>
+          ) : (
+            <div className="space-y-2">
+              {appliedTasks.length > 0 && (
+                <section
+                  ref={drawerRef}
+                  className={`rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 via-slate-950/60 to-slate-950/90 p-4 transition-all duration-700 ease-out origin-top ${drawerOpen ? 'max-h-[420px] opacity-100 scale-100' : 'max-h-0 opacity-0 scale-[0.98]'} overflow-hidden`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-200">
+                      <Sparkles size={12} className="text-indigo-300" />
+                      <h3>Missions Drawer</h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-indigo-200/80 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-full">
+                      {appliedTasks.length} tasks
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scroll">
+                    {appliedTasks.map((task, idx) => {
+                      const isVisible = idx < visibleCount;
+                      return (
+                        <div
+                          key={task.id}
+                          style={{
+                            transitionDelay: `${idx * 80}ms`,
+                            transitionProperty: 'opacity, transform, max-height'
+                          }}
+                          className={`flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0 max-h-24' : 'opacity-0 -translate-y-3 max-h-0'} overflow-hidden`}
+                        >
+                          <div>
+                            <div className="text-[11px] font-bold text-white">{task.title}</div>
+                            <div className="text-[10px] text-slate-400">{task.section === 'onboarding' ? 'Onboarding' : 'Mission'} · {task.xp} XP</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onEditTask(task)}
+                            className="text-[10px] font-black uppercase tracking-widest text-indigo-300 hover:text-indigo-200 transition-colors"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {isAnimating && (
+                    <div className="mt-2 text-[10px] text-slate-400 uppercase tracking-widest">Assembling tasks…</div>
+                  )}
+                </section>
+              )}
+              {suggestedTasks.map((task) => {
+                const selected = selectedTaskIds.has(task.id);
+                const isApplied = appliedIds.has(task.id);
+                if (isApplied) return null;
+                return (
+                  <button
+                    key={task.id}
+                    type="button"
+                    onClick={() => toggleTaskSelection(task.id)}
+                    className={`w-full text-left border rounded-2xl px-4 py-3 transition-colors ${selected
+                      ? 'border-indigo-500/40 bg-indigo-500/10'
+                      : 'border-white/10 bg-slate-900/60 hover:border-white/20'
+                      } ${isAnimating && isApplied ? 'ql-fly-to-drawer' : ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[11px] font-bold text-white">{task.title}</div>
+                        <div className="text-[10px] text-slate-500">{task.section === 'onboarding' ? 'Onboarding' : 'Mission'}</div>
+                      </div>
+                      <div className="text-[10px] text-slate-400">{task.xp} XP</div>
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-1">{task.desc}</div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {applyMessage && (
+            <div className="text-[11px] text-emerald-200/90 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-2">
+              {applyMessage}
+            </div>
+          )}
+          {(missionCount > 0 || onboardingCount > 0) && (
+            <div className="text-[11px] text-slate-400 bg-slate-900/60 border border-white/10 rounded-2xl px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-slate-500">
+                <span>Missions</span>
+                <span>{missionCount}</span>
+              </div>
+              {missionPreview.length > 0 ? (
+                <div className="text-[11px] text-slate-300">
+                  {missionPreview.map((task) => task.title).join(' · ')}
+                  {missionCount > missionPreview.length ? ' · …' : ''}
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-500">No missions applied yet.</div>
+              )}
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-slate-500 pt-1">
+                <span>Onboarding</span>
+                <span>{onboardingCount}</span>
+              </div>
+              {onboardingPreview.length > 0 ? (
+                <div className="text-[11px] text-slate-300">
+                  {onboardingPreview.map((task) => task.title).join(' · ')}
+                  {onboardingCount > onboardingPreview.length ? ' · …' : ''}
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-500">No onboarding tasks applied yet.</div>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <Palette size={12} />
+          <h3>Theme & Color</h3>
+        </div>
+        <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-500">Theme</label>
+              <select
+                value={state.activeTheme}
+                onChange={(e) => setActiveTheme(e.target.value as ThemeType)}
+                className="w-full h-[38px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
+              >
+                <option value="sleek">Sleek</option>
+                <option value="cyber">Cyber</option>
+                <option value="minimal">Minimal</option>
+                <option value="gaming">Gaming</option>
+                <option value="brutal">Brutal</option>
+                <option value="glass">Glass</option>
+                <option value="terminal">Terminal</option>
+                <option value="aura">Aura</option>
+                <option value="avatar">Avatar</option>
+                <option value="ironman">Ironman</option>
+                <option value="quest">Quest</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-500">Position</label>
+              <select
+                value={state.position}
+                onChange={(e) => setPosition(e.target.value as Position)}
+                className="w-full h-[38px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
+              >
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+                <option value="free-form">Custom</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-slate-500">Accent Color</label>
+            <div className="flex flex-wrap gap-2">
+              {PASTEL_PALETTE.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setAccentColor(color)}
+                  className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 ${state.accentColor.toLowerCase() === color.toLowerCase()
+                    ? 'border-white ring-2 ring-indigo-500/50 scale-110'
+                    : 'border-transparent'
+                    }`}
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+              <div className="relative group flex items-center justify-center w-7 h-7 rounded-full border-2 border-white/10 overflow-hidden bg-slate-800">
+                <input
+                  type="color"
+                  value={state.accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+                />
+                <Plus size={14} className="text-slate-400 group-hover:text-white transition-colors" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <ShieldCheck size={12} />
+          <h3>Publish</h3>
+        </div>
+        <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-3">
+          <button
+            type="button"
+            onClick={onPublishClick}
+            className={`w-full h-[44px] rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${isConnected
+              ? 'bg-emerald-500/90 text-white hover:bg-emerald-500 shadow-[0_0_18px_rgba(16,185,129,0.45)]'
+              : 'bg-rose-500/90 text-white hover:bg-rose-500 animate-pulse shadow-[0_0_18px_rgba(244,63,94,0.5)]'
+              }`}
+          >
+            {isConnected ? 'Publish and Embed' : 'Connect to publish'}
+          </button>
+          <p className="text-[11px] text-slate-500">
+            {isConnected
+              ? 'Publishing opens the embed modal with your widget code.'
+              : 'Connect your wallet to save and publish your widget.'}
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+};
+
 
 const Editor: React.FC<EditorProps> = ({
   state,
@@ -168,6 +936,8 @@ const Editor: React.FC<EditorProps> = ({
   setProjectDomain,
   setProjectDescription,
   setProjectSocials,
+  setProjectLogo,
+  setProjectBanner,
   onFetchMetadata,
   setAccentColor,
   setPosition,
@@ -176,12 +946,14 @@ const Editor: React.FC<EditorProps> = ({
   onPublish,
   onBack
 }) => {
+  const [builderMode, setBuilderMode] = useState<'basic' | 'pro'>('basic');
   const [pendingSocialKey, setPendingSocialKey] = useState<string>('');
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
   const [metadataLoaderFailed, setMetadataLoaderFailed] = useState(false);
   const [metadataCursor, setMetadataCursor] = useState({ x: 0, y: 0 });
   const metadataCursorRef = useRef({ x: 0, y: 0 });
   const metadataRafRef = useRef<number | null>(null);
+  const editPanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isFetchingMetadata) return;
@@ -587,6 +1359,13 @@ const Editor: React.FC<EditorProps> = ({
       link: task.link ?? ''
     });
   };
+  const handleQuickEditTask = (task: Task) => {
+    setBuilderMode('pro');
+    startEdit(task);
+    window.setTimeout(() => {
+      editPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+  };
 
   const getRandomGameIcon = () => GAME_ICONS[Math.floor(Math.random() * GAME_ICONS.length)];
 
@@ -701,18 +1480,63 @@ const Editor: React.FC<EditorProps> = ({
             QuestLayer <span className="text-indigo-500 not-italic font-mono text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded tracking-normal">BUILDER</span>
           </h1>
         </div>
-        <button
-          onClick={handlePublishClick}
-          disabled={isPublishing}
-          className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
-          {isPublishing ? 'Saving...' : 'Save & Publish'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePublishClick}
+            disabled={isPublishing}
+            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
+            {isPublishing ? 'Saving...' : 'Save & Publish'}
+          </button>
+        </div>
       </div>
 
       {/* Internal Scroll Area */}
       <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-10 pb-32">
+        <div className="flex items-center justify-center">
+          <div className="flex items-center gap-1 bg-slate-950/70 border border-white/10 rounded-2xl p-1">
+            <button
+              type="button"
+              onClick={() => setBuilderMode('basic')}
+              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${builderMode === 'basic'
+                ? 'bg-indigo-500/80 text-white'
+                : 'text-slate-400 hover:text-white'
+                }`}
+            >
+              Basic
+            </button>
+            <button
+              type="button"
+              onClick={() => setBuilderMode('pro')}
+              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${builderMode === 'pro'
+                ? 'bg-indigo-500/80 text-white'
+                : 'text-slate-400 hover:text-white'
+                }`}
+            >
+              Pro
+            </button>
+          </div>
+        </div>
+        <div className={builderMode === 'basic' ? 'block' : 'hidden'}>
+          <BasicBuilder
+            state={state}
+            setProjectName={setProjectName}
+            setProjectDomain={setProjectDomain}
+            setProjectDescription={setProjectDescription}
+            setProjectSocials={setProjectSocials}
+            setProjectLogo={setProjectLogo}
+            setProjectBanner={setProjectBanner}
+            setAccentColor={setAccentColor}
+            setPosition={setPosition}
+            setActiveTheme={setActiveTheme}
+            setTasks={setTasks}
+            isConnected={isConnected}
+            onPublishClick={handlePublishClick}
+            onEditTask={handleQuickEditTask}
+          />
+        </div>
+        <div className={builderMode === 'pro' ? 'block' : 'hidden'}>
         {/* Style & Layout Section */}
         <section className="space-y-3">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -1215,7 +2039,10 @@ const Editor: React.FC<EditorProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-5 bg-indigo-600/5 border-l-4 border-indigo-500 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div
+                    ref={editingId === task.id ? editPanelRef : null}
+                    className="p-5 bg-indigo-600/5 border-l-4 border-indigo-500 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300"
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <label className="text-[9px] font-bold text-slate-500 uppercase">Task Section</label>
@@ -1493,6 +2320,8 @@ const Editor: React.FC<EditorProps> = ({
             </div>
           </div>
         </section>
+        </div>
+      </div>
       </div>
 
       <EmbedModal
@@ -1533,7 +2362,6 @@ const Editor: React.FC<EditorProps> = ({
         </div>,
         document.body
       )}
-      </div>
     </>
   );
 };

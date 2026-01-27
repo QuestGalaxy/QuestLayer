@@ -322,6 +322,14 @@ const App: React.FC = () => {
     ...prev,
     projectDescription: description
   }));
+  const handleSetLogo = (logo: string) => setState(prev => ({
+    ...prev,
+    projectLogo: logo
+  }));
+  const handleSetBanner = (banner: string) => setState(prev => ({
+    ...prev,
+    projectBanner: banner
+  }));
   const handleSetSocials = (socials: AppState['projectSocials']) => setState(prev => ({
     ...prev,
     projectSocials: socials
@@ -776,6 +784,8 @@ const App: React.FC = () => {
             setProjectDomain={handleSetDomain}
             setProjectDescription={handleSetDescription}
             setProjectSocials={handleSetSocials}
+            setProjectLogo={handleSetLogo}
+            setProjectBanner={handleSetBanner}
             onFetchMetadata={handleFetchMetadata}
             setAccentColor={handleSetColor}
             setPosition={handleSetPos}

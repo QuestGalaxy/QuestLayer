@@ -78,6 +78,25 @@
   }
 }
 
+@keyframes ql-fly-to-drawer {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translate3d(0, -28px, 0) scale(0.96);
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.8;
+  }
+}
+
+.ql-fly-to-drawer {
+  animation: ql-fly-to-drawer 700ms ease-out;
+}
+
 @keyframes arrow-float {
   0%,
   100% {

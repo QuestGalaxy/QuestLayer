@@ -36,6 +36,11 @@ export default async function handler(req: any, res: any) {
       return null;
     };
 
+    // Title
+    const title = findMetaContent(['og:title', 'twitter:title'])
+      || (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() ?? null)
+      || findMetaContent(['og:site_name']);
+
     // Images
     let image = findMetaContent(['og:image', 'twitter:image']);
     if (!image) {
@@ -75,20 +80,19 @@ export default async function handler(req: any, res: any) {
     const socials: Record<string, string> = {};
     const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi;
     let linkMatch;
-    while ((linkMatch = linkRegex.exec(html))) {
-      const href = linkMatch?.[1];
-      if (!href || href.startsWith('mailto:') || href.startsWith('javascript:')) continue;
+    const addSocialFromUrl = (href: string) => {
+      if (!href || href.startsWith('mailto:') || href.startsWith('javascript:')) return;
       let absolute: string;
       try {
         absolute = new URL(href, targetUrl).toString();
       } catch {
-        continue;
+        return;
       }
       let host = '';
       try {
         host = new URL(absolute).hostname.replace(/^www\./, '');
       } catch {
-        continue;
+        return;
       }
       for (const rule of socialRules) {
         if (socials[rule.key]) continue;
@@ -98,10 +102,33 @@ export default async function handler(req: any, res: any) {
           break;
         }
       }
+    };
+    while ((linkMatch = linkRegex.exec(html))) {
+      addSocialFromUrl(linkMatch?.[1] || '');
       if (Object.keys(socials).length >= socialRules.length) break;
     }
 
+    // Fallback: use Jina AI reader for JS-heavy pages if we didn't find socials.
+    if (Object.keys(socials).length === 0) {
+      try {
+        const jinaUrl = `https://r.jina.ai/http://${targetUrl.replace(/^https?:\/\//i, '')}`;
+        const jinaRes = await fetch(jinaUrl);
+        if (jinaRes.ok) {
+          const jinaText = await jinaRes.text();
+          const urlRegex = /(https?:\/\/[^\s"'<>]+)/g;
+          const matches = jinaText.match(urlRegex) || [];
+          for (const raw of matches) {
+            addSocialFromUrl(raw);
+            if (Object.keys(socials).length >= socialRules.length) break;
+          }
+        }
+      } catch {
+        // ignore fallback failures
+      }
+    }
+
     return res.status(200).json({
+      title: title || null,
       image: image || null,
       description: description || null,
       socials
