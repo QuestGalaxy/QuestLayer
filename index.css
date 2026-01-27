@@ -78,6 +78,16 @@
   }
 }
 
+@keyframes arrow-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
 .quest-cta-shine {
   background-image: linear-gradient(
     120deg,
@@ -147,6 +157,10 @@
 
 .reward-splash {
   animation: icon-splash 2.8s ease-in-out infinite;
+}
+
+.arrow-float {
+  animation: arrow-float 1.6s ease-in-out infinite;
 }
 
 .card-aurora-orange {

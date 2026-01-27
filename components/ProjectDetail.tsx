@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ExternalLink,
   Globe,
-  Loader2,
   ShieldCheck,
   Sparkles,
   Trophy,
@@ -15,6 +14,8 @@ import {
   CheckCircle2,
   Star,
   Share2,
+  ChevronDown,
+  ChevronUp,
   Twitter,
   MessageSquare,
   Send,
@@ -63,6 +64,8 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [showInitial, setShowInitial] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [canExpandDescription, setCanExpandDescription] = useState(false);
+  const descriptionRef = useRef<HTMLParagraphElement | null>(null);
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -126,6 +129,35 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   useEffect(() => {
     setShowFullDescription(false);
   }, [projectId]);
+
+  useEffect(() => {
+    const el = descriptionRef.current;
+    if (!el) return;
+    const measure = () => {
+      const wasClamped = !showFullDescription;
+      if (wasClamped) {
+        setCanExpandDescription(el.scrollHeight > el.clientHeight + 1);
+      } else {
+        setCanExpandDescription(true);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [project?.description, showFullDescription]);
+
+  const BadgeWithTooltip: React.FC<{
+    children: React.ReactNode;
+    tooltipText: React.ReactNode;
+  }> = ({ children, tooltipText }) => (
+    <div className="relative flex items-center z-30 group/tooltip">
+      {children}
+      <div className="hidden group-hover/tooltip:block absolute top-full right-0 mt-2 w-40 p-2 bg-slate-950/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[100] text-[10px] leading-snug text-slate-300 font-medium animate-in fade-in zoom-in-95 duration-200 text-left pointer-events-none select-none">
+        {tooltipText}
+        <div className="absolute -top-1 right-3 w-2 h-2 bg-slate-950/95 border-t border-l border-white/10 rotate-45 transform" />
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     if (!project) return;
@@ -305,7 +337,15 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         <div className="relative">
           <div className="h-24 w-24 rounded-full border-t-2 border-indigo-500 animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="text-indigo-500 animate-pulse" size={32} />
+            <video
+              className="h-10 w-10 rounded-full"
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src="/questLogo.webm" type="video/webm" />
+            </video>
           </div>
         </div>
       </div>
@@ -365,9 +405,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-10 pt-24 md:pt-32 flex-1 w-full">
         {/* Hero Section */}
-        <div className="relative flex flex-col lg:flex-row gap-6 md:gap-12 items-start mb-16 rounded-[2rem] md:rounded-[3rem] p-5 sm:p-6 md:p-12 overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm group">
+        <div className="relative flex flex-col lg:flex-row gap-6 md:gap-12 items-start mb-16 rounded-[2rem] md:rounded-[3rem] p-5 sm:p-6 md:p-12 border border-white/10 bg-white/5 backdrop-blur-sm group">
           {/* Banner Image Background */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden rounded-[2rem] md:rounded-[3rem]">
             {ogImage ? (
               <div className="absolute inset-0">
                 <img 
@@ -393,19 +433,16 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           <div className="flex-1 space-y-8 w-full relative z-10">
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="relative group/quest-tag">
+                <BadgeWithTooltip
+                  tooltipText={isVerified ? 'Official, verified quest.' : 'Community quest. Not verified.'}
+                >
                   <div
                     className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] ${isVerified ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}
                   >
                     <Sparkles size={12} className="animate-pulse" />
                     {isVerified ? 'Official Quest' : 'Unofficial Quest'}
                   </div>
-                  <div className="hidden group-hover/quest-tag:block absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl z-30">
-                    {isVerified
-                      ? 'Verified or auto‑verified via widget activity on the official domain.'
-                      : 'Not verified yet. Embed the widget on your domain to get auto‑verified.'}
-                  </div>
-                </div>
+                </BadgeWithTooltip>
                 <button
                   onClick={handleShare}
                   className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300 hover:text-white hover:border-indigo-500/60 hover:bg-indigo-500/20 transition-all"
@@ -461,16 +498,25 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                 <div className="space-y-4 max-w-3xl">
                   {project.description && (
                     <div className="relative">
-                      <p className={`text-sm sm:text-base text-slate-300/80 leading-relaxed ${showFullDescription ? '' : 'line-clamp-2'} transition-all duration-300`}>
+                      <p
+                        ref={descriptionRef}
+                        onClick={() => {
+                          if (canExpandDescription) setShowFullDescription((prev) => !prev);
+                        }}
+                        className={`text-sm sm:text-base text-slate-300/80 leading-relaxed ${showFullDescription ? '' : 'line-clamp-2'} transition-all duration-300 ${canExpandDescription ? 'cursor-pointer' : ''}`}
+                      >
                         {project.description}
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => setShowFullDescription((prev) => !prev)}
-                        className="mt-2 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-indigo-300 hover:text-white transition-colors"
-                      >
-                        {showFullDescription ? 'Show less' : 'Read more'}
-                      </button>
+                      {canExpandDescription && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullDescription((prev) => !prev)}
+                          className="absolute left-1/2 -translate-x-1/2 -bottom-[5px] inline-flex items-center justify-center text-indigo-300 hover:text-white transition-colors"
+                          aria-label={showFullDescription ? 'Collapse description' : 'Expand description'}
+                        >
+                          {showFullDescription ? <ChevronUp size={14} /> : <ChevronDown size={14} className="arrow-float" />}
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -488,21 +534,19 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                     </a>
                     <div className="h-1 w-1 rounded-full bg-slate-700" />
                     {isVerified ? (
-                      <div className="relative group/verify flex items-center gap-2 text-sm text-sky-300">
-                        <ShieldCheck size={16} />
-                        <span>Verified</span>
-                        <div className="hidden group-hover/verify:block absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl z-30">
-                          Auto‑verified after the widget is embedded and pings our servers.
+                      <BadgeWithTooltip tooltipText="Auto‑verified via widget activity.">
+                        <div className="flex items-center gap-2 text-sm text-sky-300">
+                          <ShieldCheck size={16} />
+                          <span>Verified</span>
                         </div>
-                      </div>
+                      </BadgeWithTooltip>
                     ) : (
-                      <div className="relative group/verify flex items-center gap-2 text-sm text-amber-300">
-                        <ShieldCheck size={16} />
-                        <span>Not Verified</span>
-                        <div className="hidden group-hover/verify:block absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl z-30">
-                          Embed the widget on your domain to get auto‑verified.
+                      <BadgeWithTooltip tooltipText="Embed widget to verify.">
+                        <div className="flex items-center gap-2 text-sm text-amber-300">
+                          <ShieldCheck size={16} />
+                          <span>Not Verified</span>
                         </div>
-                      </div>
+                      </BadgeWithTooltip>
                     )}
                     {isOnline && (
                       <div className="flex items-center gap-2 text-sm text-emerald-400">
@@ -542,11 +586,11 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
             <div className="flex items-center gap-2 w-full">
               <button
                 onClick={() => onOpen({ projectId: project.id, domain: project.domain })}
-                className="group relative flex-1 min-w-0 px-3 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-indigo-500 text-white text-[11px] sm:text-sm font-black uppercase tracking-[0.12em] sm:tracking-widest whitespace-nowrap transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(99,102,241,0.4)]"
+                className="group relative flex-1 min-w-0 px-3 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 text-[11px] sm:text-sm font-black uppercase tracking-[0.12em] sm:tracking-widest whitespace-nowrap transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(251,191,36,0.45)] overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                <span className="relative inline-flex items-center justify-center gap-2 sm:gap-3 w-full">
-                  <Sword size={16} />
+                <span className="absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80" />
+                <span className="relative inline-flex items-center justify-center gap-2 sm:gap-3 w-full font-extrabold">
+                  <Sword size={16} className="text-slate-950" />
                   Start Quest
                 </span>
               </button>
