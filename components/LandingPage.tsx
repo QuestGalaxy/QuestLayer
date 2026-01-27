@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronRight, Gem, Lock, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X } from 'lucide-react';
+import { BarChart3, ChevronRight, Gem, Lock, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X, Zap } from 'lucide-react';
 import { useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
 import { STORE_SLIDING_LINKS } from '../constants';
@@ -270,11 +270,31 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
               <div className="absolute -inset-x-2 -inset-y-1 bg-orange-500/10 blur-xl rounded-full -z-0 animate-pulse" />
             </span>
           </p>
-          <div className="mt-8 flex items-center gap-3 px-6 py-2.5 bg-white/5 border border-white/10 rounded-full max-w-[95vw] backdrop-blur-md">
-            <Sparkles size={16} className="text-orange-400 animate-spin-slow shrink-0" />
-            <p className="text-slate-300 text-[10px] sm:text-sm font-bold uppercase tracking-[0.3em] truncate">
-              One embed • No redirects • Instant Web3 Experience
-            </p>
+          <div className="mt-10 flex flex-row items-center justify-center gap-x-3 sm:gap-x-6 px-4 sm:px-10 py-3 sm:py-4 bg-white/[0.03] border border-white/10 rounded-full max-w-[98vw] backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.05)]">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 group animate-[soft-bounce_3s_ease-in-out_infinite]">
+              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-500/10 text-orange-400 group-hover:scale-110 transition-transform duration-300">
+                <Sparkles className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
+              </div>
+              <span className="text-slate-200 text-[8px] sm:text-xs font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] whitespace-nowrap">One embed</span>
+            </div>
+            
+            <div className="w-px h-3 sm:h-4 bg-white/10" />
+            
+            <div className="flex items-center gap-1.5 sm:gap-2.5 group animate-[soft-bounce_3s_ease-in-out_infinite_0.5s]">
+              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform duration-300">
+                <Zap className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
+              </div>
+              <span className="text-slate-200 text-[8px] sm:text-xs font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] whitespace-nowrap">No redirects</span>
+            </div>
+            
+            <div className="w-px h-3 sm:h-4 bg-white/10" />
+            
+            <div className="flex items-center gap-1.5 sm:gap-2.5 group animate-[soft-bounce_3s_ease-in-out_infinite_1s]">
+              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+                <Target className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
+              </div>
+              <span className="text-slate-200 text-[8px] sm:text-xs font-black uppercase tracking-[0.15em] whitespace-nowrap">Instant Web3</span>
+            </div>
           </div>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 w-full px-4">
               <button
@@ -354,13 +374,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
                 100% { transform: translateX(200%) skewX(-30deg); }
               }
               @keyframes lively-wiggle {
-                0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
-                25% { transform: translateY(-2px) scale(1.01) rotate(0.5deg); }
-                50% { transform: translateY(0) scale(1) rotate(-0.5deg); }
-                75% { transform: translateY(-1px) scale(1.01) rotate(0.3deg); }
-              }
-            `}
-          </style>
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            25% { transform: translateY(-2px) scale(1.01) rotate(0.5deg); }
+            50% { transform: translateY(0) scale(1) rotate(-0.5deg); }
+            75% { transform: translateY(-1px) scale(1.01) rotate(0.3deg); }
+          }
+
+          @keyframes soft-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+          }
+        `}</style>
           <div
             ref={sliderRef}
             className="mt-6 relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
