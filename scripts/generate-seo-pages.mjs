@@ -762,6 +762,29 @@ const renderProjectDetailPage = (project) => {
     ? `<ul class="list">${socials.map((link) => `<li><a href="${link}">${link}</a></li>`).join('')}</ul>`
     : '<p>No social links listed yet.</p>';
 
+  const taskTitles = (project.tasks || [])
+    .filter((task) => task?.title)
+    .slice(0, 3)
+    .map((task) => task.title);
+  const taskSnippet = taskTitles.length
+    ? `Try quests like ${taskTitles.join(', ')} to earn XP and rewards.`
+    : 'Complete quests to earn XP and unlock rewards.';
+
+  const faqItems = [
+    {
+      question: 'How do I earn rewards?',
+      answer: taskSnippet
+    },
+    {
+      question: 'How do I embed the widget?',
+      answer: 'Use the QuestLayer builder to configure missions, then embed the widget script on your website.'
+    },
+    {
+      question: 'What can I do on this project page?',
+      answer: 'Explore official links, read the overview, and open the live quest widget to get started.'
+    }
+  ];
+
   const schemas = renderJsonLd([
     renderBreadcrumbSchema(breadcrumbs),
     {
@@ -772,8 +795,57 @@ const renderProjectDetailPage = (project) => {
       url: pageUrl(pagePath),
       image: image ? (image.startsWith('http') ? image : `${site.baseUrl}${image}`) : undefined,
       sameAs: socials.length ? socials : undefined
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer
+        }
+      }))
     }
   ]);
+
+  const redirectScript = `
+    <script>
+      (function() {
+        var ua = (navigator.userAgent || '').toLowerCase();
+        var isBot = /(bot|crawler|spider|crawling|lighthouse|pagespeed|facebookexternalhit|twitterbot|slurp|duckduckbot|bingbot|yandex|baiduspider|telegrambot|whatsapp|discordbot|linkedinbot)/i.test(ua);
+        if (!isBot) {
+          var target = '/browse?projectId=${project.id}';
+          window.location.replace(target);
+        }
+      })();
+    </script>
+    <noscript>
+      <meta http-equiv="refresh" content="0; url=/browse?projectId=${project.id}">
+    </noscript>
+  `;
+
+  const seoParagraph = `
+    <p class="lead">
+      ${project.name} quests are built to guide users through the ecosystem.
+      ${taskSnippet}
+      You can also embed the QuestLayer widget to activate these missions on your own site.
+    </p>
+  `;
+
+  const ctaBlock = `
+    <div class="cta-grid">
+      <a class="button primary" href="/browse?projectId=${project.id}">Open quests</a>
+      <a class="button secondary" href="/builder">Embed widget</a>
+    </div>
+  `;
+
+  const faqBlock = `
+    <ul class="list">
+      ${faqItems.map((item) => `<li><strong>${item.question}</strong><br/>${item.answer}</li>`).join('')}
+    </ul>
+  `;
 
   return `<!DOCTYPE html>\n<html lang="en">\n<head>${renderMeta({
     title: `${project.name} | QuestLayer`,
@@ -786,7 +858,7 @@ const renderProjectDetailPage = (project) => {
         description,
         secondaryHref: '/browse',
         secondaryCta: 'Back to store'
-      })}\n      ${renderSection('Overview', `<p>${description}</p>`)}\n      ${project.domain ? renderSection('Website', `<p><a href="${project.domain.startsWith('http') ? project.domain : `https://${project.domain}`}">${project.domain}</a></p>`) : ''}\n      ${renderSection('Social links', socialList)}\n    </main>\n${renderFooter()}\n  </div>\n</body>\n</html>`;
+      })}\n      ${renderSection('Overview', `<p>${description}</p>`)}\n      ${renderSection('Rewards & widget', `${seoParagraph}${ctaBlock}`)}\n      ${project.domain ? renderSection('Website', `<p><a href="${project.domain.startsWith('http') ? project.domain : `https://${project.domain}`}">${project.domain}</a></p>`) : ''}\n      ${renderSection('Social links', socialList)}\n      ${renderSection('FAQ', faqBlock)}\n    </main>\n${renderFooter()}\n  </div>\n${redirectScript}\n</body>\n</html>`;
 };
 
 const writePage = async (filePath, content) => {
@@ -812,7 +884,24 @@ const fetchProjectsForSeo = async () => {
     .limit(1000);
 
   if (error || !data) return [];
-  return data;
+
+  const projectIds = data.map((project) => project.id);
+  const { data: tasksData } = await supabase
+    .from('tasks')
+    .select('project_id, title, task_section, task_kind, order_index')
+    .in('project_id', projectIds);
+
+  const tasksByProject = (tasksData || []).reduce((acc, task) => {
+    if (!acc[task.project_id]) acc[task.project_id] = [];
+    acc[task.project_id].push(task);
+    return acc;
+  }, {});
+
+  return data.map((project) => ({
+    ...project,
+    tasks: (tasksByProject[project.id] || [])
+      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+  }));
 };
 
 const generate = async () => {

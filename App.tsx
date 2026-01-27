@@ -55,6 +55,11 @@ const App: React.FC = () => {
     const match = path.match(/^\/store\/([^/]+)/);
     return match?.[1] ?? null;
   };
+  const getProjectIdFromQuery = (search: string) => {
+    if (!search) return null;
+    const params = new URLSearchParams(search);
+    return params.get('projectId');
+  };
 
   const openSubmitModal = () => {
     submitModalReturnPathRef.current = window.location.pathname + window.location.search;
@@ -63,6 +68,13 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    const projectIdFromQuery = getProjectIdFromQuery(window.location.search);
+    if (projectIdFromQuery) {
+      setSelectedProjectId(projectIdFromQuery);
+      setCurrentPage('projectdetail');
+      window.history.replaceState(null, '', `/store/${projectIdFromQuery}`);
+      return;
+    }
     if (currentPage !== 'projectdetail' || selectedProjectId) return;
     const fromPath = getProjectIdFromPath(window.location.pathname);
     if (fromPath) {
@@ -81,6 +93,14 @@ const App: React.FC = () => {
   // Handle URL updates and back button
   useEffect(() => {
     const handlePopState = () => {
+      const projectIdFromQuery = getProjectIdFromQuery(window.location.search);
+      if (projectIdFromQuery) {
+        setSelectedProjectId(projectIdFromQuery);
+        setIsSubmitModalOpen(false);
+        setCurrentPage('projectdetail');
+        window.history.replaceState(null, '', `/store/${projectIdFromQuery}`);
+        return;
+      }
       const projectIdFromPath = getProjectIdFromPath(window.location.pathname);
       if (projectIdFromPath) {
         setSelectedProjectId(projectIdFromPath);

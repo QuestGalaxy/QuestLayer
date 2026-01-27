@@ -204,14 +204,20 @@ const extractH1 = (html: string) => {
 
 const cleanTitle = (raw: string | null) => {
   if (!raw) return null;
-  const separators = ['|', '·', '-', '—', '–', ':'];
-  let value = raw;
+  let value = raw.trim();
+  const separators = ['|', '·', '—', '–', '-', ':'];
   for (const sep of separators) {
     if (value.includes(sep)) {
       value = value.split(sep)[0];
     }
   }
-  return value.trim();
+  value = value.replace(/\s{2,}/g, ' ').trim();
+  // Keep titles short for SEO (1-3 words max).
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length > 3) {
+    value = words.slice(0, 3).join(' ');
+  }
+  return value;
 };
 
 const extractLinks = (html: string, baseUrl: string) => {
@@ -231,7 +237,18 @@ const extractLinks = (html: string, baseUrl: string) => {
   return results;
 };
 
-const extractSocials = (links: string[]) => {
+const scoreSocialLink = (link: string, tokens: string[]) => {
+  const lower = link.toLowerCase();
+  let score = 0;
+  tokens.forEach((token) => {
+    if (!token) return;
+    if (lower.includes(token)) score += 2;
+  });
+  if (link.length < 60) score += 1;
+  return score;
+};
+
+const extractSocials = (links: string[], tokens: string[] = []) => {
   const socialRules = [
     { key: 'twitter', hosts: ['twitter.com', 'x.com'] },
     { key: 'discord', hosts: ['discord.gg', 'discord.com'] },
@@ -245,6 +262,7 @@ const extractSocials = (links: string[]) => {
     { key: 'facebook', hosts: ['facebook.com', 'fb.com'] }
   ];
   const socials: Record<string, string> = {};
+  const scores: Record<string, number> = {};
   for (const href of links) {
     let host = '';
     try {
@@ -253,10 +271,13 @@ const extractSocials = (links: string[]) => {
       continue;
     }
     for (const rule of socialRules) {
-      if (socials[rule.key]) continue;
       const matched = rule.hosts.some((domain) => host === domain || host.endsWith(`.${domain}`));
       if (matched) {
-        socials[rule.key] = href;
+        const nextScore = scoreSocialLink(href, tokens);
+        if (!scores[rule.key] || nextScore > scores[rule.key]) {
+          socials[rule.key] = href;
+          scores[rule.key] = nextScore;
+        }
       }
     }
     if (Object.keys(socials).length >= socialRules.length) break;
@@ -439,15 +460,56 @@ const pickUrlByPattern = (urls: string[], patterns: RegExp[]) => {
   return null;
 };
 
-const buildTasks = (projectUrl: string, name: string, hostname: string, socials: Record<string, string>, sitemapUrls: string[]) => {
+const computeSeoScore = (payload: {
+  description?: string | null;
+  ogImage?: string | null;
+  logoUrl?: string | null;
+  socials?: Record<string, string>;
+  sitemapUrls?: string[];
+  title?: string | null;
+  hostname?: string | null;
+}) => {
+  let score = 0;
+  if (payload.description && payload.description.trim().length > 40) score += 2;
+  if (payload.ogImage) score += 2;
+  if (payload.logoUrl) score += 1;
+  if (payload.socials && Object.keys(payload.socials).length > 0) score += 1;
+  if (payload.sitemapUrls && payload.sitemapUrls.length > 0) score += 1;
+  if (payload.title && payload.hostname && payload.title.toLowerCase() !== payload.hostname.toLowerCase()) score += 1;
+  return score;
+};
+
+const getXpRewards = (seoScore: number) => {
+  const clamped = Math.max(0, Math.min(seoScore, 8));
+  const mission = 40 + clamped * 5; // 40-80
+  const quiz = 80 + clamped * 10; // 80-160
+  return { mission, quiz };
+};
+
+const buildXpSet = (base: number, spread: number) => {
+  const values = [base - spread, base, base + spread].map((value) => Math.max(10, Math.round(value)));
+  return shuffle(values);
+};
+
+const buildTasks = (
+  projectUrl: string,
+  name: string,
+  hostname: string,
+  socials: Record<string, string>,
+  sitemapUrls: string[],
+  seoScore: number
+) => {
   const tasks: any[] = [];
+  const rewards = getXpRewards(seoScore);
+  const missionXp = buildXpSet(rewards.mission, 5);
+  const quizXp = buildXpSet(rewards.quiz, 10);
   const addTask = (title: string, link: string, order: number, desc: string) => {
     tasks.push({
       title,
       task_kind: 'link',
       task_section: 'missions',
       link,
-      xp_reward: 50,
+      xp_reward: missionXp[order] ?? rewards.mission,
       order_index: order,
       description: desc
     });
@@ -538,7 +600,7 @@ const buildTasks = (projectUrl: string, name: string, hostname: string, socials:
       question: 'What is this project called?',
       answer: name,
       description: 'Answer the project name to continue.',
-      xp_reward: 100,
+      xp_reward: quizXp[0] ?? rewards.quiz,
       order_index: 0
     },
     {
@@ -548,7 +610,7 @@ const buildTasks = (projectUrl: string, name: string, hostname: string, socials:
       question: 'Which domain hosts the official site?',
       answer: hostname,
       description: 'Type the main domain of the project.',
-      xp_reward: 100,
+      xp_reward: quizXp[1] ?? rewards.quiz,
       order_index: 1
     },
     {
@@ -558,7 +620,7 @@ const buildTasks = (projectUrl: string, name: string, hostname: string, socials:
       question: 'Name one official community channel.',
       answer: primaryCommunity,
       description: 'Answer with a community channel (e.g. Discord).',
-      xp_reward: 100,
+      xp_reward: quizXp[2] ?? rewards.quiz,
       order_index: 2
     }
   ];
@@ -658,7 +720,18 @@ export default async function handler(req: any, res: any) {
       const iconResolved = resolveUrl(icon, projectUrl) || getFaviconUrl(projectUrl);
 
       const links = source === 'jina' ? extractLinksFromText(html) : extractLinks(html, projectUrl);
-      const socials = extractSocials(links);
+      const brandTokens = Array.from(new Set([
+        ...title.toLowerCase().split(/\s+/),
+        hostname.split('.')[0]?.toLowerCase()
+      ].filter(Boolean)));
+      let socials = extractSocials(links, brandTokens);
+      if (Object.keys(socials).length === 0 && source !== 'jina') {
+        const jinaText = await fetchHtmlViaJina(projectUrl);
+        if (jinaText) {
+          const fallbackLinks = extractLinksFromText(jinaText);
+          socials = extractSocials(fallbackLinks, brandTokens);
+        }
+      }
       const sitemapUrls = await collectSiteUrls(origin);
 
       const description = buildSeoDescription(title, hostname, metaDescription, metaKeywords);
@@ -703,7 +776,16 @@ export default async function handler(req: any, res: any) {
         projectId = created.id;
       }
 
-      const tasks = buildTasks(projectUrl, title, hostname, socials, sitemapUrls);
+      const seoScore = computeSeoScore({
+        description,
+        ogImage: ogResolved,
+        logoUrl,
+        socials,
+        sitemapUrls,
+        title,
+        hostname
+      });
+      const tasks = buildTasks(projectUrl, title, hostname, socials, sitemapUrls, seoScore);
 
       const { error: deleteError } = await supabase
         .from('tasks')
@@ -735,6 +817,7 @@ export default async function handler(req: any, res: any) {
         projectId,
         name: title,
         domain: hostname,
+        seo_score: seoScore,
         socials: Object.keys(socials),
         tasks: tasks.length
       });
