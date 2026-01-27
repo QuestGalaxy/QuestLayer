@@ -737,9 +737,13 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [currentProjectIndex, setCurrentProjectIndex] = useState<number>(-1);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const featureScrollRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [isFeatureDragging, setIsFeatureDragging] = useState(false);
+  const [featureStartX, setFeatureStartX] = useState(0);
+  const [featureScrollLeft, setFeatureScrollLeft] = useState(0);
 
   // Auto-scrolling logic
   useEffect(() => {
@@ -791,6 +795,26 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = scrollLeft - walk;
     }
+  };
+
+  const handleFeaturePointerDown = (e: React.PointerEvent) => {
+    if (!featureScrollRef.current) return;
+    setIsFeatureDragging(true);
+    featureScrollRef.current.setPointerCapture(e.pointerId);
+    setFeatureStartX(e.clientX);
+    setFeatureScrollLeft(featureScrollRef.current.scrollLeft);
+  };
+
+  const handleFeaturePointerMove = (e: React.PointerEvent) => {
+    if (!isFeatureDragging || !featureScrollRef.current) return;
+    const walk = (e.clientX - featureStartX) * 1.5;
+    featureScrollRef.current.scrollLeft = featureScrollLeft - walk;
+  };
+
+  const handleFeaturePointerUp = (e: React.PointerEvent) => {
+    if (!featureScrollRef.current) return;
+    setIsFeatureDragging(false);
+    featureScrollRef.current.releasePointerCapture(e.pointerId);
   };
 
   const handleBadgeClick = (badge: { domain: string }) => {
@@ -1522,35 +1546,90 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 mt-12 pb-10">
+                <div className="flex justify-center items-center gap-3 sm:gap-4 mt-12 pb-10">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronLeft size={20} />
                   </button>
                   
-                  <div className="flex items-center gap-2">
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i + 1}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
-                          currentPage === i + 1
-                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
-                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                        }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                  <div className="hidden sm:flex items-center gap-2">
+                    {(() => {
+                      const pages = new Set<number>();
+                      const add = (p: number) => {
+                        if (p >= 1 && p <= totalPages) pages.add(p);
+                      };
+                      add(1);
+                      add(totalPages);
+                      for (let i = currentPage - 2; i <= currentPage + 2; i += 1) add(i);
+
+                      const sorted = Array.from(pages).sort((a, b) => a - b);
+                      const items: Array<number | 'ellipsis'> = [];
+                      sorted.forEach((p, idx) => {
+                        if (idx === 0) {
+                          items.push(p);
+                          return;
+                        }
+                        const prev = sorted[idx - 1];
+                        if (p - prev > 1) items.push('ellipsis');
+                        items.push(p);
+                      });
+
+                      return items.map((item, i) => {
+                        if (item === 'ellipsis') {
+                          return (
+                            <span
+                              key={`ellipsis-${i}`}
+                              className="w-8 text-center text-slate-500 font-bold"
+                            >
+                              …
+                            </span>
+                          );
+                        }
+                        const page = item as number;
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                              currentPage === page
+                                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                                : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  <div className="flex sm:hidden items-center gap-2">
+                    {(() => {
+                      const start = Math.max(1, Math.min(currentPage - 1, totalPages - 2));
+                      const pages = [start, start + 1, start + 2].filter((p) => p >= 1 && p <= totalPages);
+                      return pages.map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-9 h-9 rounded-xl font-bold text-xs transition-all ${
+                            currentPage === page
+                              ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ));
+                    })()}
                   </div>
 
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronRight size={20} />
                   </button>
@@ -1566,8 +1645,18 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                   <div className="mb-6 text-center text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                     Discover leading projects, complete missions, and get rewarded instantly.
                   </div>
-                  <div className="relative overflow-hidden">
-                    <div className="flex gap-4 w-max animate-[ql-marquee_40s_linear_infinite]">
+                  <div
+                    ref={featureScrollRef}
+                    className="relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+                    onPointerDown={handleFeaturePointerDown}
+                    onPointerMove={handleFeaturePointerMove}
+                    onPointerUp={handleFeaturePointerUp}
+                    onPointerLeave={handleFeaturePointerUp}
+                  >
+                    <div
+                      className="flex gap-4 w-max animate-[ql-marquee_40s_linear_infinite]"
+                      style={{ animationPlayState: isFeatureDragging ? 'paused' : 'running' }}
+                    >
                       {STORE_SLIDING_LINKS
                         .filter((link) => featuredImages[link.domain])
                         .slice(0, 12)

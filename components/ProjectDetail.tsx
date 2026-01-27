@@ -65,6 +65,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [showInitial, setShowInitial] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [canExpandDescription, setCanExpandDescription] = useState(false);
+  const [logoOverride, setLogoOverride] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLParagraphElement | null>(null);
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
@@ -128,6 +129,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
 
   useEffect(() => {
     setShowFullDescription(false);
+    setLogoOverride(null);
   }, [projectId]);
 
   useEffect(() => {
@@ -245,7 +247,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     return tasks.reduce((sum, task) => sum + (task?.xp_reward || 0), 0);
   }, [tasks]);
 
-  const logoSrc = project?.logo_url || (project?.domain ? getFaviconUrl(project.domain) : '');
+  const logoSrc = logoOverride || project?.logo_url || (project?.domain ? getFaviconUrl(project.domain) : '');
 
   const lastVerifiedLabel = project?.last_ping_at
     ? new Date(project.last_ping_at).toLocaleDateString('en-US', {
@@ -478,6 +480,13 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                           }
                         }}
                         onError={() => {
+                          if (project?.domain) {
+                            const fallback = getFaviconUrl(project.domain);
+                            if (fallback && fallback !== logoSrc) {
+                              setLogoOverride(fallback);
+                              return;
+                            }
+                          }
                           setShowInitial(true);
                         }}
                       />

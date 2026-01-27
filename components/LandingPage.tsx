@@ -27,6 +27,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   const { isConnected, status } = useAppKitAccount();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const sliderRef = React.useRef<HTMLDivElement>(null);
+  const [isSliderDragging, setIsSliderDragging] = useState(false);
+  const [sliderStartX, setSliderStartX] = useState(0);
+  const [sliderScrollLeft, setSliderScrollLeft] = useState(0);
   const normalizeDomain = (value: string) => {
     const trimmed = value.trim().toLowerCase();
     if (!trimmed) return '';
@@ -154,6 +158,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
       case 4: return 'shadow-[0_0_80px_rgba(234,179,8,0.6)] border-yellow-500';
       default: return 'shadow-[0_0_60px_rgba(139,92,246,0.4)] border-indigo-500/50';
     }
+  };
+
+  const handleSliderPointerDown = (e: React.PointerEvent) => {
+    if (!sliderRef.current) return;
+    setIsSliderDragging(true);
+    sliderRef.current.setPointerCapture(e.pointerId);
+    setSliderStartX(e.clientX);
+    setSliderScrollLeft(sliderRef.current.scrollLeft);
+  };
+
+  const handleSliderPointerMove = (e: React.PointerEvent) => {
+    if (!isSliderDragging || !sliderRef.current) return;
+    const walk = (e.clientX - sliderStartX) * 1.5;
+    sliderRef.current.scrollLeft = sliderScrollLeft - walk;
+  };
+
+  const handleSliderPointerUp = (e: React.PointerEvent) => {
+    if (!sliderRef.current) return;
+    setIsSliderDragging(false);
+    sliderRef.current.releasePointerCapture(e.pointerId);
   };
 
   const handleFeaturedClick = async (domain: string) => {
@@ -342,8 +366,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
               }
             `}
           </style>
-          <div className="mt-6 relative overflow-hidden">
-            <div className="flex gap-3 sm:gap-4 w-max animate-[landing-marquee_35s_linear_infinite]">
+          <div
+            ref={sliderRef}
+            className="mt-6 relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+            onPointerDown={handleSliderPointerDown}
+            onPointerMove={handleSliderPointerMove}
+            onPointerUp={handleSliderPointerUp}
+            onPointerLeave={handleSliderPointerUp}
+          >
+            <div
+              className="flex gap-3 sm:gap-4 w-max animate-[landing-marquee_35s_linear_infinite]"
+              style={{ animationPlayState: isSliderDragging ? 'paused' : 'running' }}
+            >
               {featuredStoreItems.concat(featuredStoreItems).map((item, idx) => {
                 const projectId = projectDomainMap[normalizeDomain(item.domain)];
                 const href = projectId ? `/store/${projectId}` : '/browse';
