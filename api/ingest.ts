@@ -428,7 +428,7 @@ const getNgrams = (text: string, size: number) => {
 const isTooSimilar = (value: string, source?: string | null) => {
   if (!value || !source) return false;
   const cleanedValue = value.toLowerCase();
-  const grams = getNgrams(source, 6);
+  const grams = getNgrams(source, 5);
   return grams.some((gram) => cleanedValue.includes(gram));
 };
 
@@ -526,10 +526,19 @@ const rewriteSeoCopyWithAi = async (payload: {
     let title = typeof parsed.title === 'string' ? parsed.title.trim() : null;
     let description = typeof parsed.description === 'string' ? parsed.description.trim() : null;
 
-    if (description && isTooSimilar(description, payload.metaDescription)) {
+    const similaritySources = [
+      payload.metaDescription,
+      payload.h1,
+      payload.rawTitle
+    ].filter(Boolean) as string[];
+    const isSimilar = description
+      ? similaritySources.some((source) => isTooSimilar(description!, source))
+      : false;
+
+    if (isSimilar) {
       const retryPrompt = buildAiPrompt({
         ...payload,
-        avoidPhrases: [payload.metaDescription ?? '']
+        avoidPhrases: similaritySources
       });
       const retryRes = await fetchWithTimeout(`${url}/api/generate`, {
         method: 'POST',
@@ -550,6 +559,10 @@ const rewriteSeoCopyWithAi = async (payload: {
           description = typeof retryParsed.description === 'string' ? retryParsed.description.trim() : description;
         }
       }
+    }
+
+    if (description && similaritySources.some((source) => isTooSimilar(description!, source))) {
+      description = null;
     }
 
     if (!title && !description) return null;
@@ -952,9 +965,10 @@ export default async function handler(req: any, res: any) {
       }
       const sitemapUrls = await collectSiteUrls(origin);
 
+      const keywordSeed = metaKeywords || (metaDescription ? extractKeywords(metaDescription).join(', ') : null);
       const description = aiRewrite?.description
         ? clampDescription(normalizeSeoText(aiRewrite.description), AI_DESCRIPTION_MAX)
-        : buildSeoDescription(title, hostname, metaDescription, metaKeywords);
+        : buildSeoDescription(title, hostname, null, keywordSeed);
       const bannerUrl = ogResolved || iconResolved || getFaviconUrl(projectUrl);
       const logoUrl = iconResolved || getFaviconUrl(projectUrl);
 
