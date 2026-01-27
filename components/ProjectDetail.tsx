@@ -338,7 +338,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           <div className="h-24 w-24 rounded-full border-t-2 border-indigo-500 animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
             <video
-              className="h-10 w-10 rounded-full"
+              className="h-16 w-16 rounded-full animate-[prism-drift_4s_ease-in-out_infinite]"
               autoPlay
               loop
               muted

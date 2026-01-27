@@ -154,7 +154,7 @@ const fetchHtmlViaJina = async (url: string) => {
         'User-Agent': USER_AGENTS[0],
         'Accept': 'text/plain'
       }
-    });
+    }, FETCH_TIMEOUT_MS * 2);
     if (!res.ok) return null;
     const text = (await res.text()).slice(0, MAX_HTML_SIZE);
     if (!text) return null;

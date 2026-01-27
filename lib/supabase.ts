@@ -80,6 +80,33 @@ export const fetchAllProjects = async () => {
   return data;
 };
 
+const normalizeDomain = (value: string) => {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return '';
+  try {
+    const withScheme = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+      ? trimmed
+      : `https://${trimmed}`;
+    return new URL(withScheme).hostname.replace(/^www\./, '');
+  } catch {
+    return trimmed.split('/')[0].replace(/^www\./, '');
+  }
+};
+
+export const fetchProjectIdByDomain = async (domain: string) => {
+  const normalized = normalizeDomain(domain);
+  if (!normalized) return null;
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('domain', normalized)
+    .limit(1)
+    .single();
+
+  if (error) return null;
+  return data?.id ?? null;
+};
+
 export const fetchProjectDetails = async (projectId: string) => {
   const { data: project, error: projectError } = await supabase
     .from('projects')

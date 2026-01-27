@@ -515,16 +515,29 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
         .filter((link) => link.domain && !featuredImages[link.domain]);
       if (candidates.length === 0) return;
 
+      const projectImageByDomain = new Map<string, string>();
+      projects.forEach((project) => {
+        if (!project?.domain) return;
+        const key = normalizeDomain(project.domain);
+        const image = project.banner_url || project.logo_url;
+        if (key && image) projectImageByDomain.set(key, image);
+      });
+
       const results = await Promise.all(
         candidates.map(async (link) => {
           try {
+            const key = normalizeDomain(link.domain);
+            const projectImage = key ? projectImageByDomain.get(key) : null;
+            const isFavicon = projectImage?.includes('favicon');
             const target = link.domain.startsWith('http')
               ? link.domain
               : `https://${link.domain}`;
             const url = `/api/og?url=${encodeURIComponent(target)}`;
             const res = await fetch(url);
             const data = await res.json();
-            if (data?.image) return { id: link.domain, image: data.image };
+            if (data?.image && !isFavicon) return { id: link.domain, image: data.image };
+            if (data?.image && isFavicon) return { id: link.domain, image: data.image };
+            if (projectImage) return { id: link.domain, image: projectImage };
             if (isDev) {
               return { id: link.domain, image: `https://www.google.com/s2/favicons?domain=${link.domain}&sz=256` };
             }
@@ -532,6 +545,9 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           } catch {
             if (isDev && link.domain) {
               return { id: link.domain, image: `https://www.google.com/s2/favicons?domain=${link.domain}&sz=256` };
+            }
+            if (projectImageByDomain.has(normalizeDomain(link.domain))) {
+              return { id: link.domain, image: projectImageByDomain.get(normalizeDomain(link.domain))! };
             }
             return null;
           }
@@ -556,7 +572,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
     return () => {
       isMounted = false;
     };
-  }, [featuredImages, isDev]);
+  }, [featuredImages, isDev, projects]);
 
   const normalizeDomain = (value: string) => {
     const trimmed = value.trim().toLowerCase();
@@ -778,9 +794,20 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   };
 
   const handleBadgeClick = (badge: { domain: string }) => {
-      if (!isDragging) {
-          handleBrowseUrl(badge.domain);
+      if (isDragging) return;
+      const normalized = normalizeDomain(badge.domain);
+      const matched = projects.find(project => normalizeDomain(project.domain || '') === normalized);
+      if (matched?.id && onProjectDetails) {
+        onProjectDetails(matched.id);
+        return;
       }
+      handleBrowseUrl(badge.domain);
+  };
+
+  const getProjectIdByDomain = (domain: string) => {
+    const normalized = normalizeDomain(domain);
+    const matched = projects.find(project => normalizeDomain(project.domain || '') === normalized);
+    return matched?.id || null;
   };
   
   // ... rest of component
@@ -1393,25 +1420,44 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         onMouseUp={handleMouseUp}
                         onMouseMove={handleMouseMove}
                     >
-                        {STORE_SLIDING_LINKS.concat(STORE_SLIDING_LINKS).map((badge, i) => (
-                            <div 
-                                key={i} 
-                                onClick={() => handleBadgeClick(badge)}
-                                className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm min-w-[120px] justify-center shrink-0 select-none"
-                            >
-                                <img 
-                                    src={`https://www.google.com/s2/favicons?domain=${badge.domain}&sz=32`}
-                                    alt={badge.name}
-                                    className="w-4 h-4 rounded-full pointer-events-none"
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                    }}
-                                />
-                                <span className="hidden">{badge.name.slice(0, 2).toUpperCase()}</span>
-                                {badge.name}
-                            </div>
-                        ))}
+                        {STORE_SLIDING_LINKS.concat(STORE_SLIDING_LINKS).map((badge, i) => {
+                            const projectId = getProjectIdByDomain(badge.domain);
+                            const href = projectId ? `/store/${projectId}` : '/browse';
+                            return (
+                              <a 
+                                  key={i}
+                                  href={href}
+                                  onClick={(e) => {
+                                      if (isDragging) {
+                                        e.preventDefault();
+                                        return;
+                                      }
+                                      if (projectId && onProjectDetails) {
+                                        e.preventDefault();
+                                        onProjectDetails(projectId);
+                                        return;
+                                      }
+                                      if (!projectId) {
+                                        e.preventDefault();
+                                        handleBrowseUrl(badge.domain);
+                                      }
+                                  }}
+                                  className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-white/10 hover:text-white hover:border-white/20 transition-all cursor-pointer backdrop-blur-sm min-w-[120px] justify-center shrink-0 select-none"
+                              >
+                                  <img 
+                                      src={`https://www.google.com/s2/favicons?domain=${badge.domain}&sz=32`}
+                                      alt={badge.name}
+                                      className="w-4 h-4 rounded-full pointer-events-none"
+                                      onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                      }}
+                                  />
+                                  <span className="hidden">{badge.name.slice(0, 2).toUpperCase()}</span>
+                                  {badge.name}
+                              </a>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -1530,29 +1576,44 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                             .filter((link) => featuredImages[link.domain])
                             .slice(0, 12)
                         )
-                        .map((link, index) => (
-                          <button
-                            key={`${link.domain}-${index}`}
-                            onClick={() => handleBrowseUrl(link.domain)}
-                            className="group relative w-64 h-36 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)] transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:border-indigo-500/30"
-                          >
-                            <img
-                              src={featuredImages[link.domain]}
-                              alt={link.name}
-                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                              loading="lazy"
-                            />
+                        .map((link, index) => {
+                          const projectId = getProjectIdByDomain(link.domain);
+                          const href = projectId ? `/store/${projectId}` : '/browse';
+                          return (
+                            <a
+                              key={`${link.domain}-${index}`}
+                              href={href}
+                              onClick={(e) => {
+                                if (projectId && onProjectDetails) {
+                                  e.preventDefault();
+                                  onProjectDetails(projectId);
+                                  return;
+                                }
+                                if (!projectId) {
+                                  e.preventDefault();
+                                  handleBrowseUrl(link.domain);
+                                }
+                              }}
+                              className="group relative w-64 h-36 rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-[0_20px_50px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)] transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:border-indigo-500/30"
+                            >
+                              <img
+                                src={featuredImages[link.domain]}
+                                alt={link.name}
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                loading="lazy"
+                              />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
-                            <div className="absolute bottom-3 left-4 right-4 text-left">
-                              <div className="text-xs font-black uppercase tracking-widest text-white">
-                                {link.name}
+                              <div className="absolute bottom-3 left-4 right-4 text-left">
+                                <div className="text-xs font-black uppercase tracking-widest text-white">
+                                  {link.name}
+                                </div>
+                                <div className="text-[10px] text-slate-300 truncate">
+                                  {link.domain}
+                                </div>
                               </div>
-                              <div className="text-[10px] text-slate-300 truncate">
-                                {link.domain}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
+                            </a>
+                          );
+                        })}
                     </div>
                   </div>
                 </div>

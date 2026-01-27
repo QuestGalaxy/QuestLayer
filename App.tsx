@@ -472,6 +472,11 @@ const App: React.FC = () => {
 
   const { disconnect } = useDisconnect();
   const [allowAutoLaunch, setAllowAutoLaunch] = useState(true);
+  const openProjectDetails = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setCurrentPage('projectdetail');
+    window.history.pushState(null, '', `/store/${projectId}`);
+  };
 
   useEffect(() => {
     if (currentPage !== 'dashboard') return;
@@ -494,6 +499,7 @@ const App: React.FC = () => {
           onBrowse={() => {
             setCurrentPage('questbrowse');
           }}
+          onProjectDetails={openProjectDetails}
           onTryBuilder={() => {
             setCurrentPage('builder');
           }}
@@ -533,10 +539,7 @@ const App: React.FC = () => {
           }}
           onWidgetBuilder={() => setCurrentPage('dashboard')}
           onSubmitProject={openSubmitModal}
-          onProjectDetails={(projectId) => {
-            setSelectedProjectId(projectId);
-            setCurrentPage('projectdetail');
-          }}
+          onProjectDetails={openProjectDetails}
           initialBrowseRequest={pendingBrowseRequest}
           onBrowseHandled={() => setPendingBrowseRequest(null)}
         />

@@ -4,25 +4,41 @@ import { BarChart3, ChevronRight, Gem, Lock, LogIn, Rocket, Sparkles, Target, Tr
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
 import { STORE_SLIDING_LINKS } from '../constants';
+import { fetchAllProjects, fetchProjectIdByDomain } from '../lib/supabase';
 
 interface LandingPageProps {
   onLaunch: () => void;
   onBrowse: () => void;
   onTryBuilder: () => void;
   onSubmitProject: () => void;
+  onProjectDetails?: (projectId: string) => void;
   allowAutoLaunch?: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuilder, onSubmitProject, allowAutoLaunch = true }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuilder, onSubmitProject, onProjectDetails, allowAutoLaunch = true }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [bgVideoLoaded, setBgVideoLoaded] = useState(false);
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
+  const [projectDomainMap, setProjectDomainMap] = useState<Record<string, string>>({});
+  const [projectImageMap, setProjectImageMap] = useState<Record<string, string>>({});
   const isDev = (import.meta as any).env?.DEV ?? false;
   const { open } = useAppKit();
   const { isConnected, status } = useAppKitAccount();
   const isConnecting = status === 'connecting' || status === 'reconnecting';
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const normalizeDomain = (value: string) => {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) return '';
+    try {
+      const withScheme = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+        ? trimmed
+        : `https://${trimmed}`;
+      return new URL(withScheme).hostname.replace(/^www\./, '');
+    } catch {
+      return trimmed.split('/')[0].replace(/^www\./, '');
+    }
+  };
   const featuredStoreItems = useMemo(() => {
     const tags = ['XP Quests', 'Liquidity', 'Collectibles', 'DeFi', 'Wallet', 'Discover', 'Swap', 'NFTs'];
     const accents = [
@@ -56,14 +72,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
 
   useEffect(() => {
     let isMounted = true;
+    const fetchProjectsIndex = async () => {
+      try {
+        const list = await fetchAllProjects();
+        if (!isMounted) return;
+        const nextMap: Record<string, string> = {};
+        const nextImages: Record<string, string> = {};
+        list.forEach((project) => {
+          if (!project?.id || !project?.domain) return;
+          const key = normalizeDomain(project.domain);
+          if (key) {
+            nextMap[key] = project.id;
+            const image = project.banner_url || project.logo_url;
+            if (image) nextImages[key] = image;
+          }
+        });
+        setProjectDomainMap(nextMap);
+        setProjectImageMap(nextImages);
+      } catch {
+        // ignore
+      }
+    };
     const fetchFeaturedImages = async () => {
       const entries = await Promise.all(
         featuredStoreItems.map(async (item) => {
           try {
+            const key = normalizeDomain(item.domain);
+            const projectImage = projectImageMap[key];
+            const isFavicon = projectImage?.includes('favicon');
             const target = item.domain.startsWith('http') ? item.domain : `https://${item.domain}`;
             const res = await fetch(`/api/og?url=${encodeURIComponent(target)}`);
             const data = await res.json();
-            if (data?.image) return [item.domain, data.image] as const;
+            if (data?.image && !isFavicon) return [item.domain, data.image] as const;
+            if (data?.image && isFavicon) return [item.domain, data.image] as const;
+            if (projectImage) return [item.domain, projectImage] as const;
             if (isDev) {
               return [item.domain, `https://www.google.com/s2/favicons?domain=${item.domain}&sz=256`] as const;
             }
@@ -72,7 +114,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
             if (isDev) {
               return [item.domain, `https://www.google.com/s2/favicons?domain=${item.domain}&sz=256`] as const;
             }
-            return [item.domain, ''] as const;
+            return [item.domain, projectImageMap[normalizeDomain(item.domain)] || ''] as const;
           }
         })
       );
@@ -84,10 +126,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
       setFeaturedImages(nextImages);
     };
     fetchFeaturedImages();
+    fetchProjectsIndex();
     return () => {
       isMounted = false;
     };
-  }, [featuredStoreItems, isDev]);
+  }, [featuredStoreItems, isDev, projectImageMap]);
 
   React.useEffect(() => {
     if (isConnected && allowAutoLaunch) {
@@ -111,6 +154,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
       case 4: return 'shadow-[0_0_80px_rgba(234,179,8,0.6)] border-yellow-500';
       default: return 'shadow-[0_0_60px_rgba(139,92,246,0.4)] border-indigo-500/50';
     }
+  };
+
+  const handleFeaturedClick = async (domain: string) => {
+    const key = normalizeDomain(domain);
+    const existingId = projectDomainMap[key];
+    if (existingId && onProjectDetails) {
+      onProjectDetails(existingId);
+      return;
+    }
+    const fetchedId = await fetchProjectIdByDomain(domain);
+    if (fetchedId && onProjectDetails) {
+      setProjectDomainMap((prev) => ({ ...prev, [key]: fetchedId }));
+      onProjectDetails(fetchedId);
+      return;
+    }
+    onBrowse();
   };
 
   return (
@@ -285,12 +344,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
           </style>
           <div className="mt-6 relative overflow-hidden">
             <div className="flex gap-3 sm:gap-4 w-max animate-[landing-marquee_35s_linear_infinite]">
-              {featuredStoreItems.concat(featuredStoreItems).map((item, idx) => (
-                <button
-                  key={`${item.name}-${idx}`}
-                  onClick={onBrowse}
-                  className="group text-left rounded-3xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/70 transition-all overflow-hidden min-w-[220px] sm:min-w-[240px]"
-                >
+              {featuredStoreItems.concat(featuredStoreItems).map((item, idx) => {
+                const projectId = projectDomainMap[normalizeDomain(item.domain)];
+                const href = projectId ? `/store/${projectId}` : '/browse';
+                return (
+                  <a
+                    key={`${item.name}-${idx}`}
+                    href={href}
+                    onClick={(e) => {
+                      if (projectId && onProjectDetails) {
+                        e.preventDefault();
+                        onProjectDetails(projectId);
+                        return;
+                      }
+                      if (!projectId) {
+                        e.preventDefault();
+                        onBrowse();
+                      }
+                    }}
+                    className="group text-left rounded-3xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/70 transition-all overflow-hidden min-w-[220px] sm:min-w-[240px]"
+                  >
                   <div className="relative h-24 sm:h-28 w-full bg-slate-950/60 border-b border-white/5 overflow-hidden">
                     {featuredImages[item.domain] ? (
                       <img
@@ -318,8 +391,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
                       <ChevronRight size={14} className="text-white/30 group-hover:text-white/70 transition-colors shrink-0" />
                     </div>
                   </div>
-                </button>
-              ))}
+                </a>
+              )})}
             </div>
           </div>
         </div>
