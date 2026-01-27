@@ -25,7 +25,6 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
-      assetsInclude: ['**/*.html'],
       build: {
         rollupOptions: {
           input: {
