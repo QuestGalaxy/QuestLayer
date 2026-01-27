@@ -6,9 +6,10 @@ import {
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
   Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info, ShieldCheck,
-  Github, Linkedin, Youtube, Instagram, Facebook
+  Github, Linkedin, Youtube, Instagram, Facebook, CheckCircle2, FileText, Image as ImageIcon, Users
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { playSynthesizedSound } from '../lib/audio-effects.js';
 
 const TASK_TEMPLATES = [
   {
@@ -205,6 +206,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   const [suggestedTasks, setSuggestedTasks] = useState<Task[]>([]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string | number>>(new Set());
   const [autoSummary, setAutoSummary] = useState<string>('');
+  const [autoItems, setAutoItems] = useState<Array<{ id: string; label: string; icon: React.ReactNode; status: 'pending' | 'done' }>>([]);
+  const autoTimeoutsRef = useRef<number[]>([]);
   const [applyMessage, setApplyMessage] = useState<string>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [appliedTasks, setAppliedTasks] = useState<Task[]>([]);
@@ -223,6 +226,9 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   useEffect(() => {
     setDomainInput(state.projectDomain || '');
   }, [state.projectDomain]);
+  useEffect(() => () => {
+    autoTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+  }, []);
   useEffect(() => () => {
     applyTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
   }, []);
@@ -244,6 +250,39 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+
+  const normalizeTitle = (value: string | null | undefined) => {
+    if (!value) return '';
+    let trimmed = value.trim();
+    if (!trimmed) return '';
+    const separators = ['|', '–', '—', '-', '•', '·', ':'];
+    for (const sep of separators) {
+      if (trimmed.includes(sep)) {
+        const [first] = trimmed.split(sep).map((part) => part.trim()).filter(Boolean);
+        if (first) trimmed = first;
+        break;
+      }
+    }
+    const stopWords = new Set([
+      'the', 'a', 'an', 'to', 'for', 'with', 'and', 'of', 'in', 'on', 'by', 'from',
+      'official', 'homepage', 'home', 'welcome', 'site', 'website', 'platform', 'app'
+    ]);
+    const marketing = new Set([
+      'revolutionizing', 'unleash', 'discover', 'explore', 'earn', 'build', 'building',
+      'powered', 'ultimate', 'best'
+    ]);
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    const cleaned = words.filter((word, idx) => {
+      const lower = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!lower) return false;
+      if (marketing.has(lower)) return false;
+      if (idx > 0 && stopWords.has(lower)) return false;
+      return true;
+    });
+    let finalWords = cleaned.length ? cleaned : words;
+    if (finalWords.length > 4) finalWords = finalWords.slice(0, 4);
+    return finalWords.join(' ').trim();
+  };
 
   const getNameFromDomain = (domain: string) => {
     const host = normalizeHost(domain);
@@ -506,7 +545,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         fetchJson(getApiUrl(`/api/logo?url=${encodeURIComponent(normalized)}`))
       ]);
 
-      const nameCandidate = (metadata?.title as string | null) || getNameFromDomain(hostname);
+      const rawNameCandidate = (metadata?.title as string | null) || getNameFromDomain(hostname);
+      const nameCandidate = normalizeTitle(rawNameCandidate) || getNameFromDomain(hostname);
       const shouldSetName = !nameTouchedRef.current;
       if (shouldSetName && nameCandidate) {
         setProjectName(nameCandidate);
@@ -543,6 +583,26 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         ogData?.image ? 'Banner' : null
       ].filter(Boolean);
       setAutoSummary(summaryParts.length > 0 ? summaryParts.join(' • ') : 'No metadata found');
+      const nextItems: Array<{ id: string; label: string; icon: React.ReactNode }> = [];
+      if (nameCandidate) nextItems.push({ id: 'name', label: `Name · ${nameCandidate}`, icon: <CheckCircle2 size={12} /> });
+      if (metadata?.description) nextItems.push({ id: 'desc', label: 'Description', icon: <FileText size={12} /> });
+      if (foundSocials) nextItems.push({ id: 'socials', label: `${foundSocials} social links`, icon: <Users size={12} /> });
+      if (logoData?.logo) nextItems.push({ id: 'logo', label: 'Logo', icon: <ImageIcon size={12} /> });
+      if (ogData?.image) nextItems.push({ id: 'banner', label: 'Banner', icon: <ImageIcon size={12} /> });
+      setAutoItems([]);
+      autoTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+      autoTimeoutsRef.current = [];
+      nextItems.forEach((item, idx) => {
+        const addId = window.setTimeout(() => {
+          setAutoItems((prev) => [...prev, { ...item, status: 'pending' }]);
+          const completeId = window.setTimeout(() => {
+            setAutoItems((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, status: 'done' } : entry));
+            playSynthesizedSound(920, 0.08, 0.08);
+          }, 900);
+          autoTimeoutsRef.current.push(completeId);
+        }, 720 * idx);
+        autoTimeoutsRef.current.push(addId);
+      });
       setAutoStatus('done');
     } catch {
       setAutoStatus('error');
@@ -655,8 +715,26 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
               </button>
             </div>
             {autoStatus === 'done' && (
-              <div className="text-[11px] text-emerald-200/90 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-2">
-                Setup completed. {autoSummary}
+              <div className="text-[11px] text-slate-200/90 bg-slate-500/10 border border-slate-500/20 rounded-2xl px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Setup completed</span>
+                </div>
+                {autoItems.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {autoItems.map((item, idx) => (
+                      <div
+                        key={item.id}
+                        style={{ transitionDelay: `${idx * 60}ms` }}
+                        className={`inline-flex items-center gap-1.5 text-[9px] rounded-full px-2 py-1 animate-in fade-in slide-in-from-left-2 duration-500 transition-colors ${item.status === 'done'
+                          ? 'text-emerald-100/90 bg-emerald-500/10 border border-emerald-500/30'
+                          : 'text-rose-100/90 bg-rose-500/10 border border-rose-500/30'}`}
+                      >
+                        <span className={item.status === 'done' ? 'text-emerald-200' : 'text-rose-200'}>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {autoStatus === 'error' && (
@@ -879,18 +957,21 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between items-center sticky top-0 bg-slate-900 py-2 z-20">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Target size={12} />
             <h3>Recommended Tasks</h3>
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+              {selectedCount} selected
+            </span>
           </div>
           <button
             type="button"
             onClick={applySelectedTasks}
             disabled={selectedCount === 0}
-            className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 hover:text-emerald-200 disabled:opacity-40 transition-colors"
+            className="bg-emerald-500/90 text-white px-3 py-1.5 rounded-lg font-black text-[9px] uppercase hover:bg-emerald-500 transition-all flex items-center gap-1 shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Apply {selectedCount}
+            Apply
           </button>
         </div>
         <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-3">
@@ -956,8 +1037,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                     key={task.id}
                     type="button"
                     onClick={() => toggleTaskSelection(task.id)}
-                    className={`w-full text-left border rounded-2xl px-4 py-3 transition-colors ${selected
-                      ? 'border-indigo-500/40 bg-indigo-500/10'
+                    className={`relative w-full text-left border rounded-2xl px-4 py-3 transition-colors ${selected
+                      ? 'border-emerald-500/40 bg-emerald-500/10'
                       : 'border-white/10 bg-slate-900/60 hover:border-white/20'
                       } ${isAnimating && isApplied ? 'ql-fly-to-drawer' : ''}`}
                   >
@@ -966,7 +1047,14 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                         <div className="text-[11px] font-bold text-white">{task.title}</div>
                         <div className="text-[10px] text-slate-500">{task.section === 'onboarding' ? 'Onboarding' : 'Mission'}</div>
                       </div>
-                      <div className="text-[10px] text-slate-400">{task.xp} XP</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-[10px] text-slate-400">{task.xp} XP</div>
+                        {selected && (
+                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                            Selected
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-[10px] text-slate-500 mt-1">{task.desc}</div>
                   </button>
@@ -1657,30 +1745,36 @@ const Editor: React.FC<EditorProps> = ({
           >
             <ArrowLeft size={16} />
           </button>
-          <h1 className="text-xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2">
-            QuestLayer <span className="text-indigo-500 not-italic font-mono text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded tracking-normal">BUILDER</span>
+          <h1 className="relative text-xl font-black italic tracking-tighter text-white uppercase">
+            QuestLayer
+            <span className="absolute -top-2 right-0 text-[8px] font-black tracking-widest text-indigo-300 bg-indigo-500/15 px-1.5 py-0.5 rounded">
+              BUILDER
+            </span>
           </h1>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handlePublishClick}
             disabled={isPublishing}
-            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg shadow-indigo-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isConnected
+              ? 'bg-emerald-500/90 text-white hover:bg-emerald-500 shadow-emerald-500/30'
+              : 'bg-rose-500/90 text-white hover:bg-rose-500 animate-pulse shadow-rose-500/40'
+              }`}
           >
             {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />}
-            {isPublishing ? 'Saving...' : 'Save & Publish'}
+            {isPublishing ? 'Saving...' : (isConnected ? 'Save & Publish' : 'Connect to publish')}
           </button>
         </div>
       </div>
 
       {/* Internal Scroll Area */}
-      <div ref={editorScrollRef} className="flex-1 overflow-y-auto custom-scroll p-6 space-y-10 pb-32">
+      <div ref={editorScrollRef} className="flex-1 overflow-y-auto custom-scroll p-6 space-y-6 pb-32">
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-1 bg-slate-950/70 border border-white/10 rounded-2xl p-1">
             <button
               type="button"
               onClick={() => setBuilderMode('basic')}
-              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${builderMode === 'basic'
+              className={`px-5 py-2 rounded-xl text-[11px] sm:text-[10px] font-black uppercase tracking-widest transition-colors ${builderMode === 'basic'
                 ? 'bg-indigo-500/80 text-white'
                 : 'text-slate-400 hover:text-white'
                 }`}
@@ -1690,7 +1784,7 @@ const Editor: React.FC<EditorProps> = ({
             <button
               type="button"
               onClick={() => setBuilderMode('pro')}
-              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${builderMode === 'pro'
+              className={`px-5 py-2 rounded-xl text-[11px] sm:text-[10px] font-black uppercase tracking-widest transition-colors ${builderMode === 'pro'
                 ? 'bg-indigo-500/80 text-white'
                 : 'text-slate-400 hover:text-white'
                 }`}

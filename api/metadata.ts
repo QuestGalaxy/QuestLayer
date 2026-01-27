@@ -37,9 +37,45 @@ export default async function handler(req: any, res: any) {
     };
 
     // Title
-    const title = findMetaContent(['og:title', 'twitter:title'])
+    const siteName = findMetaContent(['og:site_name']);
+    const rawTitle = findMetaContent(['og:title', 'twitter:title'])
       || (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim() ?? null)
-      || findMetaContent(['og:site_name']);
+      || null;
+    const normalizeTitle = (value: string | null) => {
+      if (!value) return null;
+      let trimmed = value.trim();
+      if (!trimmed) return null;
+      // Prefer first segment if title has separators
+      const separators = ['|', '–', '—', '-', '•', '·', ':'];
+      for (const sep of separators) {
+        if (trimmed.includes(sep)) {
+          const [first] = trimmed.split(sep).map((part) => part.trim()).filter(Boolean);
+          if (first) trimmed = first;
+          break;
+        }
+      }
+      // Remove common marketing fluff
+      const stopWords = new Set([
+        'the', 'a', 'an', 'to', 'for', 'with', 'and', 'of', 'in', 'on', 'by', 'from',
+        'official', 'homepage', 'home', 'welcome', 'site', 'website', 'platform', 'app'
+      ]);
+      const marketing = new Set([
+        'revolutionizing', 'unleash', 'discover', 'explore', 'earn', 'build', 'building',
+        'powered', 'ultimate', 'best'
+      ]);
+      const words = trimmed.split(/\s+/).filter(Boolean);
+      const cleaned = words.filter((word, idx) => {
+        const lower = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!lower) return false;
+        if (marketing.has(lower)) return false;
+        if (idx > 0 && stopWords.has(lower)) return false;
+        return true;
+      });
+      let finalWords = cleaned.length ? cleaned : words;
+      if (finalWords.length > 4) finalWords = finalWords.slice(0, 4);
+      return finalWords.join(' ').trim();
+    };
+    const title = normalizeTitle(siteName) || normalizeTitle(rawTitle);
 
     // Images
     let image = findMetaContent(['og:image', 'twitter:image']);
