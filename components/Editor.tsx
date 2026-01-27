@@ -5,7 +5,8 @@ import { Task, Position, ThemeType, AppState, ProjectSocialLinks } from '../type
 import {
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
-  Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info, ShieldCheck
+  Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info, ShieldCheck,
+  Github, Linkedin, Youtube, Instagram, Facebook
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 
@@ -210,6 +211,11 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   const applyTimeoutsRef = useRef<number[]>([]);
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const [appliedIds, setAppliedIds] = useState<Set<string | number>>(new Set());
+  const lastAutoDomainRef = useRef<string | null>(null);
+  const lastAutoNameRef = useRef<string | null>(null);
+  const [pendingSocialKey, setPendingSocialKey] = useState<keyof ProjectSocialLinks | ''>('');
+  const [manualSocialKeys, setManualSocialKeys] = useState<Set<keyof ProjectSocialLinks>>(new Set());
+  const [isAddSocialOpen, setIsAddSocialOpen] = useState(false);
 
   useEffect(() => {
     setDomainInput(state.projectDomain || '');
@@ -499,8 +505,12 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
 
       const nameCandidate = (metadata?.title as string | null) || getNameFromDomain(hostname);
       const placeholderNames = new Set(['', 'Vortex Protocol', 'New Project']);
-      const shouldSetName = placeholderNames.has(state.projectName?.trim() || '');
-      if (shouldSetName && nameCandidate) setProjectName(nameCandidate);
+      const currentName = state.projectName?.trim() || '';
+      const shouldSetName = placeholderNames.has(currentName) || (lastAutoNameRef.current && currentName === lastAutoNameRef.current);
+      if (shouldSetName && nameCandidate) {
+        setProjectName(nameCandidate);
+        lastAutoNameRef.current = nameCandidate;
+      }
 
       if (metadata?.description) setProjectDescription(metadata.description);
       if (metadata?.socials && Object.keys(metadata.socials).length > 0) {
@@ -519,6 +529,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         socials
       });
 
+      lastAutoDomainRef.current = hostname;
       setSuggestedTasks(tasks);
       setSelectedTaskIds(new Set(tasks.map(task => task.id)));
 
@@ -573,6 +584,36 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   const onboardingCount = state.tasks.filter((task) => task.section === 'onboarding').length;
   const missionPreview = state.tasks.filter((task) => task.section === 'missions').slice(0, 3);
   const onboardingPreview = state.tasks.filter((task) => task.section === 'onboarding').slice(0, 3);
+  const socialIcons: Array<{ key: keyof ProjectSocialLinks; icon: React.ReactNode }> = [
+    { key: 'twitter', icon: <Twitter size={12} /> },
+    { key: 'discord', icon: <MessageSquare size={12} /> },
+    { key: 'telegram', icon: <Send size={12} /> },
+    { key: 'github', icon: <Github size={12} /> },
+    { key: 'medium', icon: <Globe size={12} /> },
+    { key: 'linkedin', icon: <Linkedin size={12} /> },
+    { key: 'youtube', icon: <Youtube size={12} /> },
+    { key: 'instagram', icon: <Instagram size={12} /> },
+    { key: 'tiktok', icon: <Globe size={12} /> },
+    { key: 'facebook', icon: <Facebook size={12} /> }
+  ];
+  const socialOptions: Array<{ key: keyof ProjectSocialLinks; label: string }> = [
+    { key: 'twitter', label: 'X / Twitter' },
+    { key: 'discord', label: 'Discord' },
+    { key: 'telegram', label: 'Telegram' },
+    { key: 'github', label: 'GitHub' },
+    { key: 'medium', label: 'Medium' },
+    { key: 'linkedin', label: 'LinkedIn' },
+    { key: 'youtube', label: 'YouTube' },
+    { key: 'instagram', label: 'Instagram' },
+    { key: 'tiktok', label: 'TikTok' },
+    { key: 'facebook', label: 'Facebook' }
+  ];
+
+  useEffect(() => {
+    const existingKeys = Object.keys(state.projectSocials || {}).filter((key) => !!state.projectSocials?.[key as keyof ProjectSocialLinks]) as Array<keyof ProjectSocialLinks>;
+    if (!existingKeys.length) return;
+    setManualSocialKeys((prev) => new Set([...Array.from(prev), ...existingKeys]));
+  }, [state.projectSocials]);
 
   return (
     <div className="space-y-8">
@@ -616,36 +657,115 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Info size={12} />
             <h3>Review Details</h3>
           </div>
-          <button
-            type="button"
-            onClick={() => setDetailsOpen((prev) => !prev)}
-            className="text-[10px] font-bold uppercase tracking-widest text-indigo-300 hover:text-indigo-200 transition-colors"
-          >
-            {detailsOpen ? 'Hide' : 'Edit'}
-          </button>
-        </div>
-        <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl border border-white/10 bg-slate-900 overflow-hidden flex items-center justify-center">
-              {state.projectLogo ? (
-                <img src={state.projectLogo} alt="Project logo" className="w-full h-full object-cover" />
-              ) : (
-                <Globe size={20} className="text-slate-500" />
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-bold text-white">{state.projectName || 'Unnamed Project'}</div>
-              <div className="text-[11px] text-slate-500">{state.projectDomain || 'No domain yet'}</div>
-            </div>
-          </div>
+        <div className="relative overflow-hidden bg-slate-950/50 rounded-3xl border border-white/5">
+          {!detailsOpen && state.projectBanner && (
+            <div
+              className="absolute inset-0 opacity-40"
+              style={{
+                backgroundImage: `url(${state.projectBanner})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              }}
+            />
+          )}
+          {!detailsOpen && <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/80 to-slate-950/95" />}
 
           {detailsOpen && (
-            <div className="space-y-3">
+            <div className="relative h-32 w-full overflow-hidden border-b border-white/5">
+              {state.projectBanner && (
+                <img
+                  src={state.projectBanner}
+                  alt=""
+                  className="h-full w-full object-cover object-center"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-slate-950/70 to-slate-950/95 pointer-events-none" />
+              <button
+                type="button"
+                onClick={() => setDetailsOpen((prev) => !prev)}
+                className="absolute top-4 right-4 z-20 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/20 bg-slate-950/70 text-white hover:bg-slate-950/90 transition-colors"
+              >
+                {detailsOpen ? 'Hide' : 'Edit'}
+              </button>
+              <div className="absolute inset-0 flex items-end pointer-events-none">
+                <div className="w-full p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl border border-white/10 bg-slate-900/80 overflow-hidden flex items-center justify-center shadow-[0_0_24px_rgba(15,23,42,0.45)]">
+                      {state.projectLogo ? (
+                        <img src={state.projectLogo} alt="Project logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <Globe size={20} className="text-slate-500" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-white">{state.projectName || 'Unnamed Project'}</div>
+                      <div className="text-[11px] text-slate-300">{state.projectDomain || 'No domain yet'}</div>
+                      {state.projectSocials && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {socialIcons
+                            .filter(({ key }) => state.projectSocials?.[key])
+                            .map(({ key, icon }) => (
+                              <span
+                                key={key}
+                                className="h-7 w-7 rounded-full border border-white/10 bg-slate-900/70 text-slate-200 flex items-center justify-center"
+                                title={key}
+                              >
+                                {icon}
+                              </span>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!detailsOpen && (
+            <div className="relative flex items-center gap-4 p-5">
+              <button
+                type="button"
+                onClick={() => setDetailsOpen(true)}
+                className="absolute top-4 right-4 h-8 px-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/15 bg-slate-900/70 text-slate-200 hover:bg-slate-900/90 transition-colors"
+              >
+                Edit
+              </button>
+              <div className="w-16 h-16 rounded-2xl border border-white/10 bg-slate-900 overflow-hidden flex items-center justify-center shadow-[0_0_24px_rgba(15,23,42,0.45)]">
+                {state.projectLogo ? (
+                  <img src={state.projectLogo} alt="Project logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Globe size={20} className="text-slate-500" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-bold text-white">{state.projectName || 'Unnamed Project'}</div>
+                <div className="text-[11px] text-slate-400">{state.projectDomain || 'No domain yet'}</div>
+                {state.projectSocials && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {socialIcons
+                      .filter(({ key }) => state.projectSocials?.[key])
+                      .map(({ key, icon }) => (
+                        <span
+                          key={key}
+                          className="h-7 w-7 rounded-full border border-white/10 bg-slate-900/70 text-slate-300 flex items-center justify-center"
+                          title={key}
+                        >
+                          {icon}
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {detailsOpen && (
+            <div className="space-y-3 px-5 pb-5">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase text-slate-500">Project Name</label>
                 <input
@@ -684,16 +804,57 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-slate-500">Social Links</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {(['twitter', 'discord', 'telegram', 'github', 'medium', 'linkedin', 'youtube', 'instagram', 'tiktok', 'facebook'] as Array<keyof ProjectSocialLinks>).map((key) => (
-                    <input
-                      key={key}
-                      value={state.projectSocials?.[key] || ''}
-                      onChange={(e) => setProjectSocials({ ...(state.projectSocials || {}), [key]: e.target.value })}
-                      placeholder={`${key} URL`}
-                      className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
-                    />
-                  ))}
+                <div className="space-y-2">
+                  {Array.from(new Set([
+                    ...Object.keys(state.projectSocials || {}).filter((key) => !!state.projectSocials?.[key as keyof ProjectSocialLinks]),
+                    ...Array.from(manualSocialKeys)
+                  ] as Array<keyof ProjectSocialLinks>)).map((key) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <div className="w-24 text-[10px] font-black uppercase text-slate-500">{key}</div>
+                        <input
+                          value={state.projectSocials?.[key] || ''}
+                          onChange={(e) => setProjectSocials({ ...(state.projectSocials || {}), [key]: e.target.value })}
+                          placeholder={`${key} URL`}
+                          className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+                    ))}
+                </div>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddSocialOpen((prev) => !prev)}
+                    className="h-[34px] px-4 rounded-xl border border-white/10 bg-slate-900 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white hover:border-white/20 transition-colors"
+                  >
+                    + Add More
+                  </button>
+                  {isAddSocialOpen && (
+                    <div className="absolute left-0 bottom-11 z-20 w-48 rounded-xl border border-white/10 bg-slate-950 shadow-xl">
+                      {socialOptions
+                        .filter((option) => !manualSocialKeys.has(option.key))
+                        .map((option) => (
+                          <button
+                            key={option.key}
+                            type="button"
+                            onClick={() => {
+                              setProjectSocials({
+                                ...(state.projectSocials || {}),
+                                [option.key]: state.projectSocials?.[option.key] || 'https://'
+                              });
+                              setManualSocialKeys((prev) => new Set([...Array.from(prev), option.key]));
+                              setPendingSocialKey('');
+                              setIsAddSocialOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2 text-[10px] font-semibold text-slate-200 hover:bg-white/5"
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      {socialOptions.filter((option) => !manualSocialKeys.has(option.key)).length === 0 && (
+                        <div className="px-3 py-2 text-[10px] text-slate-500">All socials added.</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
