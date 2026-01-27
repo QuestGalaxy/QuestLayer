@@ -1,10 +1,10 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronRight, Gem, Lock, LogIn, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X } from 'lucide-react';
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { BarChart3, ChevronRight, Gem, Lock, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X } from 'lucide-react';
+import { useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
 import { STORE_SLIDING_LINKS } from '../constants';
-import { fetchAllProjects, fetchProjectIdByDomain } from '../lib/supabase';
+import { fetchAllProjects } from '../lib/supabase';
 
 interface LandingPageProps {
   onLaunch: () => void;
@@ -18,14 +18,11 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuilder, onSubmitProject, onProjectDetails, allowAutoLaunch = true }) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [bgVideoLoaded, setBgVideoLoaded] = useState(false);
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
   const [projectDomainMap, setProjectDomainMap] = useState<Record<string, string>>({});
   const [projectImageMap, setProjectImageMap] = useState<Record<string, string>>({});
   const isDev = (import.meta as any).env?.DEV ?? false;
-  const { open } = useAppKit();
-  const { isConnected, status } = useAppKitAccount();
-  const isConnecting = status === 'connecting' || status === 'reconnecting';
+  const { isConnected } = useAppKitAccount();
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const sliderRef = React.useRef<HTMLDivElement>(null);
   const [isSliderDragging, setIsSliderDragging] = useState(false);
@@ -142,14 +139,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
     }
   }, [isConnected, allowAutoLaunch, onLaunch]);
 
-  const handleStartBuilding = () => {
-    if (isConnected) {
-      onLaunch();
-    } else {
-      open();
-    }
-  };
-
   const getHubGlow = () => {
     switch (hoveredCard) {
       case 1: return 'shadow-[0_0_80px_rgba(249,115,22,0.6)] border-orange-500';
@@ -180,22 +169,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
     sliderRef.current.releasePointerCapture(e.pointerId);
   };
 
-  const handleFeaturedClick = async (domain: string) => {
-    const key = normalizeDomain(domain);
-    const existingId = projectDomainMap[key];
-    if (existingId && onProjectDetails) {
-      onProjectDetails(existingId);
-      return;
-    }
-    const fetchedId = await fetchProjectIdByDomain(domain);
-    if (fetchedId && onProjectDetails) {
-      setProjectDomainMap((prev) => ({ ...prev, [key]: fetchedId }));
-      onProjectDetails(fetchedId);
-      return;
-    }
-    onBrowse();
-  };
-
   return (
     <div className="relative min-h-screen w-full bg-[#05010d] overflow-x-hidden overflow-y-auto custom-scroll selection:bg-orange-500/30 font-['Inter']">
 
@@ -209,7 +182,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
           preload="none"
           poster="/qlayer.jpeg"
           className="absolute inset-0 w-full h-full object-cover opacity-20"
-          onLoadedData={() => setBgVideoLoaded(true)}
         >
           {/* Source injected via JS */}
         </video>
@@ -287,46 +259,55 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
                 poster="/logoLayer.webp"
                 className="h-16 w-16 sm:h-24 sm:w-24 object-contain"
               />
-              <h1 className="pixel-text text-3xl sm:text-5xl md:text-7xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-                QUESTLAYER
-              </h1>
-            </div>
-            <p className="text-lg sm:text-2xl md:text-3xl font-black text-white max-w-3xl leading-[1.2] tracking-tight px-4">
-              Turn Any Website Into an Interactive <br className="hidden sm:block" />
-              <span className="text-orange-500 italic underline decoration-orange-500/30 underline-offset-8">Quest & Reward Hub</span>
+              <h1 className="pixel-text text-4xl sm:text-6xl md:text-8xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_30px_rgba(249,115,22,0.4)] mb-4">
+              QUESTLAYER
+            </h1>
+          </div>
+          <p className="text-xl sm:text-3xl md:text-4xl font-black text-white max-w-4xl leading-[1.1] tracking-tight px-4 mt-4">
+            Turn Any Website Into an Interactive <br className="hidden md:block" />
+            <span className="relative inline-block">
+              <span className="relative z-10 text-orange-500 italic underline decoration-orange-500/30 underline-offset-[12px]">Quest & Reward Hub</span>
+              <div className="absolute -inset-x-2 -inset-y-1 bg-orange-500/10 blur-xl rounded-full -z-0 animate-pulse" />
+            </span>
+          </p>
+          <div className="mt-8 flex items-center gap-3 px-6 py-2.5 bg-white/5 border border-white/10 rounded-full max-w-[95vw] backdrop-blur-md">
+            <Sparkles size={16} className="text-orange-400 animate-spin-slow shrink-0" />
+            <p className="text-slate-300 text-[10px] sm:text-sm font-bold uppercase tracking-[0.3em] truncate">
+              One embed • No redirects • Instant Web3 Experience
             </p>
-            <div className="mt-6 flex items-center gap-3 px-6 py-2 bg-white/5 border border-white/10 rounded-full max-w-[90vw]">
-              <Sparkles size={14} className="text-orange-400 animate-spin-slow shrink-0" />
-              <p className="text-slate-400 text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] truncate">
-                One embed • No redirects • Instant Web3
-              </p>
-            </div>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
+          </div>
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 w-full px-4">
               <button
-                onClick={handleStartBuilding}
-                disabled={isConnecting}
-                className="w-full sm:w-auto px-6 py-3.5 bg-orange-500 text-black font-black uppercase text-[10px] tracking-[0.2em] rounded-xl shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building' : 'Connect to Build')}
-                {!isConnected && !isConnecting && <Wallet size={14} />}
+                 onClick={onTryBuilder}
+                 className="group relative w-full sm:w-[320px] px-8 py-3 bg-orange-500 hover:bg-orange-400 text-black font-black uppercase text-xs tracking-[0.25em] rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col items-center justify-center overflow-hidden leading-tight
+                   shadow-[0_10px_30px_rgba(249,115,22,0.4),inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-4px_8px_rgba(0,0,0,0.2)]
+                   before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/30 before:to-transparent before:opacity-100
+                   after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/40 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite]
+                   animate-[lively-wiggle_3s_ease-in-out_infinite]"
+               >
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="flex items-center gap-2">
+                    <Rocket size={16} className="group-hover:rotate-12 transition-transform" />
+                    <span>Start Building</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.1em] text-black/60 animate-pulse">
+                    <Sparkles size={8} />
+                    <span>No Wallet Required</span>
+                  </div>
+                </div>
               </button>
 
-              <div className="flex gap-4 w-full sm:w-auto">
-                <button
-                  onClick={onBrowse}
-                  className="flex-1 sm:flex-none px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <LogIn size={14} className="group-hover:text-indigo-400 transition-colors" />
-                  Store
-                </button>
-                <button
-                  onClick={onTryBuilder}
-                  className="flex-1 sm:flex-none px-6 py-3.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 font-black uppercase text-[10px] tracking-[0.2em] rounded-xl border border-indigo-500/20 transition-all flex items-center justify-center gap-2 group"
-                >
-                  <Sparkles size={14} className="group-hover:text-white transition-colors" />
-                  Try Demo
-                </button>
-              </div>
+              <button
+                 onClick={onBrowse}
+                 className="group relative w-full sm:w-auto px-10 py-4 bg-white/10 hover:bg-white/15 text-white font-black uppercase text-[11px] tracking-[0.2em] rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-3 overflow-hidden
+                   shadow-[0_10px_30px_rgba(99,102,241,0.2),inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-4px_8px_rgba(0,0,0,0.3)]
+                   before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-100
+                   after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/20 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite] backdrop-blur-md
+                   hover:scale-[1.05] active:scale-[0.95] hover:shadow-[0_15px_40px_rgba(99,102,241,0.4)]"
+               >
+                 <Gem size={16} className="text-indigo-400 group-hover:scale-110 transition-transform relative z-10" />
+                 <span className="relative z-10">Browse Store</span>
+               </button>
             </div>
           </div>
         </div>
@@ -363,6 +344,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
               @keyframes landing-marquee {
                 0% { transform: translateX(0); }
                 100% { transform: translateX(-50%); }
+              }
+              @keyframes shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+              }
+              @keyframes glass-shine {
+                0% { transform: translateX(-200%) skewX(-30deg); }
+                100% { transform: translateX(200%) skewX(-30deg); }
+              }
+              @keyframes lively-wiggle {
+                0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+                25% { transform: translateY(-2px) scale(1.01) rotate(0.5deg); }
+                50% { transform: translateY(0) scale(1) rotate(-0.5deg); }
+                75% { transform: translateY(-1px) scale(1.01) rotate(0.3deg); }
               }
             `}
           </style>
@@ -637,11 +632,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
                     Turn your website into a living reward hub - powered by quests, XP, NFTs & tokens.
                   </p>
                   <button
-                    onClick={handleStartBuilding}
-                    disabled={isConnecting}
-                    className="group mt-8 inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-black shadow-[0_0_30px_rgba(249,115,22,0.35)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={onTryBuilder}
+                    className="group mt-8 relative inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all hover:scale-105 active:scale-95 overflow-hidden"
                   >
-                    Launch Your Widget <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                    <Rocket size={18} className="group-hover:rotate-12 transition-transform" />
+                    Start Building Now
                   </button>
                 </div>
 
@@ -730,31 +726,51 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
             <button
-              onClick={handleStartBuilding}
-              disabled={isConnecting}
-              className="group relative w-full md:w-auto px-12 py-6 bg-orange-500 text-black font-black uppercase text-sm tracking-[0.2em] rounded-2xl shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all active:scale-95 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {/* Shimmer Effect */}
-              <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-              <span className="relative flex items-center justify-center gap-3">
-                {isConnecting ? 'Connecting...' : (isConnected ? 'Start Building Now' : 'Connect Wallet to Build')} <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
-              </span>
-            </button>
-
-            <button
-              onClick={onBrowse}
-              className="w-full md:w-auto px-10 py-5 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl border border-white/10 transition-all backdrop-blur-md flex items-center justify-center gap-3"
-            >
-              <LogIn size={16} /> Store
-            </button>
-
-            <button
               onClick={onTryBuilder}
-              className="w-full md:w-auto px-10 py-5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 font-black uppercase text-xs tracking-[0.2em] rounded-2xl border border-indigo-500/20 transition-all backdrop-blur-md flex items-center justify-center gap-3"
+              className="group relative w-full md:w-[320px] px-12 py-4 bg-orange-500 hover:bg-orange-400 text-black font-black uppercase text-sm tracking-[0.25em] rounded-2xl transition-all hover:scale-[1.05] active:scale-[0.95] flex flex-col items-center justify-center overflow-hidden leading-tight
+                shadow-[0_15px_40px_rgba(249,115,22,0.4),inset_0_2px_6px_rgba(255,255,255,0.4),inset_0_-6px_12px_rgba(0,0,0,0.2)]
+                before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/30 before:to-transparent before:opacity-100
+                after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/50 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite]
+                animate-[lively-wiggle_4s_ease-in-out_infinite]"
             >
-              <Sparkles size={16} /> Try Demo
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="flex items-center gap-3">
+                  <Rocket size={20} className="group-hover:rotate-12 transition-transform" />
+                  <span>Start Building</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-black/60 animate-pulse">
+                  <Sparkles size={10} />
+                  <span>No Wallet Required</span>
+                </div>
+              </div>
             </button>
 
+            <button
+               onClick={onBrowse}
+               className="group relative w-full md:w-[320px] px-12 py-4 bg-white/10 hover:bg-white/15 text-white font-black uppercase text-sm tracking-[0.25em] rounded-2xl border border-white/10 transition-all flex flex-col items-center justify-center gap-1 overflow-hidden
+                 shadow-[0_15px_40px_rgba(99,102,241,0.2),inset_0_2px_6px_rgba(255,255,255,0.1),inset_0_-6px_12px_rgba(0,0,0,0.3)]
+                 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-100
+                 after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite] backdrop-blur-md
+                 hover:scale-[1.05] active:scale-[0.95] hover:shadow-[0_20px_50px_rgba(99,102,241,0.5)]"
+             >
+               <div className="relative z-10 flex items-center gap-3">
+                 <Gem size={20} className="text-indigo-400 group-hover:scale-110 transition-transform" />
+                 <span>Browse Store</span>
+               </div>
+               <div className="relative z-10 text-[10px] font-black uppercase tracking-[0.15em] text-white/40">
+                 Explore Ecosystem
+               </div>
+             </button>
+          </div>
+
+          <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-slate-500 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+              <span>Embed quests</span>
+              <span className="h-1 w-1 rounded-full bg-orange-500/40" />
+              <span>Build loyalty</span>
+              <span className="h-1 w-1 rounded-full bg-indigo-500/40" />
+              <span>Reward users</span>
+            </p>
           </div>
 
         </div>
