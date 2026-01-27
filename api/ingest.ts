@@ -408,6 +408,19 @@ const cleanTitle = (raw: string | null) => {
   return value;
 };
 
+const getBrandNameFromDomain = (hostname: string) => {
+  const base = hostname.split('.')[0] || hostname;
+  const words = base.split(/[-_]/g).filter(Boolean);
+  if (!words.length) return hostname;
+  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
+
+const isGenericTitle = (value: string | null) => {
+  if (!value) return true;
+  const normalized = value.toLowerCase().trim();
+  return ['home', 'homepage', 'welcome', 'index', 'landing', 'site', 'main'].includes(normalized);
+};
+
 const extractLinks = (html: string, baseUrl: string) => {
   const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi;
   const results: string[] = [];
@@ -1025,6 +1038,7 @@ export default async function handler(req: any, res: any) {
       const urlObj = new URL(projectUrl);
       const hostname = urlObj.hostname.replace(/^www\./, '');
       const origin = urlObj.origin;
+      const brandName = getBrandNameFromDomain(hostname);
 
       let html = await fetchHtmlWithRetry(projectUrl);
       let source: 'html' | 'jina' = 'html';
@@ -1046,7 +1060,7 @@ export default async function handler(req: any, res: any) {
       const rawTitle = source === 'jina'
         ? (parseJinaTitle(html) || hostname)
         : (extractTitle(html) || extractH1(html) || hostname);
-      let title = cleanTitle(rawTitle) || hostname;
+      let title = brandName;
       const rawH1 = source === 'jina' ? null : extractH1(html);
       const metaDescription = source === 'jina'
         ? cleanJinaDescription(html, title)
@@ -1099,13 +1113,14 @@ export default async function handler(req: any, res: any) {
       const aiRewrite = await rewriteSeoCopyWithAi({
         domain: hostname,
         rawTitle,
-        cleanedTitle: title,
+        cleanedTitle: brandName,
         h1: rawH1,
         metaDescription,
         metaKeywords
       });
-      if (aiRewrite?.title) {
-        title = cleanTitle(aiRewrite.title) || title;
+      if (aiRewrite?.title && !isGenericTitle(aiRewrite.title)) {
+        const cleaned = cleanTitle(aiRewrite.title);
+        if (cleaned) title = cleaned;
       }
 
       const links = source === 'jina' ? extractLinksFromText(html) : extractLinks(html, projectUrl);
