@@ -179,6 +179,7 @@ type BasicBuilderProps = {
   isConnected: boolean;
   onPublishClick: () => void;
   onEditTask: (task: Task) => void;
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
 };
 
 const BasicBuilder: React.FC<BasicBuilderProps> = ({
@@ -195,7 +196,8 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   setTasks,
   isConnected,
   onPublishClick,
-  onEditTask
+  onEditTask,
+  scrollContainerRef
 }) => {
   const [domainInput, setDomainInput] = useState(state.projectDomain || '');
   const [autoStatus, setAutoStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle');
@@ -213,6 +215,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   const [appliedIds, setAppliedIds] = useState<Set<string | number>>(new Set());
   const lastAutoDomainRef = useRef<string | null>(null);
   const lastAutoNameRef = useRef<string | null>(null);
+  const nameTouchedRef = useRef(false);
   const [pendingSocialKey, setPendingSocialKey] = useState<keyof ProjectSocialLinks | ''>('');
   const [manualSocialKeys, setManualSocialKeys] = useState<Set<keyof ProjectSocialLinks>>(new Set());
   const [isAddSocialOpen, setIsAddSocialOpen] = useState(false);
@@ -504,9 +507,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
       ]);
 
       const nameCandidate = (metadata?.title as string | null) || getNameFromDomain(hostname);
-      const placeholderNames = new Set(['', 'Vortex Protocol', 'New Project']);
-      const currentName = state.projectName?.trim() || '';
-      const shouldSetName = placeholderNames.has(currentName) || (lastAutoNameRef.current && currentName === lastAutoNameRef.current);
+      const shouldSetName = !nameTouchedRef.current;
       if (shouldSetName && nameCandidate) {
         setProjectName(nameCandidate);
         lastAutoNameRef.current = nameCandidate;
@@ -577,6 +578,17 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
     });
     const finalTimeout = window.setTimeout(() => setIsAnimating(false), 220 * selected.length + 300);
     applyTimeoutsRef.current.push(finalTimeout);
+  };
+  const handleDrawerWheel: React.WheelEventHandler<HTMLDivElement> = (event) => {
+    const el = event.currentTarget;
+    const atTop = el.scrollTop <= 0;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    if ((event.deltaY < 0 && atTop) || (event.deltaY > 0 && atBottom)) {
+      if (scrollContainerRef.current) {
+        event.stopPropagation();
+        scrollContainerRef.current.scrollTop += event.deltaY;
+      }
+    }
   };
 
   const selectedCount = selectedTaskIds.size;
@@ -770,7 +782,11 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                 <label className="text-[10px] font-black uppercase text-slate-500">Project Name</label>
                 <input
                   value={state.projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setProjectName(next);
+                    nameTouchedRef.current = next.trim().length > 0;
+                  }}
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
@@ -896,7 +912,10 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                       {appliedTasks.length} tasks
                     </span>
                   </div>
-                  <div className="mt-3 space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scroll">
+                  <div
+                    className="mt-3 space-y-2 max-h-[280px] overflow-y-auto pr-1 custom-scroll overscroll-auto"
+                    onWheel={handleDrawerWheel}
+                  >
                     {appliedTasks.map((task, idx) => {
                       const isVisible = idx < visibleCount;
                       return (
@@ -1115,6 +1134,7 @@ const Editor: React.FC<EditorProps> = ({
   const metadataCursorRef = useRef({ x: 0, y: 0 });
   const metadataRafRef = useRef<number | null>(null);
   const editPanelRef = useRef<HTMLDivElement | null>(null);
+  const editorScrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isFetchingMetadata) return;
@@ -1654,7 +1674,7 @@ const Editor: React.FC<EditorProps> = ({
       </div>
 
       {/* Internal Scroll Area */}
-      <div className="flex-1 overflow-y-auto custom-scroll p-6 space-y-10 pb-32">
+      <div ref={editorScrollRef} className="flex-1 overflow-y-auto custom-scroll p-6 space-y-10 pb-32">
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-1 bg-slate-950/70 border border-white/10 rounded-2xl p-1">
             <button
@@ -1695,6 +1715,7 @@ const Editor: React.FC<EditorProps> = ({
             isConnected={isConnected}
             onPublishClick={handlePublishClick}
             onEditTask={handleQuickEditTask}
+            scrollContainerRef={editorScrollRef}
           />
         </div>
         <div className={builderMode === 'pro' ? 'block' : 'hidden'}>
