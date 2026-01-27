@@ -146,6 +146,79 @@ const fetchHtmlWithPlaywright = async (url: string) => {
   }
 };
 
+const fetchOgImageViaPlaywright = async (url: string) => {
+  const allowPlaywright = process.env.INGEST_USE_PLAYWRIGHT === 'true' || process.env.INGEST_USE_PLAYWRIGHT === '1';
+  if (!allowPlaywright) return null;
+  try {
+    const playwright = await import('playwright');
+    const browser = await playwright.chromium.launch({
+      headless: true,
+      args: ['--disable-blink-features=AutomationControlled']
+    });
+    const context = await browser.newContext({
+      userAgent: USER_AGENTS[0],
+      viewport: { width: 1280, height: 720 },
+      locale: 'en-US'
+    });
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: FETCH_TIMEOUT_MS });
+    await page.waitForTimeout(1200);
+
+    const ogUrl = await page.evaluate(() => {
+      const resolve = (value: string) => {
+        try {
+          return new URL(value, window.location.href).toString();
+        } catch {
+          return value;
+        }
+      };
+      const og =
+        document.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
+        document.querySelector('meta[name="twitter:image"]')?.getAttribute('content') ||
+        document.querySelector('meta[name="twitter:image:src"]')?.getAttribute('content');
+      if (og) return resolve(og);
+
+      const candidates: Array<{ url: string; score: number }> = [];
+      const inViewport = (rect: DOMRect) => rect.bottom > 0 && rect.top < window.innerHeight * 1.2;
+
+      document.querySelectorAll('img').forEach((img) => {
+        const src = img.currentSrc || img.getAttribute('src') || '';
+        if (!src) return;
+        const rect = img.getBoundingClientRect();
+        if (!inViewport(rect)) return;
+        const area = rect.width * rect.height;
+        if (area < 200 * 200) return;
+        candidates.push({ url: resolve(src), score: area });
+      });
+
+      document.querySelectorAll<HTMLElement>('*').forEach((el) => {
+        const style = window.getComputedStyle(el);
+        const bg = style.backgroundImage || '';
+        if (!bg || bg === 'none') return;
+        const match = bg.match(/url\\([\"']?(.*?)[\"']?\\)/i);
+        if (!match?.[1]) return;
+        const rect = el.getBoundingClientRect();
+        if (!inViewport(rect)) return;
+        const area = rect.width * rect.height;
+        if (area < 200 * 200) return;
+        candidates.push({ url: resolve(match[1]), score: area * 0.9 });
+      });
+
+      candidates.sort((a, b) => b.score - a.score);
+      return candidates[0]?.url || null;
+    });
+
+    await context.close();
+    await browser.close();
+    return ogUrl || null;
+  } catch {
+    return null;
+  }
+};
+
 const fetchHtmlViaJina = async (url: string) => {
   try {
     const target = `https://r.jina.ai/http://${url.replace(/^https?:\/\//i, '')}`;
@@ -159,6 +232,64 @@ const fetchHtmlViaJina = async (url: string) => {
     const text = (await res.text()).slice(0, MAX_HTML_SIZE);
     if (!text) return null;
     return text;
+  } catch {
+    return null;
+  }
+};
+
+const extractOgImageFromHtml = (html: string, baseUrl: string) => {
+  const raw =
+    extractMetaContent(html, 'og:image') ||
+    extractMetaContent(html, 'twitter:image') ||
+    extractMetaContent(html, 'twitter:image:src');
+  if (!raw) return null;
+  const normalized = raw.startsWith('//') ? `https:${raw}` : raw;
+  return resolveUrl(normalized, baseUrl);
+};
+
+const fetchOgImageDirect = async (url: string) => {
+  const isHardBotWall = (html: string) => {
+    const signal = html.toLowerCase();
+    return signal.includes('just a moment')
+      || signal.includes('cf-browser-verification')
+      || signal.includes('cf-chl')
+      || signal.includes('attention required')
+      || signal.includes('captcha')
+      || signal.includes('access denied');
+  };
+  for (const ua of USER_AGENTS) {
+    try {
+      const res = await fetchWithTimeout(url, {
+        headers: {
+          'User-Agent': ua,
+          'Accept': 'text/html,application/xhtml+xml'
+        }
+      });
+      if (!res.ok) continue;
+      const html = (await res.text()).slice(0, MAX_HTML_SIZE);
+      if (!html || isHardBotWall(html)) continue;
+      const og = extractOgImageFromHtml(html, url);
+      if (og) return og;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+};
+
+const fetchProdOgImage = async (url: string) => {
+  const base = process.env.PROD_OG_BASE_URL || 'https://questlayer.app';
+  const enabled = process.env.INGEST_USE_PROD_OG !== 'false';
+  if (!enabled) return null;
+  try {
+    const res = await fetchWithTimeout(
+      `${base}/api/og?url=${encodeURIComponent(url)}`,
+      { headers: { 'User-Agent': USER_AGENTS[0] } },
+      FETCH_TIMEOUT_MS
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.image === 'string' ? data.image : null;
   } catch {
     return null;
   }
@@ -380,6 +511,11 @@ const getFaviconUrl = (link: string) => {
   } catch {
     return '';
   }
+};
+
+const isFaviconUrl = (value: string | null) => {
+  if (!value) return false;
+  return value.includes('favicon') || value.includes('faviconV2') || value.includes('favicon.ico');
 };
 
 const extractKeywords = (text: string) => {
@@ -938,6 +1074,28 @@ export default async function handler(req: any, res: any) {
           extractIconHref(html, 'mask-icon'));
       const iconResolved = resolveUrl(icon, projectUrl) || getFaviconUrl(projectUrl);
 
+      let ogFinal = ogResolved;
+      if (!ogFinal && (source === 'jina' || isFaviconUrl(iconResolved))) {
+        const retryHtml = await fetchHtmlWithRetry(projectUrl) || await fetchHtmlWithPlaywright(projectUrl);
+        if (retryHtml) {
+          ogFinal = extractOgImageFromHtml(retryHtml, projectUrl);
+        }
+      }
+
+      if (!ogFinal) {
+        const ogFromDom = await fetchOgImageViaPlaywright(projectUrl);
+        if (ogFromDom) {
+          ogFinal = ogFromDom;
+        }
+      }
+
+      if (!ogFinal && isFaviconUrl(iconResolved)) {
+        const prodOg = await fetchProdOgImage(projectUrl);
+        if (prodOg) {
+          ogFinal = prodOg;
+        }
+      }
+
       const aiRewrite = await rewriteSeoCopyWithAi({
         domain: hostname,
         rawTitle,
@@ -969,7 +1127,7 @@ export default async function handler(req: any, res: any) {
       const description = aiRewrite?.description
         ? clampDescription(normalizeSeoText(aiRewrite.description), AI_DESCRIPTION_MAX)
         : buildSeoDescription(title, hostname, null, keywordSeed);
-      const bannerUrl = ogResolved || iconResolved || getFaviconUrl(projectUrl);
+      const bannerUrl = ogFinal || iconResolved || getFaviconUrl(projectUrl);
       const logoUrl = iconResolved || getFaviconUrl(projectUrl);
 
       const projectPayload: Record<string, any> = {
@@ -1010,9 +1168,34 @@ export default async function handler(req: any, res: any) {
         projectId = created.id;
       }
 
+      if (isFaviconUrl(projectPayload.banner_url)) {
+        const ogDirect = await fetchOgImageDirect(projectUrl);
+        if (ogDirect) {
+          const { error: bannerError } = await supabase
+            .from('projects')
+            .update({ banner_url: ogDirect })
+            .eq('id', projectId);
+          if (!bannerError) {
+            projectPayload.banner_url = ogDirect;
+          }
+        }
+        if (isFaviconUrl(projectPayload.banner_url)) {
+          const prodOg = await fetchProdOgImage(projectUrl);
+          if (prodOg) {
+            const { error: bannerError } = await supabase
+              .from('projects')
+              .update({ banner_url: prodOg })
+              .eq('id', projectId);
+            if (!bannerError) {
+              projectPayload.banner_url = prodOg;
+            }
+          }
+        }
+      }
+
       const seoScore = computeSeoScore({
         description,
-        ogImage: ogResolved,
+        ogImage: ogFinal,
         logoUrl,
         socials,
         sitemapUrls,
