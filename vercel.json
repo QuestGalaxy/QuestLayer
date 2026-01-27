@@ -1,5 +1,15 @@
 {
   "rewrites": [
+    { "source": "/@vite/:path*", "destination": "/@vite/:path*" },
+    { "source": "/@react-refresh", "destination": "/@react-refresh" },
+    { "source": "/@id/:path*", "destination": "/@id/:path*" },
+    { "source": "/@fs/:path*", "destination": "/@fs/:path*" },
+    { "source": "/node_modules/:path*", "destination": "/node_modules/:path*" },
+    { "source": "/src/:path*", "destination": "/src/:path*" },
+    { "source": "/manifest.webmanifest", "destination": "/manifest.webmanifest" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/favicon-32x32.png", "destination": "/favicon-32x32.png" },
+    { "source": "/favicon-16x16.png", "destination": "/favicon-16x16.png" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/terms", "destination": "/terms/index.html" },

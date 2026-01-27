@@ -6,9 +6,10 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const disableCdpTracking = env.DISABLE_CDP_USAGE_TRACKING === 'true' || mode === 'development';
     const disableCdpErrorReporting = env.DISABLE_CDP_ERROR_REPORTING === 'true' || mode === 'development';
+    const port = Number(process.env.PORT || env.PORT || 3000);
     return {
       server: {
-        port: 3000,
+        port,
         host: '0.0.0.0',
         cors: true
       },
@@ -24,6 +25,7 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
+      assetsInclude: ['**/*.html'],
       build: {
         rollupOptions: {
           input: {

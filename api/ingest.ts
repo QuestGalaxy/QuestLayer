@@ -4,6 +4,8 @@ const MAX_HTML_SIZE = 1_000_000;
 const FETCH_TIMEOUT_MS = 9000;
 const MAX_SITEMAPS = 3;
 const MAX_SITEMAP_URLS = 200;
+const AI_DESCRIPTION_MAX = 360;
+const AI_TITLE_MAX_WORDS = 3;
 
 const parseBody = async (req: any) => {
   if (req.body) {
@@ -32,6 +34,18 @@ const getSupabaseClient = () => {
   }
 
   return createClient(supabaseUrl, supabaseKey);
+};
+
+const shouldUseAiRewrite = () => {
+  const flag = process.env.INGEST_USE_AI;
+  if (flag === '0' || flag === 'false') return false;
+  return true;
+};
+
+const getOllamaConfig = () => {
+  const url = process.env.OLLAMA_URL || 'http://localhost:11434';
+  const model = process.env.OLLAMA_MODEL || 'llama3.1:8b';
+  return { url, model };
 };
 
 const fetchWithTimeout = async (url: string, init?: RequestInit, timeoutMs = FETCH_TIMEOUT_MS) => {
@@ -162,6 +176,49 @@ const stripJinaHeader = (text: string) => {
   return text.slice(idx + marker.length).trim();
 };
 
+const cleanJinaDescription = (text: string, title?: string | null) => {
+  const stripped = stripJinaHeader(text)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\((?:https?:\/\/)?[^)]+\)/g, '$1')
+    .replace(/#+\s*/g, '')
+    .replace(/_{2,}/g, ' ')
+    .replace(/={2,}/g, ' ')
+    .replace(/-{2,}/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  const raw = stripped
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .filter((line) => !/opens in a new window/i.test(line))
+    .filter((line) => !/open in a new window/i.test(line))
+    .filter((line) => !/external website/i.test(line))
+    .filter((line) => !/skip to content/i.test(line))
+    .filter((line) => !/^menu$/i.test(line))
+    .filter((line) => !/cookie/i.test(line))
+    .filter((line) => !/privacy/i.test(line))
+    .filter((line) => !/terms/i.test(line))
+    .filter((line) => !/copyright/i.test(line))
+    .filter((line) => !/all rights reserved/i.test(line))
+    .filter((line) => !/opens an external website/i.test(line))
+    .filter((line) => !/image\s*\d+/i.test(line));
+
+  const content = raw.join(' ').replace(/\s{2,}/g, ' ').trim();
+  const safeTitle = (title || '').toLowerCase();
+  const withoutTitle = safeTitle
+    ? content.replace(new RegExp(`\\b${safeTitle.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`, 'ig'), '').trim()
+    : content;
+
+  const sentences = withoutTitle
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length > 20);
+  const picked = sentences.slice(0, 2).join(' ');
+  return picked.length > 0 ? picked : content;
+};
+
 const extractLinksFromText = (text: string) => {
   const results: string[] = [];
   const regex = /https?:\/\/[^\s)]+/g;
@@ -214,8 +271,8 @@ const cleanTitle = (raw: string | null) => {
   value = value.replace(/\s{2,}/g, ' ').trim();
   // Keep titles short for SEO (1-3 words max).
   const words = value.split(/\s+/).filter(Boolean);
-  if (words.length > 3) {
-    value = words.slice(0, 3).join(' ');
+  if (words.length > AI_TITLE_MAX_WORDS) {
+    value = words.slice(0, AI_TITLE_MAX_WORDS).join(' ');
   }
   return value;
 };
@@ -347,6 +404,161 @@ const clampDescription = (value: string, max = 180) => {
   return value.slice(0, max - 1).trimEnd() + '…';
 };
 
+const normalizeSeoText = (value: string) => {
+  return value
+    .replace(/\s+/g, ' ')
+    .replace(/\s+\./g, '.')
+    .trim();
+};
+
+const getNgrams = (text: string, size: number) => {
+  const words = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  const grams: string[] = [];
+  if (words.length < size) return grams;
+  for (let i = 0; i <= words.length - size; i += 1) {
+    grams.push(words.slice(i, i + size).join(' '));
+  }
+  return grams;
+};
+
+const isTooSimilar = (value: string, source?: string | null) => {
+  if (!value || !source) return false;
+  const cleanedValue = value.toLowerCase();
+  const grams = getNgrams(source, 6);
+  return grams.some((gram) => cleanedValue.includes(gram));
+};
+
+const extractJsonObject = (value: string) => {
+  const start = value.indexOf('{');
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < value.length; i += 1) {
+    const char = value[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (char === '{') depth += 1;
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        const slice = value.slice(start, i + 1);
+        try {
+          return JSON.parse(slice);
+        } catch {
+          return null;
+        }
+      }
+    }
+  }
+  return null;
+};
+
+const buildAiPrompt = (payload: {
+  domain: string;
+  rawTitle?: string | null;
+  cleanedTitle?: string | null;
+  h1?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
+  avoidPhrases?: string[];
+}) => {
+  const avoidLine = payload.avoidPhrases && payload.avoidPhrases.length > 0
+    ? `Avoid verbatim phrases from: ${payload.avoidPhrases.join(' | ')}`
+    : '';
+  return [
+    'You rewrite project SEO copy into original wording.',
+    'Return ONLY valid JSON with keys: "title", "description".',
+    'Title: 1-3 words, keep the brand name, no punctuation.',
+    `Description: 2-3 sentences, original wording, mention QuestLayer missions/rewards, max ${AI_DESCRIPTION_MAX} characters, no markdown.`,
+    'Do not include code fences or extra commentary.',
+    'Do not copy verbatim from inputs.',
+    avoidLine,
+    '',
+    `Input: ${JSON.stringify(payload)}`
+  ].filter(Boolean).join('\n');
+};
+
+const rewriteSeoCopyWithAi = async (payload: {
+  domain: string;
+  rawTitle?: string | null;
+  cleanedTitle?: string | null;
+  h1?: string | null;
+  metaDescription?: string | null;
+  metaKeywords?: string | null;
+}) => {
+  if (!shouldUseAiRewrite()) return null;
+  const { url, model } = getOllamaConfig();
+  const prompt = buildAiPrompt(payload);
+
+  try {
+    const res = await fetchWithTimeout(`${url}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false,
+        options: { temperature: 0.4 }
+      })
+    }, 12000);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const outputText = typeof data?.response === 'string' ? data.response.trim() : '';
+    if (!outputText) return null;
+    const parsed = extractJsonObject(outputText);
+    if (!parsed || typeof parsed !== 'object') return null;
+    let title = typeof parsed.title === 'string' ? parsed.title.trim() : null;
+    let description = typeof parsed.description === 'string' ? parsed.description.trim() : null;
+
+    if (description && isTooSimilar(description, payload.metaDescription)) {
+      const retryPrompt = buildAiPrompt({
+        ...payload,
+        avoidPhrases: [payload.metaDescription ?? '']
+      });
+      const retryRes = await fetchWithTimeout(`${url}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt: retryPrompt,
+          stream: false,
+          options: { temperature: 0.6 }
+        })
+      }, 12000);
+      if (retryRes.ok) {
+        const retryData = await retryRes.json();
+        const retryText = typeof retryData?.response === 'string' ? retryData.response.trim() : '';
+        const retryParsed = extractJsonObject(retryText);
+        if (retryParsed && typeof retryParsed === 'object') {
+          title = typeof retryParsed.title === 'string' ? retryParsed.title.trim() : title;
+          description = typeof retryParsed.description === 'string' ? retryParsed.description.trim() : description;
+        }
+      }
+    }
+
+    if (!title && !description) return null;
+    return { title, description };
+  } catch {
+    return null;
+  }
+};
+
 const shuffle = <T,>(items: T[]) => {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -359,45 +571,37 @@ const shuffle = <T,>(items: T[]) => {
 const pickOne = (items: string[]) => items[Math.floor(Math.random() * items.length)];
 
 const buildSeoDescription = (name: string, hostname: string, metaDesc?: string | null, metaKeywords?: string | null) => {
+  const cleanedMetaDesc = metaDesc
+    ? metaDesc.replace(new RegExp(`^${name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\s*[|:-]\\s*`, 'i'), '')
+      .replace(new RegExp(`^${hostname.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\s*[|:-]\\s*`, 'i'), '')
+      .trim()
+    : null;
   const keywordList = metaKeywords
-    ? metaKeywords.split(',').map(k => k.trim()).filter(Boolean).slice(0, 5)
-    : (metaDesc ? extractKeywords(metaDesc).slice(0, 4) : []);
+    ? metaKeywords.split(',').map(k => k.trim()).filter(Boolean).slice(0, 4)
+    : (cleanedMetaDesc ? extractKeywords(cleanedMetaDesc).slice(0, 4) : []);
   const keywordsText = keywordList.length ? keywordList.join(', ') : null;
 
-  const opening = pickOne([
-    `${name} powers its web presence from ${hostname}.`,
-    `${name} is headquartered on ${hostname}, where its core experience lives.`,
-    `${name} runs its official hub at ${hostname}.`,
-    `The official ${name} experience is published on ${hostname}.`,
-    `${hostname} is the primary home for ${name}.`
-  ]);
+  const leadLine = cleanedMetaDesc
+    ? `${name} ${cleanedMetaDesc.replace(/\.+$/g, '')}.`
+    : pickOne([
+      `${name} is a leading web3 project building the next generation of decentralized infrastructure.`,
+      `${name} is a modern blockchain ecosystem focused on scalable, secure applications.`,
+      `${name} is a next-gen protocol designed to power community-driven growth.`,
+      `${name} is a forward‑looking network built for builders, creators, and users.`
+    ]);
 
-  const middle = pickOne([
-    'Find product updates, docs, and launch details in one place.',
-    'Browse documentation, announcements, and ecosystem links.',
-    'Explore releases, developer resources, and community touchpoints.',
-    'Catch the latest product news, guides, and official resources.',
-    'Discover what’s new, how it works, and where the community gathers.'
+  const questLine = pickOne([
+    `On QuestLayer, you can explore the ecosystem, complete community missions, and earn rewards while learning about ${name}.`,
+    `On QuestLayer, explore ${name}, finish missions, and earn rewards as you learn how the ecosystem works.`,
+    `On QuestLayer, discover ${name}, complete quests, and collect rewards through guided community tasks.`
   ]);
 
   const keywordLine = keywordsText
-    ? pickOne([
-      `Common topics include ${keywordsText}.`,
-      `Key themes: ${keywordsText}.`,
-      `Expect coverage of ${keywordsText}.`
-    ])
-    : '';
+    ? `Key themes include ${keywordsText}.`
+    : `Learn the essentials, explore official resources, and get started faster.`;
 
-  const closing = pickOne([
-    'Use this page as the trusted starting point.',
-    'This is the authoritative source for the project.',
-    'Start here for verified links and updates.',
-    'Ideal for first-time visitors and returning users.',
-    'The canonical place to learn and connect.'
-  ]);
-
-  const parts = shuffle([opening, middle, keywordLine, closing]).filter(Boolean);
-  return clampDescription(parts.join(' '));
+  const parts = [leadLine, questLine, keywordLine];
+  return clampDescription(parts.join(' '), AI_DESCRIPTION_MAX);
 };
 
 const parseRobotsForSitemaps = (robotsText: string) => {
@@ -690,11 +894,13 @@ export default async function handler(req: any, res: any) {
         continue;
       }
 
-      const title = source === 'jina'
+      const rawTitle = source === 'jina'
         ? (parseJinaTitle(html) || hostname)
-        : (cleanTitle(extractTitle(html)) || extractH1(html) || hostname);
+        : (extractTitle(html) || extractH1(html) || hostname);
+      let title = cleanTitle(rawTitle) || hostname;
+      const rawH1 = source === 'jina' ? null : extractH1(html);
       const metaDescription = source === 'jina'
-        ? stripJinaHeader(html).slice(0, 220)
+        ? cleanJinaDescription(html, title)
         : (extractMetaContent(html, 'description')
           || extractMetaContent(html, 'og:description')
           || extractMetaContent(html, 'twitter:description'));
@@ -719,6 +925,18 @@ export default async function handler(req: any, res: any) {
           extractIconHref(html, 'mask-icon'));
       const iconResolved = resolveUrl(icon, projectUrl) || getFaviconUrl(projectUrl);
 
+      const aiRewrite = await rewriteSeoCopyWithAi({
+        domain: hostname,
+        rawTitle,
+        cleanedTitle: title,
+        h1: rawH1,
+        metaDescription,
+        metaKeywords
+      });
+      if (aiRewrite?.title) {
+        title = cleanTitle(aiRewrite.title) || title;
+      }
+
       const links = source === 'jina' ? extractLinksFromText(html) : extractLinks(html, projectUrl);
       const brandTokens = Array.from(new Set([
         ...title.toLowerCase().split(/\s+/),
@@ -734,7 +952,9 @@ export default async function handler(req: any, res: any) {
       }
       const sitemapUrls = await collectSiteUrls(origin);
 
-      const description = buildSeoDescription(title, hostname, metaDescription, metaKeywords);
+      const description = aiRewrite?.description
+        ? clampDescription(normalizeSeoText(aiRewrite.description), AI_DESCRIPTION_MAX)
+        : buildSeoDescription(title, hostname, metaDescription, metaKeywords);
       const bannerUrl = ogResolved || iconResolved || getFaviconUrl(projectUrl);
       const logoUrl = iconResolved || getFaviconUrl(projectUrl);
 

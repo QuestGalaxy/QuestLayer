@@ -62,6 +62,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [loading, setLoading] = useState(true);
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [showInitial, setShowInitial] = useState(true);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -120,6 +121,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     return () => {
       isMounted = false;
     };
+  }, [projectId]);
+
+  useEffect(() => {
+    setShowFullDescription(false);
   }, [projectId]);
 
   useEffect(() => {
@@ -388,8 +393,18 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           <div className="flex-1 space-y-8 w-full relative z-10">
             <div className="space-y-6">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300">
-                  <Sparkles size={12} className="animate-pulse" /> Official Quest
+                <div className="relative group/quest-tag">
+                  <div
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] ${isVerified ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' : 'border-amber-500/30 bg-amber-500/10 text-amber-300'}`}
+                  >
+                    <Sparkles size={12} className="animate-pulse" />
+                    {isVerified ? 'Official Quest' : 'Unofficial Quest'}
+                  </div>
+                  <div className="hidden group-hover/quest-tag:block absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-white/10 bg-slate-950/95 px-3 py-2 text-[10px] text-slate-300 shadow-2xl z-30">
+                    {isVerified
+                      ? 'Verified or auto‑verified via widget activity on the official domain.'
+                      : 'Not verified yet. Embed the widget on your domain to get auto‑verified.'}
+                  </div>
                 </div>
                 <button
                   onClick={handleShare}
@@ -445,10 +460,17 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                 {/* Description and Info below */}
                 <div className="space-y-4 max-w-3xl">
                   {project.description && (
-                    <div className="group/desc relative">
-                      <p className="text-sm sm:text-base text-slate-300/80 leading-relaxed line-clamp-2 md:line-clamp-3 group-hover/desc:line-clamp-none transition-all duration-300">
+                    <div className="relative">
+                      <p className={`text-sm sm:text-base text-slate-300/80 leading-relaxed ${showFullDescription ? '' : 'line-clamp-2'} transition-all duration-300`}>
                         {project.description}
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowFullDescription((prev) => !prev)}
+                        className="mt-2 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-indigo-300 hover:text-white transition-colors"
+                      >
+                        {showFullDescription ? 'Show less' : 'Read more'}
+                      </button>
                     </div>
                   )}
 
