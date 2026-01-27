@@ -1022,11 +1022,7 @@ const generate = async () => {
   const projects = await fetchProjectsForSeo();
   const projectPaths = projects.map((project) => `/store/${project.id}`);
 
-  await Promise.all(
-    projects.map((project) =>
-      writePage(path.join(root, 'store', project.id, 'index.html'), renderProjectDetailPage(project))
-    )
-  );
+  // Project detail pages are served dynamically via /api/store to avoid static flash for humans.
   const urls = [
     '/',
     '/terms',
