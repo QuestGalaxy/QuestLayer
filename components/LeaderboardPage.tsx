@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { fetchAllProjects, fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
+import AnimatedNumber from './AnimatedNumber';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 
@@ -65,6 +66,37 @@ const triggerConfetti = () => {
       origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
     });
   }, 250);
+};
+
+const playCoinSound = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    const playTone = (freq: number, startTime: number, duration: number, type: OscillatorType = 'sine') => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+      
+      gain.gain.setValueAtTime(0.1, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    const now = ctx.currentTime;
+    // Coin sound: rapid high pitch sequence
+    playTone(1200, now, 0.1);
+    playTone(2000, now + 0.05, 0.2); 
+  } catch (e) {
+    console.error('Audio play failed', e);
+  }
 };
 
 const ClaimModal: React.FC<{
@@ -220,7 +252,8 @@ const ProjectCard: React.FC<{
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
   timeframe: 'all' | 'weekly';
   timeRemaining: string;
-}> = ({ data, userWallet, onContinue, timeframe, timeRemaining }) => {
+  onRewardClaimed?: (amount: number) => void;
+}> = ({ data, userWallet, onContinue, timeframe, timeRemaining, onRewardClaimed }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -390,6 +423,8 @@ const ProjectCard: React.FC<{
       
       if (result.success) {
         triggerConfetti();
+        playCoinSound();
+        if (onRewardClaimed) onRewardClaimed(result.reward);
         setClaimStatus(prev => ({ ...prev, [period]: true }));
         setClaimModalState(prev => ({
           ...prev,
@@ -1068,7 +1103,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
                 {isConnected && (
                   <div className="flex items-center gap-2">
                      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Total XP</span>
-                     <span className="text-sm font-black text-white">{formatNumber(totalXp)}</span>
+                     <span className="text-sm font-black text-white"><AnimatedNumber value={totalXp} /></span>
                   </div>
                 )}
                  <div className="flex items-center gap-2">
@@ -1087,6 +1122,18 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
                   onContinue={onContinue}
                   timeframe={timeframe}
                   timeRemaining={timeRemaining}
+                  onRewardClaimed={(amount) => {
+                    setProjects(prev => prev.map(p => {
+                      if (p.project.id === project.project.id) {
+                        return { ...p, userXp: p.userXp + amount };
+                      }
+                      return p;
+                    }));
+                    setUserStats(prev => ({
+                      ...prev,
+                      xp: prev.xp + amount
+                    }));
+                  }}
                 />
               ))}
             </div>

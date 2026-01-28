@@ -32,7 +32,7 @@ const App: React.FC = () => {
     if (window.location.pathname === '/explore') {
       return 'explore';
     }
-    if (window.location.pathname === '/leaderboard') {
+    if (window.location.pathname.startsWith('/leaderboard')) {
       return 'leaderboard';
     }
     if (window.location.pathname === '/builder') {
@@ -53,6 +53,11 @@ const App: React.FC = () => {
   const getProjectIdFromPath = (path: string) => {
     if (!path.startsWith('/store/') || path.startsWith('/store/submit')) return null;
     const match = path.match(/^\/store\/([^/]+)/);
+    return match?.[1] ?? null;
+  };
+  const getLeaderboardProjectIdFromPath = (path: string) => {
+    if (!path.startsWith('/leaderboard/')) return null;
+    const match = path.match(/^\/leaderboard\/([^/]+)/);
     return match?.[1] ?? null;
   };
   const getProjectIdFromQuery = (search: string) => {
@@ -80,7 +85,13 @@ const App: React.FC = () => {
     if (fromPath) {
       setSelectedProjectId(fromPath);
     } else {
-      setCurrentPage('questbrowse');
+      const lbProjectId = getLeaderboardProjectIdFromPath(window.location.pathname);
+      if (lbProjectId) {
+        setLeaderboardProjectId(lbProjectId);
+        setCurrentPage('leaderboard');
+      } else {
+        setCurrentPage('questbrowse');
+      }
     }
   }, [currentPage, selectedProjectId]);
 
@@ -113,8 +124,10 @@ const App: React.FC = () => {
         setIsSubmitModalOpen(false);
         setLeaderboardProjectId(null);
         setCurrentPage('questbrowse');
-      } else if (window.location.pathname === '/leaderboard') {
+      } else if (window.location.pathname.startsWith('/leaderboard')) {
         setIsSubmitModalOpen(false);
+        const lbId = getLeaderboardProjectIdFromPath(window.location.pathname);
+        setLeaderboardProjectId(lbId);
         setCurrentPage('leaderboard');
       } else if (window.location.pathname === '/explore') {
         setIsSubmitModalOpen(false);
@@ -236,11 +249,12 @@ const App: React.FC = () => {
         image: '/qlayer.jpeg'
       });
     } else if (currentPage === 'leaderboard') {
-      window.history.pushState(null, '', '/leaderboard');
+      const lbPath = leaderboardProjectId ? `/leaderboard/${leaderboardProjectId}` : '/leaderboard';
+      window.history.pushState(null, '', lbPath);
       applySeo({
         title: 'QuestLayer Leaderboard - Your XP Legacy',
         description: 'See top QuestLayer users and compete for the highest XP rank.',
-        path: '/leaderboard',
+        path: lbPath,
         image: '/leaderboard.jpeg'
       });
       applyJsonLd({
@@ -248,7 +262,7 @@ const App: React.FC = () => {
         '@type': 'WebPage',
         name: 'QuestLayer Leaderboard',
         description: 'See top QuestLayer users and compete for the highest XP rank.',
-        url: 'https://questlayer.app/leaderboard'
+        url: `https://questlayer.app${lbPath}`
       });
     } else if (currentPage === 'submit') {
       const submitPath = window.location.pathname === '/store/submit' ? '/store/submit' : '/submit';
@@ -288,7 +302,7 @@ const App: React.FC = () => {
         }
       });
     }
-  }, [currentPage, isSubmitModalOpen]);
+  }, [currentPage, isSubmitModalOpen, leaderboardProjectId]);
 
   const [view, setView] = useState<'editor' | 'preview'>('editor');
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
@@ -566,7 +580,17 @@ const App: React.FC = () => {
     return (
       <>
         <LeaderboardPage
-          onBack={() => setCurrentPage('questbrowse')}
+          onBack={() => {
+            if (leaderboardProjectId) {
+              setSelectedProjectId(leaderboardProjectId);
+              setLeaderboardProjectId(null);
+              setCurrentPage('projectdetail');
+              window.history.pushState(null, '', `/store/${leaderboardProjectId}`);
+            } else {
+              setCurrentPage('questbrowse');
+              window.history.pushState(null, '', '/browse');
+            }
+          }}
           onContinue={({ projectId, domain }) => {
             setPendingBrowseRequest({ projectId, url: domain || undefined });
             setCurrentPage('questbrowse');
@@ -608,6 +632,8 @@ const App: React.FC = () => {
         onLeaderboard={(projectId) => {
           setLeaderboardProjectId(projectId);
           setCurrentPage('leaderboard');
+          // Update URL immediately for better UX
+          window.history.pushState(null, '', `/leaderboard/${projectId}`);
         }}
         onWidgetBuilder={() => setCurrentPage('builder')}
         onSubmitProject={() => setCurrentPage('submit')}

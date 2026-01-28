@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ExternalLink, Home, Layout, LogOut, ShoppingBag, Star, Trophy, Upload, User } from 'lucide-react';
 import ConnectCta from './ConnectCta';
+import AnimatedNumber from './AnimatedNumber';
 
 interface ProfileMenuButtonProps {
   isConnected: boolean;
@@ -64,7 +65,7 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
             </span>
             <span className="w-1 h-1 rounded-full bg-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
             <span className="text-[9px] md:text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-              <Star size={10} fill="currentColor" /> {xp} XP
+              <Star size={10} fill="currentColor" /> <AnimatedNumber value={xp} /> XP
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -111,7 +112,7 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
               </div>
               <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5 flex flex-col items-center">
                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">XP</div>
-                <div className="text-xl font-black text-indigo-400">{xp}</div>
+                <div className="text-xl font-black text-indigo-400"><AnimatedNumber value={xp} /></div>
               </div>
             </div>
           </div>

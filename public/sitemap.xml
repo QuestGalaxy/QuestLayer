@@ -256,6 +256,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://questlayer.app/store/a969e9a3-cbd0-4d45-9439-e0271e8672f3</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://questlayer.app/store/ec5296a0-1757-40c3-b5f8-23d0bdaa4ea1</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
