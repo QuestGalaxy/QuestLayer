@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, ChevronLeft, ChevronRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users, X, Gift, Wallet, AlertCircle, Check, Sword, Zap } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { fetchAllProjects, fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
@@ -37,14 +38,381 @@ const formatNumber = (value: number | undefined | null) => {
   return value.toString();
 };
 
+const triggerConfetti = () => {
+  const duration = 3 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+  const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+  const interval: any = setInterval(function() {
+    const timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    const particleCount = 50 * (timeLeft / duration);
+    
+    confetti({
+      ...defaults, 
+      particleCount,
+      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+    });
+    confetti({
+      ...defaults, 
+      particleCount,
+      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+    });
+  }, 250);
+};
+
+const ClaimModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  type: 'daily' | 'weekly';
+  rank: number;
+  status: 'idle' | 'claiming' | 'success' | 'error';
+  rewardAmount?: number;
+  errorMessage?: string;
+}> = ({ isOpen, onClose, onConfirm, type, rank, status, rewardAmount, errorMessage }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+      <div 
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300"
+        onClick={status === 'claiming' ? undefined : onClose}
+      />
+      <div className="relative w-full max-w-sm bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl transform transition-all scale-100 animate-[ql-modal-pop_0.4s_ease-out]">
+        {/* Shiny Border Effect */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-[ql-shine_3s_linear_infinite]" />
+        </div>
+
+        {status !== 'claiming' && (
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          >
+            <X size={20} />
+          </button>
+        )}
+
+        <div className="flex flex-col items-center text-center space-y-6 relative z-10">
+          <div className="relative">
+            <div className={`absolute inset-0 blur-3xl opacity-20 animate-pulse ${
+              status === 'success' ? 'bg-emerald-500' : 'bg-indigo-500'
+            }`} />
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 ${
+              status === 'success' 
+                ? 'bg-gradient-to-br from-emerald-500 to-teal-600' 
+                : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+            }`}>
+              {status === 'success' ? (
+                <Check size={40} className="text-white" />
+              ) : (
+                <Gift size={40} className="text-white animate-bounce" />
+              )}
+            </div>
+            {status === 'success' && (
+              <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-wider animate-bounce">
+                Claimed!
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-black text-white uppercase tracking-tight">
+              {status === 'success' ? 'Reward Claimed!' : `Claim ${type} Reward`}
+            </h3>
+            <div className="text-sm text-slate-400 leading-relaxed">
+              {status === 'success' ? (
+                <>
+                  You have successfully claimed your <span className="text-white font-bold">{rewardAmount} XP</span> reward!
+                </>
+              ) : status === 'error' ? (
+                <span className="text-red-400">{errorMessage}</span>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <span>
+                    You are eligible for the <span className="text-indigo-400 font-bold">{type}</span> reward because you are in the <span className="text-white font-bold">Top 10</span> (Rank #{rank}).
+                  </span>
+                  <div className="flex items-center justify-center gap-2 text-sm font-bold text-emerald-400 bg-emerald-500/10 px-4 py-3 rounded-xl border border-emerald-500/20">
+                    <Gift size={16} />
+                    Reward: {rewardAmount} XP
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {status === 'idle' || status === 'error' ? (
+             <button 
+              onClick={onConfirm}
+              className="w-full py-3 font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/25"
+            >
+              Claim Reward
+            </button>
+          ) : status === 'claiming' ? (
+            <button disabled className="w-full py-3 font-bold rounded-xl bg-slate-700 text-slate-400 cursor-wait flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin" /> Claiming...
+            </button>
+          ) : (
+            <button 
+              onClick={onClose}
+              className="w-full py-3 font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/25"
+            >
+              Awesome!
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RewardsTable = () => (
+  <div className="w-full lg:w-auto overflow-x-auto">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl min-w-[320px]">
+      <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">
+        <Gift size={14} /> Rewards Pool
+      </div>
+      <table className="w-full text-left border-collapse whitespace-nowrap">
+        <thead>
+          <tr className="border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-500">
+            <th className="py-2 pr-8">Rank</th>
+            <th className="py-2 pr-8 text-emerald-400">Daily</th>
+            <th className="py-2 text-amber-400">Weekly</th>
+          </tr>
+        </thead>
+        <tbody className="text-[10px] font-bold text-slate-300">
+          <tr className="border-b border-white/5 group hover:bg-white/5 transition-colors">
+            <td className="py-2 flex items-center gap-2 pr-4"><Crown size={12} className="text-yellow-400 fill-yellow-400" /> 1st</td>
+            <td className="py-2 pr-4 text-emerald-300">3,000 XP</td>
+            <td className="py-2 text-amber-300">15,000 XP</td>
+          </tr>
+          <tr className="border-b border-white/5 group hover:bg-white/5 transition-colors">
+            <td className="py-2 flex items-center gap-2 pr-4"><span className="text-slate-300 text-xs">🥈</span> 2nd</td>
+            <td className="py-2 pr-4 text-emerald-300">1,500 XP</td>
+            <td className="py-2 text-amber-300">7,500 XP</td>
+          </tr>
+          <tr className="border-b border-white/5 group hover:bg-white/5 transition-colors">
+            <td className="py-2 flex items-center gap-2 pr-4"><span className="text-orange-700 text-xs">🥉</span> 3rd</td>
+            <td className="py-2 pr-4 text-emerald-300">1,000 XP</td>
+            <td className="py-2 text-amber-300">5,000 XP</td>
+          </tr>
+          <tr className="group hover:bg-white/5 transition-colors">
+            <td className="py-2 flex items-center gap-2 pr-4"><span className="text-slate-400 text-xs font-bold">#</span> 4th - 10th</td>
+            <td className="py-2 pr-4 text-emerald-300">100 - 700 XP</td>
+            <td className="py-2 text-amber-300">500 - 3,500 XP</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
 const ProjectCard: React.FC<{
   data: ProjectLeaderboard;
   userWallet?: string;
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
-}> = ({ data, userWallet, onContinue }) => {
+  timeframe: 'all' | 'weekly';
+  timeRemaining: string;
+}> = ({ data, userWallet, onContinue, timeframe, timeRemaining }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  const [claimStatus, setClaimStatus] = useState({ daily: false, weekly: false });
+  const [claiming, setClaiming] = useState<'daily' | 'weekly' | null>(null);
+  
+  const [dailyTimeRemaining, setDailyTimeRemaining] = useState<string>('');
+  const [weeklyTimeRemaining, setWeeklyTimeRemaining] = useState<string>('');
+
+  useEffect(() => {
+    const updateCountdowns = () => {
+      const now = new Date();
+
+      // Daily Countdown (Until next 00:00 UTC)
+      const nextDay = new Date();
+      nextDay.setUTCDate(now.getUTCDate() + 1);
+      nextDay.setUTCHours(0, 0, 0, 0);
+      const diffDaily = nextDay.getTime() - now.getTime();
+      
+      const dh = Math.floor((diffDaily % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const dm = Math.floor((diffDaily % (1000 * 60 * 60)) / (1000 * 60));
+      setDailyTimeRemaining(`${dh}h ${dm}m`);
+
+      // Weekly Countdown (Until next Monday 00:00 UTC)
+      const nextWeek = new Date();
+      nextWeek.setUTCDate(now.getUTCDate() + (7 - now.getUTCDay()) + 1);
+      nextWeek.setUTCHours(0, 0, 0, 0);
+      const diffWeekly = nextWeek.getTime() - now.getTime();
+
+      const wd = Math.floor(diffWeekly / (1000 * 60 * 60 * 24));
+      const wh = Math.floor((diffWeekly % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      setWeeklyTimeRemaining(`${wd}d ${wh}h`);
+    };
+
+    updateCountdowns();
+    const interval = setInterval(updateCountdowns, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const [claimModalState, setClaimModalState] = useState<{
+    isOpen: boolean;
+    type: 'daily' | 'weekly';
+    rank: number;
+    status: 'idle' | 'claiming' | 'success' | 'error';
+    rewardAmount?: number;
+    errorMessage?: string;
+  }>({
+    isOpen: false,
+    type: 'daily',
+    rank: 0,
+    status: 'idle'
+  });
+
+  // Check claim status on mount
+  useEffect(() => {
+    if (!userWallet || !data.project?.id) return;
+    
+    const checkStatus = async () => {
+        const { data: status, error } = await supabase.rpc('get_leaderboard_claim_status', {
+            p_user_id: userWallet, // Wait, RPC expects UUID user_id, but here we might only have wallet address?
+            // Actually, get_leaderboard_claim_status expects UUID.
+            // We need to resolve wallet to UUID first or update RPC to accept wallet.
+            // Let's check how we get user_id usually.
+            // In this component, we don't have user_id readily available in props, only wallet.
+            // However, we can use the 'user_progress' check logic or update RPC to take wallet.
+            // Updating RPC is better. But for now let's assume we can't easily change RPC without another file edit.
+            // Let's check if we can fetch user_id.
+            p_project_id: data.project.id
+        });
+    };
+    // Wait, the RPC 'get_leaderboard_claim_status' takes p_user_id (uuid).
+    // The prop 'userWallet' is a string (0x...).
+    // We need to find the user_id corresponding to this wallet for this project.
+    // Or better, update the RPC to accept wallet_address.
+  }, [userWallet, data.project?.id]);
+
+  // Let's look at how we can fix the RPC call issue.
+  // We can query end_users table to get ID.
+  
+  useEffect(() => {
+      if (!userWallet || !data.project?.id) return;
+      
+      const fetchStatus = async () => {
+          // 1. Get User ID
+          const { data: userData } = await supabase
+              .from('end_users')
+              .select('id')
+              .eq('project_id', data.project.id)
+              .eq('wallet_address', userWallet)
+              .single();
+              
+          if (!userData) return;
+          
+          // 2. Get Claim Status
+          const { data: status } = await supabase.rpc('get_leaderboard_claim_status', {
+              p_user_id: userData.id,
+              p_project_id: data.project.id
+          });
+          
+          if (status) {
+              setClaimStatus({
+                  daily: status.daily_claimed,
+                  weekly: status.weekly_claimed
+              });
+          }
+      };
+      
+      fetchStatus();
+  }, [userWallet, data.project?.id, claiming]); // Re-fetch after claiming
+
+  const calculateReward = (rank: number, period: 'daily' | 'weekly') => {
+    let amount = 0;
+    if (rank === 1) amount = 3000;
+    else if (rank === 2) amount = 1500;
+    else if (rank === 3) amount = 1000;
+    else if (rank === 4) amount = 700;
+    else if (rank === 5) amount = 600;
+    else if (rank === 6) amount = 500;
+    else if (rank === 7) amount = 400;
+    else if (rank === 8) amount = 300;
+    else if (rank === 9) amount = 200;
+    else if (rank === 10) amount = 100;
+    
+    if (period === 'weekly') amount *= 5;
+    return amount;
+  };
+
+  const handleClaim = async (period: 'daily' | 'weekly') => {
+    if (!userWallet || !data.project?.id || !data.userRank) return;
+    const potentialReward = calculateReward(data.userRank, period);
+    
+    setClaimModalState({
+      isOpen: true,
+      type: period,
+      rank: data.userRank,
+      status: 'idle',
+      rewardAmount: potentialReward
+    });
+  };
+
+  const handleModalConfirm = async () => {
+    if (!userWallet || !data.project?.id || !claimModalState.rank) return;
+    const period = claimModalState.type;
+    setClaimModalState(prev => ({ ...prev, status: 'claiming' }));
+    setClaiming(period);
+
+    try {
+      // 1. Get User ID
+      const { data: userData } = await supabase
+        .from('end_users')
+        .select('id')
+        .eq('project_id', data.project.id)
+        .eq('wallet_address', userWallet)
+        .single();
+        
+      if (!userData) throw new Error('User not found');
+
+      // 2. Claim
+      const { data: result, error } = await supabase.rpc('claim_leaderboard_reward', {
+        p_user_id: userData.id,
+        p_project_id: data.project.id,
+        p_period_type: period
+      });
+
+      if (error) throw error;
+      
+      if (result.success) {
+        triggerConfetti();
+        setClaimStatus(prev => ({ ...prev, [period]: true }));
+        setClaimModalState(prev => ({
+          ...prev,
+          status: 'success',
+          rewardAmount: result.reward
+        }));
+      } else {
+        setClaimModalState(prev => ({
+          ...prev,
+          status: 'error',
+          errorMessage: result.message
+        }));
+      }
+    } catch (err: any) {
+      setClaimModalState(prev => ({
+        ...prev,
+        status: 'error',
+        errorMessage: 'Error claiming reward: ' + err.message
+      }));
+    } finally {
+      setClaiming(null);
+    }
+  };
 
   useEffect(() => {
     if (!data.project?.domain) return;
@@ -76,6 +444,16 @@ const ProjectCard: React.FC<{
 
   return (
     <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-slate-900/60 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+      <ClaimModal 
+        isOpen={claimModalState.isOpen}
+        onClose={() => setClaimModalState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleModalConfirm}
+        type={claimModalState.type}
+        rank={claimModalState.rank}
+        status={claimModalState.status}
+        rewardAmount={claimModalState.rewardAmount}
+        errorMessage={claimModalState.errorMessage}
+      />
       <div className="relative h-48 w-full overflow-hidden">
         {ogImage ? (
           <img src={ogImage} alt={data.project?.name || PROJECT_PLACEHOLDER} className="h-full w-full object-cover" />
@@ -86,13 +464,18 @@ const ProjectCard: React.FC<{
           <div className="absolute inset-0 animate-pulse bg-slate-900/60" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
-        <div className="absolute left-6 bottom-12">
+        
+        {/* Category Badge - Moved to top left */}
+        <div className="absolute left-6 top-5">
           <div
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md"
           >
             <Flame size={12} className="text-indigo-300" />
             {data.project?.theme || 'Sleek'}
           </div>
+        </div>
+
+        <div className="absolute left-6 bottom-12">
           <div className="mt-3 text-2xl font-black text-white">{data.project?.name || PROJECT_PLACEHOLDER}</div>
           {trimmedDomain && (
             <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
@@ -130,10 +513,130 @@ const ProjectCard: React.FC<{
         {data.project?.id && (
           <button
             onClick={() => onContinue({ projectId: data.project.id, domain: data.project.domain })}
-            className="quest-cta-shine w-full rounded-2xl border border-indigo-400/30 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-white transition-all"
+            className={`group w-full rounded-xl px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all relative overflow-hidden ${
+                data.userXp > 0
+                // Continue Quest (Green)
+                ? 'bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.45)] hover:brightness-110'
+                // Start Quest (Yellow/Amber)
+                : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 shadow-[0_0_20px_rgba(251,191,36,0.45)] hover:brightness-110'
+            }`}
           >
-            Continue quests
+            <span className="absolute inset-0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-80" />
+            <span className="relative flex items-center justify-center gap-2">
+               {data.userXp > 0 ? (
+                   <>
+                       <Zap size={14} className="text-slate-950 fill-slate-950" />
+                       Continue Quest
+                   </>
+               ) : (
+                   <>
+                       <Sword size={14} className="text-slate-950 fill-slate-950" />
+                       Start Quest
+                   </>
+               )}
+            </span>
           </button>
+        )}
+
+        {userWallet && (
+            <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-300">
+                        <Trophy size={12} /> Your Rewards
+                    </div>
+                    {data.userRank && data.userRank <= 10 && (
+                         <div className="text-[9px] font-bold uppercase tracking-widest text-emerald-400">
+                             Eligible
+                         </div>
+                    )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                    {/* Daily Claim Button */}
+                    <button
+                        onClick={() => handleClaim('daily')}
+                        disabled={!data.userRank || data.userRank > 10 || claimStatus.daily || claiming === 'daily'}
+                        className={`relative group flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all duration-300 overflow-hidden ${
+                            !data.userRank || data.userRank > 10
+                                ? 'border-white/5 bg-white/5 opacity-50 cursor-not-allowed grayscale'
+                                : claimStatus.daily
+                                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
+                                    : 'border-indigo-500/50 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 hover:from-indigo-500/30 hover:to-purple-600/30 text-white hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] backdrop-blur-md'
+                        }`}
+                    >
+                        {/* Shiny effect overlay */}
+                        {(!claimStatus.daily && data.userRank && data.userRank <= 10) && (
+                            <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent z-0 pointer-events-none" />
+                        )}
+                        
+                        <div className="relative z-10 flex flex-col items-center gap-1.5">
+                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-80 text-indigo-200">Daily Reward</span>
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-lg ${claimStatus.daily ? 'bg-emerald-500/20' : 'bg-indigo-500/30'}`}>
+                                    <Gift size={16} className={claimStatus.daily ? "text-emerald-400" : "text-indigo-300 animate-bounce"} />
+                                </div>
+                                <div className="flex flex-col items-start">
+                                    <span className={`text-xs font-black ${claimStatus.daily ? 'text-emerald-400' : 'text-white'}`}>
+                                        {claimStatus.daily ? 'Claimed' : (data.userRank && data.userRank <= 10 ? 'Claim' : 'Locked')}
+                                    </span>
+                                    <span className={`text-[8px] font-bold uppercase tracking-wider ${
+                                        claimStatus.daily ? 'text-emerald-500/70' : 'text-indigo-200/70'
+                                    }`}>
+                                        {claimStatus.daily ? 'Next:' : 'Ends:'} {dailyTimeRemaining}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+
+                    {/* Weekly Claim Button */}
+                    <button
+                        onClick={() => handleClaim('weekly')}
+                        disabled={!data.userRank || data.userRank > 10 || claimStatus.weekly || claiming === 'weekly'}
+                        className={`relative group flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all duration-300 overflow-hidden ${
+                            !data.userRank || data.userRank > 10
+                                ? 'border-white/5 bg-white/5 opacity-50 cursor-not-allowed grayscale'
+                                : claimStatus.weekly
+                                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
+                                    : 'border-amber-500/50 bg-gradient-to-br from-amber-500/20 to-orange-600/20 hover:from-amber-500/30 hover:to-orange-600/30 text-white hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] backdrop-blur-md'
+                        }`}
+                    >
+                        {/* Shiny effect overlay */}
+                        {(!claimStatus.weekly && data.userRank && data.userRank <= 10) && (
+                             <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent z-0 pointer-events-none" />
+                        )}
+
+                         <div className="relative z-10 flex flex-col items-center gap-1.5">
+                            <span className="text-[9px] font-bold uppercase tracking-widest opacity-80 text-amber-200">Weekly Reward</span>
+                            <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded-lg ${claimStatus.weekly ? 'bg-emerald-500/20' : 'bg-amber-500/30'}`}>
+                                    <Crown size={16} className={claimStatus.weekly ? "text-emerald-400" : "text-amber-300 animate-pulse"} />
+                                </div>
+                                <div className="flex flex-col items-start">
+                                    <span className={`text-xs font-black ${claimStatus.weekly ? 'text-emerald-400' : 'text-white'}`}>
+                                        {claimStatus.weekly ? 'Claimed' : (data.userRank && data.userRank <= 10 ? 'Claim' : 'Locked')}
+                                    </span>
+                                    <span className={`text-[8px] font-bold uppercase tracking-wider ${
+                                        claimStatus.weekly ? 'text-emerald-500/70' : 'text-amber-200/70'
+                                    }`}>
+                                        {claimStatus.weekly ? 'Next:' : 'Ends:'} {weeklyTimeRemaining}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                
+                {(!data.userRank || data.userRank > 10) ? (
+                    <div className="mt-2 text-center text-[9px] text-slate-500">
+                        * Reach Top 10 in All-Time Leaderboard to claim rewards
+                    </div>
+                ) : (
+                    <div className="mt-2 text-center text-[9px] text-slate-500/50">
+                        * Rewards based on All-Time Rank
+                    </div>
+                )}
+            </div>
         )}
 
         <div className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3">
@@ -201,6 +704,30 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
   const [nextLevelXP, setNextLevelXP] = useState(3000);
   const [leaderboardFilter, setLeaderboardFilter] = useState<'global' | 'mine'>('global');
+  const [timeframe, setTimeframe] = useState<'all' | 'weekly'>('all');
+
+  // Calculate time remaining until Sunday midnight UTC
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const nextWeek = new Date();
+      nextWeek.setUTCDate(now.getUTCDate() + (7 - now.getUTCDay()) + 1);
+      nextWeek.setUTCHours(0, 0, 0, 0); // Monday 00:00 UTC
+      
+      const diff = nextWeek.getTime() - now.getTime();
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      setTimeRemaining(`${d}d ${h}h ${m}m`);
+    };
+    
+    updateTimer();
+    const interval = setInterval(updateTimer, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const loadUserStats = async () => {
@@ -265,40 +792,60 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
 
           if (!userError && userLinks && userLinks.length > 0) {
             userLinks.forEach(link => userProjects.add(link.project_id));
-            const userIds = userLinks.map(link => link.id);
-            const { data: progressRows } = await supabase
-              .from('user_progress')
-              .select('user_id, xp')
-              .in('user_id', userIds);
+            
+            if (timeframe === 'all') {
+                const userIds = userLinks.map(link => link.id);
+                const { data: progressRows } = await supabase
+                  .from('user_progress')
+                  .select('user_id, xp')
+                  .in('user_id', userIds);
 
-            const progressByUser = new Map<string, number>();
-            progressRows?.forEach(row => progressByUser.set(row.user_id, row.xp || 0));
+                const progressByUser = new Map<string, number>();
+                progressRows?.forEach(row => progressByUser.set(row.user_id, row.xp || 0));
 
-            userLinks.forEach(link => {
-              userXpByProject.set(link.project_id, progressByUser.get(link.id) || 0);
-            });
+                userLinks.forEach(link => {
+                  userXpByProject.set(link.project_id, progressByUser.get(link.id) || 0);
+                });
+            } else {
+                // For weekly, we skip user XP calculation for now to keep it fast
+            }
           }
         }
 
         const fullData = await Promise.all(
           uniqueProjects.map(async project => {
             const stats = project.stats;
-            const userXp = address ? userXpByProject.get(project.id) || 0 : 0;
+            const userXp = (timeframe === 'all' && address) ? userXpByProject.get(project.id) || 0 : 0;
 
-            const { data: leaderboardRows } = await supabase
-              .from('user_progress')
-              .select('xp, end_users!inner(wallet_address, project_id)')
-              .eq('end_users.project_id', project.id)
-              .order('xp', { ascending: false })
-              .limit(10);
+            let leaderboard: LeaderboardEntry[] = [];
+            
+            if (timeframe === 'all') {
+                const { data: leaderboardRows } = await supabase
+                  .from('user_progress')
+                  .select('xp, end_users!inner(wallet_address, project_id)')
+                  .eq('end_users.project_id', project.id)
+                  .order('xp', { ascending: false })
+                  .limit(10);
 
-            const leaderboard: LeaderboardEntry[] = (leaderboardRows || []).map((row: any) => ({
-              wallet: row.end_users?.wallet_address || '0x----',
-              xp: row.xp || 0
-            }));
+                leaderboard = (leaderboardRows || []).map((row: any) => ({
+                  wallet: row.end_users?.wallet_address || '0x----',
+                  xp: row.xp || 0
+                }));
+            } else {
+                const { data: weeklyRows, error } = await supabase.rpc('get_project_leaderboard_weekly', {
+                    p_id: project.id
+                });
+                
+                if (!error && weeklyRows) {
+                    leaderboard = weeklyRows.slice(0, 10).map((row: any) => ({
+                        wallet: row.wallet_address,
+                        xp: row.xp
+                    }));
+                }
+            }
 
             let userRank: number | null = null;
-            if (address && userXp > 0) {
+            if (timeframe === 'all' && address && userXp > 0) {
               const { count } = await supabase
                 .from('user_progress')
                 .select('id, end_users!inner(project_id)', { count: 'exact', head: true })
@@ -342,7 +889,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
     return () => {
       isMounted = false;
     };
-  }, [address]);
+  }, [address, timeframe]);
 
   useEffect(() => {
     if (isConnected) {
@@ -420,71 +967,24 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
                     : 'Explore the most active quests worldwide. Connect your wallet to highlight your XP and rank.')}
               </p>
             </div>
-            {!focusProjectId && (
-              <div className="w-full md:w-auto">
-                <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 md:p-5 backdrop-blur-xl">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex flex-col gap-2">
-                      <div className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-400">Filter</div>
-                      <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
-                        <button
-                          onClick={() => setLeaderboardFilter('global')}
-                          className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                            leaderboardFilter === 'global'
-                              ? 'bg-white text-black'
-                              : 'text-slate-300 hover:text-white'
-                          }`}
-                        >
-                          Global
-                        </button>
-                        {isConnected && (
-                          <button
-                            onClick={() => setLeaderboardFilter('mine')}
-                            className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
-                              leaderboardFilter === 'mine'
-                                ? 'bg-indigo-400 text-slate-950'
-                                : 'text-slate-300 hover:text-white'
-                            }`}
-                          >
-                            My Projects
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                      {isConnected && (
-                        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                          <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Total XP</div>
-                          <div className="text-xl font-black text-white">{formatNumber(totalXp)}</div>
-                        </div>
-                      )}
-                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                        <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Projects</div>
-                        <div className="text-xl font-black text-white">{filteredProjects.length}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {!focusProjectId && <RewardsTable />}
           </div>
         </div>
       </div>
 
       <div className="px-6 pb-16 md:px-12">
         {!isConnected && (
-          <div className="mt-8 rounded-[28px] border border-white/10 bg-white/5 p-8 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-200">
-              <Users size={20} />
+          <div className="mt-8 mb-10 rounded-2xl border border-white/10 bg-white/5 p-6 text-center max-w-lg mx-auto">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-200">
+              <Users size={16} />
             </div>
-            <h3 className="mt-4 text-xl font-black">Connect to highlight your rank</h3>
-            <p className="mt-2 text-sm text-slate-400">
+            <h3 className="mt-3 text-lg font-black">Connect to highlight your rank</h3>
+            <p className="mt-1 text-xs text-slate-400 max-w-xs mx-auto">
               Global leaderboards are public. Connect your wallet to show your XP placement.
             </p>
             <button
               onClick={() => open()}
-              className="mt-6 rounded-full bg-white px-6 py-3 text-xs font-black uppercase tracking-widest text-black"
+              className="mt-4 rounded-full bg-white px-5 py-2 text-[10px] font-black uppercase tracking-widest text-black hover:bg-slate-200 transition-colors"
             >
               Connect wallet
             </button>
@@ -507,6 +1007,77 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
 
         {!loading && filteredProjects.length > 0 && (
           <>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8 rounded-2xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
+              <div className="flex flex-wrap items-center gap-4 md:gap-8">
+                {/* Filter Switch */}
+                <div className="flex items-center gap-3">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Filter</span>
+                  <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
+                    <button
+                      onClick={() => setLeaderboardFilter('global')}
+                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        leaderboardFilter === 'global' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Global
+                    </button>
+                    {isConnected && (
+                      <button
+                        onClick={() => setLeaderboardFilter('mine')}
+                        className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
+                          leaderboardFilter === 'mine' ? 'bg-indigo-400 text-slate-950' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        My Projects
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Period Switch */}
+                <div className="flex items-center gap-3 md:border-l md:border-white/10 md:pl-8">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Period</span>
+                  <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
+                    <button
+                      onClick={() => setTimeframe('all')}
+                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        timeframe === 'all' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      All Time
+                    </button>
+                    <button
+                      onClick={() => setTimeframe('weekly')}
+                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
+                        timeframe === 'weekly' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      This Week
+                    </button>
+                  </div>
+                   {timeframe === 'weekly' && (
+                      <div className="hidden lg:block text-[9px] font-bold uppercase tracking-widest text-amber-400 animate-pulse ml-2">
+                          Ends in {timeRemaining}
+                      </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center gap-6">
+                {isConnected && (
+                  <div className="flex items-center gap-2">
+                     <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Total XP</span>
+                     <span className="text-sm font-black text-white">{formatNumber(totalXp)}</span>
+                  </div>
+                )}
+                 <div className="flex items-center gap-2">
+                     <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Projects</span>
+                     <span className="text-sm font-black text-white">{filteredProjects.length}</span>
+                  </div>
+              </div>
+            </div>
+
             <div className="mt-10 grid gap-10 lg:grid-cols-2 xl:grid-cols-3">
               {paginatedProjects.map(project => (
                 <ProjectCard
@@ -514,43 +1085,102 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onContinue, o
                   data={project}
                   userWallet={address || undefined}
                   onContinue={onContinue}
+                  timeframe={timeframe}
+                  timeRemaining={timeRemaining}
                 />
               ))}
             </div>
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-12 pb-10">
+            {totalPages > 1 ? (
+              <div className="flex justify-center items-center gap-3 sm:gap-4 mt-12 pb-10">
                 <button
-                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 
-                <div className="flex items-center gap-2">
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
-                        currentPage === i + 1
-                          ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
-                          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+                <div className="hidden sm:flex items-center gap-2">
+                  {(() => {
+                    const pages = new Set<number>();
+                    const add = (p: number) => {
+                      if (p >= 1 && p <= totalPages) pages.add(p);
+                    };
+                    add(1);
+                    add(totalPages);
+                    for (let i = currentPage - 2; i <= currentPage + 2; i += 1) add(i);
+
+                    const sorted = Array.from(pages).sort((a, b) => a - b);
+                    const items: Array<number | 'ellipsis'> = [];
+                    sorted.forEach((p, idx) => {
+                      if (idx === 0) {
+                        items.push(p);
+                        return;
+                      }
+                      const prev = sorted[idx - 1];
+                      if (p - prev > 1) items.push('ellipsis');
+                      items.push(p);
+                    });
+
+                    return items.map((item, i) => {
+                      if (item === 'ellipsis') {
+                        return (
+                          <span
+                            key={`ellipsis-${i}`}
+                            className="w-8 text-center text-slate-500 font-bold"
+                          >
+                            …
+                          </span>
+                        );
+                      }
+                      const page = item as number;
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${
+                            currentPage === page
+                              ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+
+                <div className="flex sm:hidden items-center gap-2">
+                  {(() => {
+                    const start = Math.max(1, Math.min(currentPage - 1, totalPages - 2));
+                    const pages = [start, start + 1, start + 2].filter((p) => p >= 1 && p <= totalPages);
+                    return pages.map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-9 h-9 rounded-xl font-bold text-xs transition-all ${
+                          currentPage === page
+                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25'
+                            : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ));
+                  })()}
                 </div>
 
                 <button
-                  onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="p-2 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   <ChevronRight size={20} />
                 </button>
               </div>
+            ) : (
+              <div className="pb-20" />
             )}
           </>
         )}
