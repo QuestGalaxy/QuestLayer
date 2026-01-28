@@ -1227,6 +1227,7 @@ const Editor: React.FC<EditorProps> = ({
 }) => {
   const [builderMode, setBuilderMode] = useState<'basic' | 'pro'>('basic');
   const [pendingSocialKey, setPendingSocialKey] = useState<string>('');
+  const [isProAddSocialOpen, setIsProAddSocialOpen] = useState(false);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
   const [isProAutoSetup, setIsProAutoSetup] = useState(false);
   const [metadataLoaderFailed, setMetadataLoaderFailed] = useState(false);
@@ -1292,7 +1293,7 @@ const Editor: React.FC<EditorProps> = ({
   ];
 
   const socials = state.projectSocials ?? {};
-  const socialKeys = Object.keys(socials) as Array<keyof ProjectSocialLinks>;
+  const socialKeys = Object.keys(socials).filter((key) => Boolean(socials[key as keyof ProjectSocialLinks])) as Array<keyof ProjectSocialLinks>;
   const availableSocials = SOCIAL_OPTIONS.filter((option) => !(option.key in socials));
 
   const handleSocialChange = (key: keyof ProjectSocialLinks, value: string) => {
@@ -1308,7 +1309,7 @@ const Editor: React.FC<EditorProps> = ({
   const handleAddSocial = () => {
     if (!pendingSocialKey) return;
     const key = pendingSocialKey as keyof ProjectSocialLinks;
-    setProjectSocials({ ...socials, [key]: '' });
+    setProjectSocials({ ...socials, [key]: 'https://' });
     setPendingSocialKey('');
   };
   const getFaviconUrl = (link: string) => {
@@ -2021,28 +2022,6 @@ const Editor: React.FC<EditorProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-black text-slate-500 uppercase">Social Links</label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={pendingSocialKey}
-                      onChange={(e) => setPendingSocialKey(e.target.value)}
-                      className="h-[30px] bg-slate-900 border border-white/10 rounded-lg px-2 text-[10px] font-semibold text-white outline-none focus:border-indigo-500"
-                    >
-                      <option value="">Add social...</option>
-                      {availableSocials.map((option) => (
-                        <option key={option.key} value={option.key}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleAddSocial}
-                      disabled={!pendingSocialKey}
-                      className="h-[30px] px-3 rounded-lg bg-indigo-500/80 text-[10px] font-black uppercase tracking-widest text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-500 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
                 </div>
 
                 {socialKeys.length === 0 ? (
@@ -2064,18 +2043,44 @@ const Editor: React.FC<EditorProps> = ({
                             placeholder={meta?.placeholder || 'https://'}
                             className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 transition-colors"
                           />
-                          <button
-                            type="button"
-                            onClick={() => handleSocialRemove(key)}
-                            className="w-9 h-9 rounded-xl border border-white/10 bg-slate-900 text-slate-400 hover:text-white hover:border-rose-500/60 transition-colors flex items-center justify-center"
-                          >
-                            <X size={12} />
-                          </button>
                         </div>
                       );
                     })}
                   </div>
                 )}
+
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsProAddSocialOpen((prev) => !prev)}
+                    className="h-[34px] px-4 rounded-xl border border-white/10 bg-slate-900 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white hover:border-white/20 transition-colors"
+                  >
+                    + Add More
+                  </button>
+                  {isProAddSocialOpen && (
+                    <div className="absolute left-0 bottom-11 z-20 w-48 rounded-xl border border-white/10 bg-slate-950 shadow-xl">
+                      {availableSocials.map((option) => (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => {
+                            setProjectSocials({
+                              ...socials,
+                              [option.key]: socials[option.key] || 'https://'
+                            });
+                            setIsProAddSocialOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-[10px] font-semibold text-slate-200 hover:bg-white/5"
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                      {availableSocials.length === 0 && (
+                        <div className="px-3 py-2 text-[10px] text-slate-500">All socials added.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

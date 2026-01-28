@@ -742,6 +742,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [isFeatureDragging, setIsFeatureDragging] = useState(false);
+  const featureDragDistance = useRef(0);
+  const featureLastDragAt = useRef(0);
   const [featureStartX, setFeatureStartX] = useState(0);
   const [featureScrollLeft, setFeatureScrollLeft] = useState(0);
 
@@ -798,21 +800,24 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   };
 
   const handleFeaturePointerDown = (e: React.PointerEvent) => {
-    if (!featureScrollRef.current) return;
+    if (!featureScrollRef.current || e.pointerType !== 'touch') return;
     setIsFeatureDragging(true);
+    featureDragDistance.current = 0;
     featureScrollRef.current.setPointerCapture(e.pointerId);
     setFeatureStartX(e.clientX);
     setFeatureScrollLeft(featureScrollRef.current.scrollLeft);
   };
 
   const handleFeaturePointerMove = (e: React.PointerEvent) => {
-    if (!isFeatureDragging || !featureScrollRef.current) return;
+    if (!isFeatureDragging || !featureScrollRef.current || e.pointerType !== 'touch') return;
+    featureDragDistance.current = Math.max(featureDragDistance.current, Math.abs(e.clientX - featureStartX));
+    featureLastDragAt.current = Date.now();
     const walk = (e.clientX - featureStartX) * 1.5;
     featureScrollRef.current.scrollLeft = featureScrollLeft - walk;
   };
 
   const handleFeaturePointerUp = (e: React.PointerEvent) => {
-    if (!featureScrollRef.current) return;
+    if (!featureScrollRef.current || e.pointerType !== 'touch') return;
     setIsFeatureDragging(false);
     featureScrollRef.current.releasePointerCapture(e.pointerId);
   };
@@ -1438,11 +1443,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                 <div className="absolute top-full left-0 w-full pt-6 overflow-hidden">
                     <div 
                         ref={scrollRef}
-                        className="flex gap-2 overflow-x-hidden whitespace-nowrap scrollbar-hide cursor-grab active:cursor-grabbing pb-4 px-1"
-                        onMouseDown={handleMouseDown}
-                        onMouseLeave={handleMouseLeave}
-                        onMouseUp={handleMouseUp}
-                        onMouseMove={handleMouseMove}
+                        className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide pb-4 px-1"
                     >
                         {STORE_SLIDING_LINKS.concat(STORE_SLIDING_LINKS).map((badge, i) => {
                             const projectId = getProjectIdByDomain(badge.domain);
@@ -1647,7 +1648,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                   </div>
                   <div
                     ref={featureScrollRef}
-                    className="relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+                    className="relative overflow-x-auto scrollbar-hide"
                     onPointerDown={handleFeaturePointerDown}
                     onPointerMove={handleFeaturePointerMove}
                     onPointerUp={handleFeaturePointerUp}
@@ -1673,6 +1674,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                               key={`${link.domain}-${index}`}
                               href={href}
                               onClick={(e) => {
+                                if (isFeatureDragging || featureDragDistance.current > 6 || Date.now() - featureLastDragAt.current < 150) {
+                                  e.preventDefault();
+                                  return;
+                                }
                                 if (projectId && onProjectDetails) {
                                   e.preventDefault();
                                   onProjectDetails(projectId);

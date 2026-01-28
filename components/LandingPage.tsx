@@ -25,6 +25,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   const { isConnected } = useAppKitAccount();
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const sliderRef = React.useRef<HTMLDivElement>(null);
+  const sliderDragDistance = React.useRef(0);
+  const sliderLastDragAt = React.useRef(0);
   const [isSliderDragging, setIsSliderDragging] = useState(false);
   const [sliderStartX, setSliderStartX] = useState(0);
   const [sliderScrollLeft, setSliderScrollLeft] = useState(0);
@@ -150,21 +152,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   };
 
   const handleSliderPointerDown = (e: React.PointerEvent) => {
-    if (!sliderRef.current) return;
+    if (!sliderRef.current || e.pointerType !== 'touch') return;
     setIsSliderDragging(true);
+    sliderDragDistance.current = 0;
     sliderRef.current.setPointerCapture(e.pointerId);
     setSliderStartX(e.clientX);
     setSliderScrollLeft(sliderRef.current.scrollLeft);
   };
 
   const handleSliderPointerMove = (e: React.PointerEvent) => {
-    if (!isSliderDragging || !sliderRef.current) return;
+    if (!isSliderDragging || !sliderRef.current || e.pointerType !== 'touch') return;
     const walk = (e.clientX - sliderStartX) * 1.5;
+    sliderDragDistance.current = Math.max(sliderDragDistance.current, Math.abs(e.clientX - sliderStartX));
+    sliderLastDragAt.current = Date.now();
     sliderRef.current.scrollLeft = sliderScrollLeft - walk;
   };
 
   const handleSliderPointerUp = (e: React.PointerEvent) => {
-    if (!sliderRef.current) return;
+    if (!sliderRef.current || e.pointerType !== 'touch') return;
     setIsSliderDragging(false);
     sliderRef.current.releasePointerCapture(e.pointerId);
   };
@@ -387,7 +392,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
         `}</style>
           <div
             ref={sliderRef}
-            className="mt-6 relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
+            className="mt-6 relative overflow-x-auto scrollbar-hide"
             onPointerDown={handleSliderPointerDown}
             onPointerMove={handleSliderPointerMove}
             onPointerUp={handleSliderPointerUp}
@@ -405,6 +410,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
                     key={`${item.name}-${idx}`}
                     href={href}
                     onClick={(e) => {
+                      if (isSliderDragging || sliderDragDistance.current > 6 || Date.now() - sliderLastDragAt.current < 150) {
+                        e.preventDefault();
+                        return;
+                      }
                       if (projectId && onProjectDetails) {
                         e.preventDefault();
                         onProjectDetails(projectId);
