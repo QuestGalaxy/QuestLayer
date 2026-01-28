@@ -742,6 +742,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [isFeatureDragging, setIsFeatureDragging] = useState(false);
+  const featureDraggingRef = useRef(false);
   const featureDragDistance = useRef(0);
   const featureLastDragAt = useRef(0);
   const [featureStartX, setFeatureStartX] = useState(0);
@@ -802,6 +803,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const handleFeaturePointerDown = (e: React.PointerEvent) => {
     if (!featureScrollRef.current || e.pointerType !== 'touch') return;
     setIsFeatureDragging(true);
+    featureDraggingRef.current = true;
     featureDragDistance.current = 0;
     featureScrollRef.current.setPointerCapture(e.pointerId);
     setFeatureStartX(e.clientX);
@@ -819,6 +821,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
   const handleFeaturePointerUp = (e: React.PointerEvent) => {
     if (!featureScrollRef.current || e.pointerType !== 'touch') return;
     setIsFeatureDragging(false);
+    featureDraggingRef.current = false;
     featureScrollRef.current.releasePointerCapture(e.pointerId);
   };
 
@@ -1674,7 +1677,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                               key={`${link.domain}-${index}`}
                               href={href}
                               onClick={(e) => {
-                                if (isFeatureDragging || featureDragDistance.current > 6 || Date.now() - featureLastDragAt.current < 150) {
+                                if (featureDraggingRef.current || featureDragDistance.current > 6 || Date.now() - featureLastDragAt.current < 150) {
                                   e.preventDefault();
                                   return;
                                 }

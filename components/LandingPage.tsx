@@ -28,6 +28,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   const sliderDragDistance = React.useRef(0);
   const sliderLastDragAt = React.useRef(0);
   const [isSliderDragging, setIsSliderDragging] = useState(false);
+  const sliderDraggingRef = React.useRef(false);
   const [sliderStartX, setSliderStartX] = useState(0);
   const [sliderScrollLeft, setSliderScrollLeft] = useState(0);
   const normalizeDomain = (value: string) => {
@@ -154,6 +155,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   const handleSliderPointerDown = (e: React.PointerEvent) => {
     if (!sliderRef.current || e.pointerType !== 'touch') return;
     setIsSliderDragging(true);
+    sliderDraggingRef.current = true;
     sliderDragDistance.current = 0;
     sliderRef.current.setPointerCapture(e.pointerId);
     setSliderStartX(e.clientX);
@@ -171,6 +173,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
   const handleSliderPointerUp = (e: React.PointerEvent) => {
     if (!sliderRef.current || e.pointerType !== 'touch') return;
     setIsSliderDragging(false);
+    sliderDraggingRef.current = false;
     sliderRef.current.releasePointerCapture(e.pointerId);
   };
 
@@ -410,7 +413,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
                     key={`${item.name}-${idx}`}
                     href={href}
                     onClick={(e) => {
-                      if (isSliderDragging || sliderDragDistance.current > 6 || Date.now() - sliderLastDragAt.current < 150) {
+                      if (sliderDraggingRef.current || sliderDragDistance.current > 6 || Date.now() - sliderLastDragAt.current < 150) {
                         e.preventDefault();
                         return;
                       }
