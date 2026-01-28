@@ -32,6 +32,9 @@ create table if not exists tasks (
   task_section text default 'missions',
   task_kind text default 'link',
   reward_cadence text default 'once',
+  quiz_type text default 'secret_code',
+  choices jsonb,
+  correct_choice integer,
   question text,
   answer text,
   nft_contract text,
@@ -44,6 +47,9 @@ create table if not exists tasks (
 alter table tasks add column if not exists task_section text default 'missions';
 alter table tasks add column if not exists task_kind text default 'link';
 alter table tasks add column if not exists reward_cadence text default 'once';
+alter table tasks add column if not exists quiz_type text default 'secret_code';
+alter table tasks add column if not exists choices jsonb;
+alter table tasks add column if not exists correct_choice integer;
 alter table tasks add column if not exists question text;
 alter table tasks add column if not exists answer text;
 alter table tasks add column if not exists nft_contract text;

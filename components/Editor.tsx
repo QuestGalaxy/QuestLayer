@@ -332,6 +332,16 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
     const stamp = Date.now();
     const tasks: Task[] = [];
     const { name, projectUrl, hostname, socials } = payload;
+    const buildChoices = (correct: string, extras: string[]) => {
+      const pool = [correct, ...extras]
+        .map(choice => (choice ?? '').trim())
+        .filter(choice => Boolean(choice));
+      const unique = Array.from(new Set(pool));
+      while (unique.length < 3) {
+        unique.push(`Option ${unique.length + 1}`);
+      }
+      return unique.slice(0, 3);
+    };
 
     const addTask = (partial: Omit<Task, 'id'>) => {
       tasks.push({
@@ -510,6 +520,9 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         section: 'onboarding',
         kind: 'quiz',
         rewardCadence: 'once',
+        quizType: 'multiple_choice',
+        choices: buildChoices(name, ['QuestLayer', 'Demo Project']),
+        correctChoice: 0,
         question: 'What is this project called?',
         answer: name
       },
@@ -523,6 +536,9 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         section: 'onboarding',
         kind: 'quiz',
         rewardCadence: 'once',
+        quizType: 'multiple_choice',
+        choices: buildChoices(hostname, ['example.com', 'project.xyz']),
+        correctChoice: 0,
         question: 'Which domain hosts the official site?',
         answer: hostname
       },
@@ -536,6 +552,9 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         section: 'onboarding',
         kind: 'quiz',
         rewardCadence: 'once',
+        quizType: 'multiple_choice',
+        choices: buildChoices(community, ['discord', 'telegram']),
+        correctChoice: 0,
         question: 'Name one official community channel.',
         answer: community
       }
@@ -1248,6 +1267,13 @@ const Editor: React.FC<EditorProps> = ({
   const editPanelRef = useRef<HTMLDivElement | null>(null);
   const editorScrollRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    const projectId = state.projectId ? String(state.projectId) : '';
+    if (projectId && !projectId.startsWith('temp-')) {
+      setBuilderMode('pro');
+    }
+  }, [state.projectId]);
+
   const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
   const getApiUrl = (path: string) => {
     if (!apiBaseUrl) return path;
@@ -1419,6 +1445,9 @@ const Editor: React.FC<EditorProps> = ({
       section: 'missions',
       kind: 'link',
       rewardCadence: 'once',
+      quizType: 'secret_code',
+      choices: [],
+      correctChoice: 0,
       question: '',
       answer: '',
       nftContract: '',
@@ -1565,6 +1594,16 @@ const Editor: React.FC<EditorProps> = ({
     }
     const seed = Date.now();
     const projectNameAnswer = state.projectName?.trim() || 'project';
+    const buildChoices = (correct: string, extras: string[]) => {
+      const pool = [correct, ...extras]
+        .map(choice => (choice ?? '').trim())
+        .filter(choice => Boolean(choice));
+      const unique = Array.from(new Set(pool));
+      while (unique.length < 3) {
+        unique.push(`Option ${unique.length + 1}`);
+      }
+      return unique.slice(0, 3);
+    };
     const onboardingTasks: Task[] = [
       {
         id: seed,
@@ -1576,6 +1615,9 @@ const Editor: React.FC<EditorProps> = ({
         section: 'onboarding',
         kind: 'quiz',
         rewardCadence: 'once',
+        quizType: 'multiple_choice',
+        choices: buildChoices(projectNameAnswer, ['QuestLayer', 'Demo Project']),
+        correctChoice: 0,
         question: 'What is this project called?',
         answer: projectNameAnswer
       },
@@ -1589,6 +1631,9 @@ const Editor: React.FC<EditorProps> = ({
         section: 'onboarding',
         kind: 'quiz',
         rewardCadence: 'once',
+        quizType: 'multiple_choice',
+        choices: buildChoices('docs', ['blog', 'app']),
+        correctChoice: 0,
         question: 'Which page would you visit for docs?',
         answer: 'docs'
       },
@@ -1602,6 +1647,9 @@ const Editor: React.FC<EditorProps> = ({
         section: 'onboarding',
         kind: 'quiz',
         rewardCadence: 'once',
+        quizType: 'multiple_choice',
+        choices: buildChoices('discord', ['telegram', 'twitter']),
+        correctChoice: 0,
         question: 'Where does the community hang out?',
         answer: 'discord'
       }
@@ -1750,6 +1798,9 @@ const Editor: React.FC<EditorProps> = ({
       section: task.section ?? 'missions',
       kind: task.kind ?? 'link',
       rewardCadence: task.rewardCadence ?? 'once',
+      quizType: task.quizType ?? (task.section === 'onboarding' ? 'multiple_choice' : 'secret_code'),
+      choices: task.choices ?? [],
+      correctChoice: typeof task.correctChoice === 'number' ? task.correctChoice : 0,
       question: task.question ?? '',
       answer: task.answer ?? '',
       nftContract: task.nftContract ?? '',
@@ -1802,6 +1853,25 @@ const Editor: React.FC<EditorProps> = ({
       const isLink = resolvedKind === 'link';
       const isNftHold = resolvedKind === 'nft_hold';
       const isTokenHold = resolvedKind === 'token_hold';
+      const resolvedQuizType = isQuiz
+        ? (editForm.quizType ?? (editForm.section === 'onboarding' ? 'multiple_choice' : 'secret_code'))
+        : undefined;
+      const normalizedChoices = (resolvedQuizType === 'multiple_choice')
+        ? (editForm.choices ?? [])
+            .map(choice => (choice ?? '').trim())
+            .filter(choice => Boolean(choice))
+        : [];
+      const safeChoices = (resolvedQuizType === 'multiple_choice')
+        ? (normalizedChoices.length >= 3
+            ? normalizedChoices.slice(0, 3)
+            : [...normalizedChoices, 'Option B', 'Option C'].slice(0, 3))
+        : [];
+      const resolvedCorrectChoice = (resolvedQuizType === 'multiple_choice')
+        ? Math.min(
+          Math.max(typeof editForm.correctChoice === 'number' ? editForm.correctChoice : 0, 0),
+          Math.max(safeChoices.length - 1, 0)
+        )
+        : undefined;
       const resolvedDesc = editForm.desc
         || (isQuiz ? 'Answer the question to earn XP.' : '');
       // Determine Icon: Manual -> Favicon -> Random Game Icon Fallback
@@ -1816,6 +1886,9 @@ const Editor: React.FC<EditorProps> = ({
         section: editForm.section ?? 'missions',
         kind: resolvedKind,
         rewardCadence: editForm.rewardCadence ?? 'once',
+        quizType: resolvedQuizType,
+        choices: resolvedQuizType === 'multiple_choice' ? safeChoices : [],
+        correctChoice: resolvedQuizType === 'multiple_choice' ? resolvedCorrectChoice : undefined,
         question: editForm.question ?? '',
         answer: editForm.answer ?? '',
         nftContract: isNftHold ? (editForm.nftContract || '').trim() : '',
@@ -2472,7 +2545,7 @@ const Editor: React.FC<EditorProps> = ({
                       {!task.isSponsored ? (
                         <>
                           <button
-                            onClick={() => startEdit(task)}
+                            onClick={() => handleQuickEditTask(task)}
                             className="p-2 text-slate-400 hover:text-white transition-colors"
                           >
                             <Edit2 size={16} />
@@ -2571,6 +2644,23 @@ const Editor: React.FC<EditorProps> = ({
                     ) : (editForm?.kind ?? 'link') === 'quiz' ? (
                       <>
                         <div className="space-y-1">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase">Quiz Type</label>
+                          <select
+                            value={(editForm?.section === 'onboarding') ? 'multiple_choice' : (editForm?.quizType ?? 'secret_code')}
+                            onChange={(e) => setEditForm(prev => prev ? { ...prev, quizType: e.target.value as Task['quizType'] } : null)}
+                            disabled={editForm?.section === 'onboarding'}
+                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500 disabled:opacity-60"
+                          >
+                            <option value="secret_code">Secret Code</option>
+                            <option value="multiple_choice">Multiple Choice</option>
+                          </select>
+                          {editForm?.section === 'onboarding' && (
+                            <p className="text-[9px] text-slate-500">
+                              Onboarding questions are multiple-choice.
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
                           <label className="text-[9px] font-bold text-slate-500 uppercase">Question</label>
                           <textarea
                             value={editForm?.question ?? ''}
@@ -2579,18 +2669,74 @@ const Editor: React.FC<EditorProps> = ({
                             className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] h-14 text-white outline-none resize-none focus:border-indigo-500"
                           />
                         </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase">Correct Answer</label>
-                          <input
-                            value={editForm?.answer ?? ''}
-                            onChange={(e) => setEditForm(prev => prev ? { ...prev, answer: e.target.value } : null)}
-                            placeholder="e.g. hidden-badge"
-                            className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
-                          />
-                          <p className="text-[9px] text-slate-500">
-                            Case-insensitive, ignores spaces; matches if the answer appears in the sentence.
-                          </p>
-                        </div>
+                        {((editForm?.section === 'onboarding') ? 'multiple_choice' : (editForm?.quizType ?? 'secret_code')) === 'secret_code' ? (
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase">Secret Code</label>
+                            <input
+                              value={editForm?.answer ?? ''}
+                              onChange={(e) => setEditForm(prev => prev ? { ...prev, answer: e.target.value } : null)}
+                              placeholder="e.g. hidden-badge"
+                              className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                            />
+                            <p className="text-[9px] text-slate-500">
+                              Single word, case-insensitive. Exact match required.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-slate-500 uppercase">Choice A</label>
+                              <input
+                                value={editForm?.choices?.[0] ?? ''}
+                                onChange={(e) => setEditForm(prev => prev ? {
+                                  ...prev,
+                                  choices: [e.target.value, prev.choices?.[1] ?? '', prev.choices?.[2] ?? '']
+                                } : null)}
+                                placeholder="Correct option"
+                                className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-slate-500 uppercase">Choice B</label>
+                              <input
+                                value={editForm?.choices?.[1] ?? ''}
+                                onChange={(e) => setEditForm(prev => prev ? {
+                                  ...prev,
+                                  choices: [prev.choices?.[0] ?? '', e.target.value, prev.choices?.[2] ?? '']
+                                } : null)}
+                                placeholder="Option"
+                                className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-slate-500 uppercase">Choice C</label>
+                              <input
+                                value={editForm?.choices?.[2] ?? ''}
+                                onChange={(e) => setEditForm(prev => prev ? {
+                                  ...prev,
+                                  choices: [prev.choices?.[0] ?? '', prev.choices?.[1] ?? '', e.target.value]
+                                } : null)}
+                                placeholder="Option"
+                                className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-slate-500 uppercase">Correct Option</label>
+                              <select
+                                value={typeof editForm?.correctChoice === 'number' ? editForm.correctChoice : 0}
+                                onChange={(e) => setEditForm(prev => prev ? { ...prev, correctChoice: Number(e.target.value) } : null)}
+                                className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                              >
+                                <option value={0}>Choice A</option>
+                                <option value={1}>Choice B</option>
+                                <option value={2}>Choice C</option>
+                              </select>
+                            </div>
+                            <p className="text-[9px] text-slate-500">
+                              Pick which option is correct.
+                            </p>
+                          </div>
+                        )}
                       </>
                     ) : (editForm?.kind ?? 'link') === 'nft_hold' ? (
                       <>

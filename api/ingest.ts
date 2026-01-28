@@ -857,6 +857,17 @@ const buildXpSet = (base: number, spread: number) => {
   return shuffle(values);
 };
 
+const buildQuizChoices = (correct: string, extras: string[]) => {
+  const pool = [correct, ...extras]
+    .map(choice => (choice ?? '').toString().trim())
+    .filter(choice => Boolean(choice));
+  const unique = Array.from(new Set(pool));
+  while (unique.length < 3) {
+    unique.push(`Option ${unique.length + 1}`);
+  }
+  return unique.slice(0, 3);
+};
+
 const buildTasks = (
   projectUrl: string,
   name: string,
@@ -964,7 +975,10 @@ const buildTasks = (
       title: 'Project Name',
       task_kind: 'quiz',
       task_section: 'onboarding',
+      quiz_type: 'multiple_choice',
       reward_cadence: 'once',
+      choices: buildQuizChoices(name, ['QuestLayer', 'Demo Project']),
+      correct_choice: 0,
       question: 'What is this project called?',
       answer: name,
       description: 'Answer the project name to continue.',
@@ -975,7 +989,10 @@ const buildTasks = (
       title: 'Official Domain',
       task_kind: 'quiz',
       task_section: 'onboarding',
+      quiz_type: 'multiple_choice',
       reward_cadence: 'once',
+      choices: buildQuizChoices(hostname, ['example.com', 'project.xyz']),
+      correct_choice: 0,
       question: 'Which domain hosts the official site?',
       answer: hostname,
       description: 'Type the main domain of the project.',
@@ -986,7 +1003,10 @@ const buildTasks = (
       title: 'Community Channel',
       task_kind: 'quiz',
       task_section: 'onboarding',
+      quiz_type: 'multiple_choice',
       reward_cadence: 'once',
+      choices: buildQuizChoices(primaryCommunity, ['discord', 'telegram']),
+      correct_choice: 0,
       question: 'Name one official community channel.',
       answer: primaryCommunity,
       description: 'Answer with a community channel (e.g. Discord).',
@@ -1243,6 +1263,9 @@ export default async function handler(req: any, res: any) {
             task_section: task.task_section,
             task_kind: task.task_kind,
             reward_cadence: task.reward_cadence ?? 'once',
+            quiz_type: task.quiz_type ?? 'secret_code',
+            choices: task.choices ?? null,
+            correct_choice: typeof task.correct_choice === 'number' ? task.correct_choice : null,
             question: task.question ?? null,
             answer: task.answer ?? null
           })));

@@ -98,6 +98,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const [onboardingInputs, setOnboardingInputs] = useState<Record<string | number, string>>({});
+  const [onboardingSelections, setOnboardingSelections] = useState<Record<string | number, number | null>>({});
   const [onboardingFeedback, setOnboardingFeedback] = useState<Record<string | number, { type: 'error' | 'success'; message: string }>>({});
   const [onboardingCheckStatus, setOnboardingCheckStatus] = useState<Record<string | number, 'checking' | 'success' | 'error'>>({});
   const [nftVerifyState, setNftVerifyState] = useState<Record<string | number, { status: 'idle' | 'signing' | 'checking' | 'success' | 'error'; message?: string }>>({});
@@ -117,6 +118,12 @@ const Widget: React.FC<WidgetProps> = ({
 
   const [viralDayKey, setViralDayKey] = useState(() => getUtcDayRange().key);
   const resolveRewardCadence = (task: Task) => task.rewardCadence ?? 'once';
+  const resolveQuizType = (task: Task) => task.quizType ?? (task.section === 'onboarding' ? 'multiple_choice' : 'secret_code');
+  const buildFallbackChoices = (correct?: string) => {
+    const trimmed = (correct ?? '').trim();
+    const base = trimmed ? [trimmed, 'Option B', 'Option C'] : ['Option A', 'Option B', 'Option C'];
+    return base.slice(0, 3);
+  };
   const getCompletionKey = (task: Task, dayKey = getUtcDayRange().key) => {
     const id = String(task.id);
     return resolveRewardCadence(task) === 'daily' ? `${id}:${dayKey}` : id;
@@ -153,7 +160,7 @@ const Widget: React.FC<WidgetProps> = ({
   const isAnswerMatch = (input: string, answer: string) => {
     const normalizedAnswer = normalizeAnswer(answer);
     if (!normalizedAnswer) return false;
-    return normalizeAnswer(input).includes(normalizedAnswer);
+    return normalizeAnswer(input) === normalizedAnswer;
   };
   const clearOnboardingCheckTimeouts = (taskId: string | number) => {
     const timers = onboardingCheckTimeoutsRef.current[taskId];
@@ -310,6 +317,7 @@ const Widget: React.FC<WidgetProps> = ({
       setSharedPlatforms([]);
       setViralDayKey(getUtcDayRange().key);
       setOnboardingInputs({});
+      setOnboardingSelections({});
       setOnboardingFeedback({});
       setOnboardingCheckStatus({});
     }
@@ -1076,23 +1084,44 @@ const Widget: React.FC<WidgetProps> = ({
     }
   };
 
-  const handleOnboardingSubmit = (task: Task) => {
+  const handleOnboardingSubmit = (task: Task, selectedChoice?: number) => {
     if (isTaskCompleted(task)) return;
     if (onboardingCheckStatus[task.id] === 'checking') return;
+    const quizType = resolveQuizType(task);
     const input = onboardingInputs[task.id] ?? '';
-    if (!input.trim()) {
-      setOnboardingFeedback(prev => ({
-        ...prev,
-        [task.id]: { type: 'error' as const, message: 'Type your answer first.' }
-      }));
-      return;
-    }
-    if (!task.answer || !task.answer.trim()) {
-      setOnboardingFeedback(prev => ({
-        ...prev,
-        [task.id]: { type: 'error' as const, message: 'Answer not configured yet.' }
-      }));
-      return;
+    if (quizType === 'multiple_choice') {
+      const rawChoices = task.choices ?? [];
+      const choices = rawChoices.length ? rawChoices : buildFallbackChoices(task.answer);
+      if (!choices.length) {
+        setOnboardingFeedback(prev => ({
+          ...prev,
+          [task.id]: { type: 'error' as const, message: 'Choices not configured yet.' }
+        }));
+        return;
+      }
+      if (typeof selectedChoice !== 'number') {
+        setOnboardingFeedback(prev => ({
+          ...prev,
+          [task.id]: { type: 'error' as const, message: 'Pick an option first.' }
+        }));
+        return;
+      }
+      setOnboardingSelections(prev => ({ ...prev, [task.id]: selectedChoice }));
+    } else {
+      if (!input.trim()) {
+        setOnboardingFeedback(prev => ({
+          ...prev,
+          [task.id]: { type: 'error' as const, message: 'Type the secret code first.' }
+        }));
+        return;
+      }
+      if (!task.answer || !task.answer.trim()) {
+        setOnboardingFeedback(prev => ({
+          ...prev,
+          [task.id]: { type: 'error' as const, message: 'Answer not configured yet.' }
+        }));
+        return;
+      }
     }
     clearOnboardingCheckTimeouts(task.id);
     setOnboardingFeedback(prev => {
@@ -1102,7 +1131,9 @@ const Widget: React.FC<WidgetProps> = ({
     });
     setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: 'checking' as const }));
     const checkTimeout = setTimeout(() => {
-      const isMatch = isAnswerMatch(input, task.answer ?? '');
+      const isMatch = quizType === 'multiple_choice'
+        ? (typeof selectedChoice === 'number' && selectedChoice === (typeof task.correctChoice === 'number' ? task.correctChoice : 0))
+        : isAnswerMatch(input, task.answer ?? '');
       setOnboardingCheckStatus(prev => ({ ...prev, [task.id]: isMatch ? 'success' as const : 'error' as const }));
       setOnboardingFeedback(prev => ({
         ...prev,
@@ -1121,6 +1152,7 @@ const Widget: React.FC<WidgetProps> = ({
         });
         if (isMatch) {
           setOnboardingInputs(prev => ({ ...prev, [task.id]: '' }));
+          setOnboardingSelections(prev => ({ ...prev, [task.id]: null }));
           completeQuest(task);
         }
       }, 900);
@@ -1431,6 +1463,7 @@ const Widget: React.FC<WidgetProps> = ({
       const isCompleted = isTaskCompleted(task);
       const isLoading = loadingId === task.id;
       const inputValue = onboardingInputs[task.id] ?? '';
+      const selectedChoice = onboardingSelections[task.id];
       const feedback = onboardingFeedback[task.id];
       const checkStatus = onboardingCheckStatus[task.id];
       const isChecking = checkStatus === 'checking';
@@ -1493,6 +1526,11 @@ const Widget: React.FC<WidgetProps> = ({
         : 'border-white/10 focus:border-indigo-500';
       const showFeedback = Boolean(feedback && (!checkStatus || checkStatus === 'error'));
       const showTypeBadge = showTypeTag && !isQuizTask;
+      const quizType = resolveQuizType(task);
+      const rawQuizChoices = task.choices ?? [];
+      const quizChoices = (quizType === 'multiple_choice' && rawQuizChoices.length === 0)
+        ? buildFallbackChoices(task.answer)
+        : rawQuizChoices;
       const isDaily = resolveRewardCadence(task) === 'daily';
       const iconNode = !isOnboardingVariant ? (
         task.icon?.startsWith('icon:') ? (
@@ -1678,69 +1716,94 @@ const Widget: React.FC<WidgetProps> = ({
             )}
             {isQuizTask ? (
               <div className="space-y-1.5">
-                <div className="flex flex-col md:flex-row gap-2">
-                  <input
-                    value={inputValue}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setOnboardingInputs(prev => ({ ...prev, [task.id]: value }));
-                      setOnboardingFeedback(prev => {
-                        if (!prev[task.id]) return prev;
-                        const next = { ...prev };
-                        delete next[task.id];
-                        return next;
-                      });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleOnboardingSubmit(task);
-                      }
-                    }}
-                    disabled={isCompleted || isLocked}
-                    placeholder="Type the answer..."
-                    className={`w-full h-7 md:h-9 px-2 md:px-3 rounded-lg bg-white/5 border text-[10px] md:text-[11px] ${inputBorderClass} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
-                  />
-                  <button
-                    onClick={() => handleOnboardingSubmit(task)}
-                    disabled={isCompleted || isLocked}
-                    style={{
-                      ...((!isLightTheme && !isTransparentTheme) ? {
-                        backgroundColor: isCompleted ? '#94a3b8' : themePrimary,
-                        borderColor: isCompleted ? '#94a3b8' : (activeTheme.colors?.secondary || themePrimary),
-                        cursor: isCompleted ? 'not-allowed' : 'pointer'
-                      } : (isTransparentTheme ? {
-                        borderColor: isCompleted ? '#94a3b8' : themePrimary,
-                        backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
-                        color: isCompleted ? '#94a3b8' : 'white',
-                        cursor: isCompleted ? 'not-allowed' : 'pointer'
-                      } : {
-                        backgroundColor: isCompleted ? '#e2e8f0' : themePrimary,
-                        color: isCompleted ? '#94a3b8' : undefined,
-                        borderColor: isCompleted ? '#e2e8f0' : themePrimary,
-                        cursor: isCompleted ? 'not-allowed' : 'pointer'
-                      })),
-                      ...(flashColor ? {
-                        backgroundColor: flashColor,
-                        borderColor: flashColor,
-                        color: 'white'
-                      } : {})
-                    }}
-                    className={`w-full md:w-32 h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
-                  >
-                    {isCompleted ? (
-                      <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
-                    ) : isChecking ? (
-                      <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Checking</span>
-                    ) : isSuccess ? (
-                      <span className="flex items-center gap-1">Correct</span>
-                    ) : isError ? (
-                      <span className="flex items-center gap-1">Wrong</span>
-                    ) : (
-                      <span className="flex items-center gap-1">Check</span>
+                {quizType === 'multiple_choice' ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="grid grid-cols-1 gap-2">
+                      {quizChoices.map((choice, index) => {
+                        const isSelected = selectedChoice === index;
+                        return (
+                          <button
+                            key={`${task.id}-choice-${index}`}
+                            onClick={() => handleOnboardingSubmit(task, index)}
+                            disabled={isCompleted || isLocked || isChecking}
+                            className={`py-2 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${isSelected ? 'border-indigo-400 bg-indigo-500/20 text-white' : 'border-white/10 bg-white/5'} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
+                          >
+                            {choice}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {showFeedback && (
+                      <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {feedback.message}
+                      </p>
                     )}
-                  </button>
-                </div>
-                {showFeedback && (
+                  </div>
+                ) : (
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <input
+                      value={inputValue}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setOnboardingInputs(prev => ({ ...prev, [task.id]: value }));
+                        setOnboardingFeedback(prev => {
+                          if (!prev[task.id]) return prev;
+                          const next = { ...prev };
+                          delete next[task.id];
+                          return next;
+                        });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleOnboardingSubmit(task);
+                        }
+                      }}
+                      disabled={isCompleted || isLocked}
+                      placeholder="Type the secret code..."
+                      className={`w-full h-7 md:h-9 px-2 md:px-3 rounded-lg bg-white/5 border text-[10px] md:text-[11px] ${inputBorderClass} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
+                    />
+                    <button
+                      onClick={() => handleOnboardingSubmit(task)}
+                      disabled={isCompleted || isLocked}
+                      style={{
+                        ...((!isLightTheme && !isTransparentTheme) ? {
+                          backgroundColor: isCompleted ? '#94a3b8' : themePrimary,
+                          borderColor: isCompleted ? '#94a3b8' : (activeTheme.colors?.secondary || themePrimary),
+                          cursor: isCompleted ? 'not-allowed' : 'pointer'
+                        } : (isTransparentTheme ? {
+                          borderColor: isCompleted ? '#94a3b8' : themePrimary,
+                          backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
+                          color: isCompleted ? '#94a3b8' : 'white',
+                          cursor: isCompleted ? 'not-allowed' : 'pointer'
+                        } : {
+                          backgroundColor: isCompleted ? '#e2e8f0' : themePrimary,
+                          color: isCompleted ? '#94a3b8' : undefined,
+                          borderColor: isCompleted ? '#e2e8f0' : themePrimary,
+                          cursor: isCompleted ? 'not-allowed' : 'pointer'
+                        })),
+                        ...(flashColor ? {
+                          backgroundColor: flashColor,
+                          borderColor: flashColor,
+                          color: 'white'
+                        } : {})
+                      }}
+                      className={`w-full md:w-32 h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
+                    >
+                      {isCompleted ? (
+                        <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
+                      ) : isChecking ? (
+                        <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Checking</span>
+                      ) : isSuccess ? (
+                        <span className="flex items-center gap-1">Correct</span>
+                      ) : isError ? (
+                        <span className="flex items-center gap-1">Wrong</span>
+                      ) : (
+                        <span className="flex items-center gap-1">Check</span>
+                      )}
+                    </button>
+                  </div>
+                )}
+                {quizType !== 'multiple_choice' && showFeedback && (
                   <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {feedback.message}
                   </p>
