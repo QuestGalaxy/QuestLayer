@@ -105,6 +105,7 @@ interface EditorProps {
   setProjectLogo: (logo: string) => void;
   setProjectBanner: (banner: string) => void;
   onFetchMetadata: () => Promise<void>;
+  onDomainBlur: () => void;
   setAccentColor: (color: string) => void;
   setPosition: (pos: Position) => void;
   setActiveTheme: (theme: ThemeType) => void;
@@ -165,6 +166,63 @@ const AnimatedNumber = ({ value }: { value: number }) => {
   return <>{displayValue}</>;
 };
 
+const normalizeHost = (value: string) => {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return '';
+  try {
+    const withScheme = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+    return new URL(withScheme).hostname.replace(/^www\./, '');
+  } catch {
+    return trimmed.split('/')[0].replace(/^www\./, '');
+  }
+};
+
+const toTitleCase = (value: string) => value
+  .replace(/[-_]+/g, ' ')
+  .split(' ')
+  .filter(Boolean)
+  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+  .join(' ');
+
+const normalizeTitle = (value: string | null | undefined) => {
+  if (!value) return '';
+  let trimmed = value.trim();
+  if (!trimmed) return '';
+  const separators = ['|', '–', '—', '-', '•', '·', ':'];
+  for (const sep of separators) {
+    if (trimmed.includes(sep)) {
+      const [first] = trimmed.split(sep).map((part) => part.trim()).filter(Boolean);
+      if (first) trimmed = first;
+      break;
+    }
+  }
+  const stopWords = new Set([
+    'the', 'a', 'an', 'to', 'for', 'with', 'and', 'of', 'in', 'on', 'by', 'from',
+    'official', 'homepage', 'home', 'welcome', 'site', 'website', 'platform', 'app'
+  ]);
+  const marketing = new Set([
+    'revolutionizing', 'unleash', 'discover', 'explore', 'earn', 'build', 'building',
+    'powered', 'ultimate', 'best'
+  ]);
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  const cleaned = words.filter((word, idx) => {
+    const lower = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!lower) return false;
+    if (marketing.has(lower)) return false;
+    if (idx > 0 && stopWords.has(lower)) return false;
+    return true;
+  });
+  let finalWords = cleaned.length ? cleaned : words;
+  if (finalWords.length > 4) finalWords = finalWords.slice(0, 4);
+  return finalWords.join(' ').trim();
+};
+
+const getNameFromDomain = (domain: string) => {
+  const host = normalizeHost(domain);
+  const base = host.split('.')[0] || host;
+  return toTitleCase(base);
+};
+
 type BasicBuilderProps = {
   state: AppState;
   setProjectName: (name: string) => void;
@@ -173,6 +231,7 @@ type BasicBuilderProps = {
   setProjectSocials: (socials: ProjectSocialLinks | undefined) => void;
   setProjectLogo: (logo: string) => void;
   setProjectBanner: (banner: string) => void;
+  onDomainBlur: () => void;
   setAccentColor: (color: string) => void;
   setPosition: (pos: Position) => void;
   setActiveTheme: (theme: ThemeType) => void;
@@ -191,6 +250,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   setProjectSocials,
   setProjectLogo,
   setProjectBanner,
+  onDomainBlur,
   setAccentColor,
   setPosition,
   setActiveTheme,
@@ -234,63 +294,6 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
   useEffect(() => () => {
     applyTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
   }, []);
-
-  const normalizeHost = (value: string) => {
-    const trimmed = value.trim().toLowerCase();
-    if (!trimmed) return '';
-    try {
-      const withScheme = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
-      return new URL(withScheme).hostname.replace(/^www\./, '');
-    } catch {
-      return trimmed.split('/')[0].replace(/^www\./, '');
-    }
-  };
-
-  const toTitleCase = (value: string) => value
-    .replace(/[-_]+/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-
-  const normalizeTitle = (value: string | null | undefined) => {
-    if (!value) return '';
-    let trimmed = value.trim();
-    if (!trimmed) return '';
-    const separators = ['|', '–', '—', '-', '•', '·', ':'];
-    for (const sep of separators) {
-      if (trimmed.includes(sep)) {
-        const [first] = trimmed.split(sep).map((part) => part.trim()).filter(Boolean);
-        if (first) trimmed = first;
-        break;
-      }
-    }
-    const stopWords = new Set([
-      'the', 'a', 'an', 'to', 'for', 'with', 'and', 'of', 'in', 'on', 'by', 'from',
-      'official', 'homepage', 'home', 'welcome', 'site', 'website', 'platform', 'app'
-    ]);
-    const marketing = new Set([
-      'revolutionizing', 'unleash', 'discover', 'explore', 'earn', 'build', 'building',
-      'powered', 'ultimate', 'best'
-    ]);
-    const words = trimmed.split(/\s+/).filter(Boolean);
-    const cleaned = words.filter((word, idx) => {
-      const lower = word.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (!lower) return false;
-      if (marketing.has(lower)) return false;
-      if (idx > 0 && stopWords.has(lower)) return false;
-      return true;
-    });
-    let finalWords = cleaned.length ? cleaned : words;
-    if (finalWords.length > 4) finalWords = finalWords.slice(0, 4);
-    return finalWords.join(' ').trim();
-  };
-
-  const getNameFromDomain = (domain: string) => {
-    const host = normalizeHost(domain);
-    const base = host.split('.')[0] || host;
-    return toTitleCase(base);
-  };
 
   const fetchJson = async (url: string) => {
     const res = await fetch(url);
@@ -709,6 +712,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
               <input
                 value={domainInput}
                 onChange={(e) => setDomainInput(e.target.value)}
+                onBlur={onDomainBlur}
                 placeholder="my-awesome-app.com"
                 className="flex-1 bg-slate-900 border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
               />
@@ -1213,6 +1217,7 @@ const Editor: React.FC<EditorProps> = ({
   setProjectLogo,
   setProjectBanner,
   onFetchMetadata,
+  onDomainBlur,
   setAccentColor,
   setPosition,
   setActiveTheme,
@@ -1223,12 +1228,33 @@ const Editor: React.FC<EditorProps> = ({
   const [builderMode, setBuilderMode] = useState<'basic' | 'pro'>('basic');
   const [pendingSocialKey, setPendingSocialKey] = useState<string>('');
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+  const [isProAutoSetup, setIsProAutoSetup] = useState(false);
   const [metadataLoaderFailed, setMetadataLoaderFailed] = useState(false);
   const [metadataCursor, setMetadataCursor] = useState({ x: 0, y: 0 });
   const metadataCursorRef = useRef({ x: 0, y: 0 });
   const metadataRafRef = useRef<number | null>(null);
   const editPanelRef = useRef<HTMLDivElement | null>(null);
   const editorScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  const getApiUrl = (path: string) => {
+    if (!apiBaseUrl) return path;
+    const base = apiBaseUrl.replace(/\/$/, '');
+    const endpoint = path.replace(/^\//, '');
+    return `${base}/${endpoint}`;
+  };
+  const fetchJson = async (url: string) => {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) return null;
+    try {
+      const data = await res.json();
+      return data ?? null;
+    } catch {
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (!isFetchingMetadata) return;
@@ -1641,6 +1667,31 @@ const Editor: React.FC<EditorProps> = ({
       editPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 120);
   };
+  const runProAutoSetup = async () => {
+    const raw = state.projectDomain?.trim();
+    if (!raw || raw.length < 4 || !raw.includes('.')) return;
+    setIsProAutoSetup(true);
+    const normalized = raw.startsWith('http') ? raw : `https://${raw}`;
+    try {
+      const [metadata, ogData, logoData] = await Promise.all([
+        fetchJson(getApiUrl(`/api/metadata?url=${encodeURIComponent(normalized)}`)),
+        fetchJson(getApiUrl(`/api/og?url=${encodeURIComponent(normalized)}`)),
+        fetchJson(getApiUrl(`/api/logo?url=${encodeURIComponent(normalized)}`))
+      ]);
+      if (metadata?.description) setProjectDescription(metadata.description);
+      if (metadata?.socials && Object.keys(metadata.socials).length > 0) setProjectSocials(metadata.socials);
+      if (logoData?.logo) setProjectLogo(logoData.logo);
+      if (ogData?.image) setProjectBanner(ogData.image);
+      const normalizedTitle = normalizeTitle(metadata?.title);
+      const domainName = normalizeTitle(getNameFromDomain(raw));
+      const resolvedName = normalizedTitle || domainName;
+      if (resolvedName) {
+        setProjectName(resolvedName);
+      }
+    } finally {
+      setIsProAutoSetup(false);
+    }
+  };
 
   const getRandomGameIcon = () => GAME_ICONS[Math.floor(Math.random() * GAME_ICONS.length)];
 
@@ -1808,6 +1859,7 @@ const Editor: React.FC<EditorProps> = ({
             setProjectSocials={setProjectSocials}
             setProjectLogo={setProjectLogo}
             setProjectBanner={setProjectBanner}
+            onDomainBlur={onDomainBlur}
             setAccentColor={setAccentColor}
             setPosition={setPosition}
             setActiveTheme={setActiveTheme}
@@ -1913,11 +1965,22 @@ const Editor: React.FC<EditorProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-slate-500 uppercase">Website Domain</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Website Domain</label>
+                  <button
+                    type="button"
+                    onClick={runProAutoSetup}
+                    disabled={!state.projectDomain || isProAutoSetup}
+                    className="text-[9px] font-semibold uppercase tracking-widest text-emerald-300/90 hover:text-emerald-200 disabled:opacity-40 transition-colors"
+                  >
+                    {isProAutoSetup ? 'Auto...' : 'Auto-setup'}
+                  </button>
+                </div>
                 <input
                   value={state.projectDomain || ''}
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => setProjectDomain(e.target.value)}
+                  onBlur={onDomainBlur}
                   placeholder="e.g. my-awesome-app.com"
                   className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />

@@ -339,6 +339,33 @@ const App: React.FC = () => {
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
 
   const lastMetadataDomainRef = useRef<string | null>(null);
+  const isValidPreviewUrl = (value?: string | null) => {
+    if (!value) return false;
+    const trimmed = value.trim();
+    if (trimmed.length < 6 || /\s/.test(trimmed)) return false;
+    if (trimmed.endsWith('.')) return false;
+    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    try {
+      const url = new URL(withScheme);
+      const hostname = url.hostname.replace(/^www\./, '');
+      const parts = hostname.split('.');
+      if (parts.length < 2) return false;
+      if (parts[parts.length - 1].length < 3) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const [previewDomain, setPreviewDomain] = useState<string>('');
+  const handleDomainBlur = () => {
+    const rawDomain = state.projectDomain?.trim();
+    if (isValidPreviewUrl(rawDomain)) {
+      setPreviewDomain(rawDomain || '');
+    } else {
+      setPreviewDomain('');
+    }
+  };
 
   const fetchProjectMetadata = async (domain: string, signal?: AbortSignal) => {
     const normalized = domain.startsWith('http') ? domain : `https://${domain}`;
@@ -375,41 +402,7 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const rawDomain = state.projectDomain?.trim();
-    if (!rawDomain || rawDomain.length < 4 || !rawDomain.includes('.')) return;
-
-    const normalized = rawDomain.startsWith('http') ? rawDomain : `https://${rawDomain}`;
-    const needsDescription = state.projectDescription == null;
-    const needsSocials = state.projectSocials == null;
-
-    if (!needsDescription && !needsSocials) return;
-    if (lastMetadataDomainRef.current === normalized) return;
-
-    const controller = new AbortController();
-    const timeout = window.setTimeout(async () => {
-      try {
-        const data = await fetchProjectMetadata(rawDomain, controller.signal);
-        if (!data) return;
-
-        lastMetadataDomainRef.current = normalized;
-        setState(prev => ({
-          ...prev,
-          projectDescription: (data.description || prev.projectDescription || undefined),
-          projectSocials: (data.socials && Object.keys(data.socials).length > 0)
-            ? data.socials
-            : (prev.projectSocials || undefined)
-        }));
-      } catch (err) {
-        if ((err as any)?.name !== 'AbortError') {
-          console.warn('Failed to fetch project metadata:', err);
-        }
-      }
-    }, 600);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeout);
-    };
+    // Auto metadata fetch disabled; only fetch on explicit user action.
   }, [state.projectDomain, state.projectDescription, state.projectSocials]);
 
   const { open } = useAppKit();
@@ -787,6 +780,7 @@ const App: React.FC = () => {
             setProjectLogo={handleSetLogo}
             setProjectBanner={handleSetBanner}
             onFetchMetadata={handleFetchMetadata}
+            onDomainBlur={handleDomainBlur}
             setAccentColor={handleSetColor}
             setPosition={handleSetPos}
             setActiveTheme={handleSetTheme}
@@ -831,10 +825,10 @@ const App: React.FC = () => {
             </header>
 
             {/* Mock Content or Iframe */}
-            {state.projectDomain && state.projectDomain.includes('.') && state.projectDomain.length > 4 ? (
+            {isValidPreviewUrl(previewDomain) ? (
               <div className="flex-1 w-full h-full bg-white relative">
                 <iframe
-                  src={state.projectDomain.startsWith('http') ? state.projectDomain : `https://${state.projectDomain}`}
+                  src={previewDomain.startsWith('http') ? previewDomain : `https://${previewDomain}`}
                   className="w-full h-full border-none"
                   title="Website Preview"
                   sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
