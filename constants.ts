@@ -69,7 +69,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
   },
   terminal: {
     type: 'dark',
-    colors: { primary: '#86efac', border: '#1f3d2a', text: '#86efac' },
+    colors: { primary: '#86efac', border: '#1f3d2a', text: '#0b0f0c' },
     card: 'bg-[#0b0f0c] rounded-none border border-[#1f3d2a] shadow-[0_0_0_1px_rgba(24,255,131,0.12)]',
     trigger: 'rounded-none border border-[#1f3d2a] bg-[#0b0f0c] text-[#86efac] tracking-[0.2em]',
     header: 'bg-[#0f1612] border-b border-[#1f3d2a]',
@@ -80,7 +80,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
   },
   aura: {
     type: 'light',
-    colors: { primary: '#f43f5e', border: '#fecdd3' },
+    colors: { primary: '#f43f5e', border: '#fecdd3', text: '#881337' },
     card: 'bg-[#fff7f3] rounded-2xl md:rounded-[36px] border border-rose-200 shadow-[0_20px_50px_rgba(244,63,94,0.18)]',
     trigger: 'rounded-full border border-rose-200 bg-rose-100 text-rose-900',
     header: 'bg-rose-100 border-b border-rose-200',

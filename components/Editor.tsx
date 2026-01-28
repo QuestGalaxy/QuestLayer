@@ -2503,6 +2503,11 @@ const Editor: React.FC<EditorProps> = ({
                           {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
                           {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
                           {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+                          {task.icon === 'icon:nft' && <ShieldCheck size={14} className="text-emerald-300" />}
+                          {task.icon === 'icon:token' && <Coins size={14} className="text-amber-300" />}
+                          {!['icon:coin','icon:trophy','icon:gem','icon:sword','icon:crown','icon:twitter','icon:repost','icon:heart','icon:discord','icon:telegram','icon:globe','icon:calendar','icon:nft','icon:token'].includes(task.icon) && (
+                            <Sparkles size={14} className="text-emerald-300" />
+                          )}
                         </div>
                       ) : task.icon ? (
                         <img
@@ -2511,6 +2516,14 @@ const Editor: React.FC<EditorProps> = ({
                           className="h-6 w-6 rounded-full border border-white/10 bg-white/10 object-contain"
                           loading="lazy"
                         />
+                      ) : (resolvedKind === 'nft_hold' || resolvedKind === 'token_hold') ? (
+                        <div className="h-6 w-6 rounded-full border border-white/10 bg-white/10 flex items-center justify-center">
+                          {resolvedKind === 'nft_hold' ? (
+                            <ShieldCheck size={14} className="text-emerald-300" />
+                          ) : (
+                            <Coins size={14} className="text-amber-300" />
+                          )}
+                        </div>
                       ) : null}
                       <div className="truncate">
                         <div className="flex items-center gap-2">

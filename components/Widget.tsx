@@ -175,7 +175,18 @@ const Widget: React.FC<WidgetProps> = ({
   const isTransparentTheme = activeTheme.isTransparent || false;
 
   const themePrimary = activeTheme.colors?.primary || state.accentColor;
+  const actionPrimary = (state.activeTheme === 'quest' || state.activeTheme === 'aura')
+    ? state.accentColor
+    : themePrimary;
   const themeBorderRaw = activeTheme.colors?.border;
+  const getReadableTextColor = (hex: string | undefined) => {
+    if (!hex || !hex.startsWith('#') || hex.length !== 7) return undefined;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return luminance > 0.6 ? '#0b0f0c' : '#ffffff';
+  };
   const themeBorder = themeBorderRaw === 'accent' ? state.accentColor : themeBorderRaw;
 
   const isFreeForm = state.position === 'free-form';
@@ -1521,9 +1532,20 @@ const Widget: React.FC<WidgetProps> = ({
       const questionClassName = `text-[12px] md:text-[13px] font-semibold tracking-normal leading-snug break-words whitespace-normal ${isLightTheme ? 'text-slate-800' : 'text-white'} ${isCompleted ? 'line-through decoration-2' : ''}`;
       const flashColor = isSuccess ? '#22c55e' : (isError ? '#ef4444' : null);
       const flashClass = (isSuccess || isError) ? 'animate-pulse' : '';
+      const themedBorderColor = (themeBorderRaw && themeBorderRaw !== 'accent') ? themeBorderRaw : undefined;
+      const baseInputBorderClass = isLightTheme
+        ? 'border-slate-300 focus:border-slate-400'
+        : 'border-white/20 focus:border-white/40';
       const inputBorderClass = feedback?.type === 'error'
-        ? 'border-rose-500/60 focus:border-rose-400'
-        : 'border-white/10 focus:border-indigo-500';
+        ? 'border-rose-500/70 focus:border-rose-500'
+        : baseInputBorderClass;
+      const inputSurfaceClass = isLightTheme
+        ? 'bg-white placeholder:text-slate-400'
+        : 'bg-white/5 placeholder:text-white/40';
+      const choiceBaseClass = isLightTheme
+        ? 'border-slate-200 bg-white text-slate-900 hover:border-slate-300'
+        : 'border-white/10 bg-white/5 text-white hover:border-white/20';
+      const dividerClass = isLightTheme ? 'border-slate-200' : 'border-white/10';
       const showFeedback = Boolean(feedback && (!checkStatus || checkStatus === 'error'));
       const showTypeBadge = showTypeTag && !isQuizTask;
       const quizType = resolveQuizType(task);
@@ -1532,28 +1554,38 @@ const Widget: React.FC<WidgetProps> = ({
         ? buildFallbackChoices(task.answer)
         : rawQuizChoices;
       const isDaily = resolveRewardCadence(task) === 'daily';
+      const fallbackIcon = resolvedKind === 'nft_hold'
+        ? <ShieldCheck size={14} className="text-emerald-400" />
+        : (resolvedKind === 'token_hold' ? <Coins size={14} className="text-amber-400" /> : null);
+      const mappedIcon = task.icon?.startsWith('icon:') ? (
+        task.icon === 'icon:coin' ? <Coins size={14} className="text-yellow-400" />
+        : task.icon === 'icon:trophy' ? <Trophy size={14} className="text-yellow-400" />
+        : task.icon === 'icon:gem' ? <Gem size={14} className="text-yellow-400" />
+        : task.icon === 'icon:sword' ? <Sword size={14} className="text-yellow-400" />
+        : task.icon === 'icon:crown' ? <Crown size={14} className="text-yellow-400" />
+        : task.icon === 'icon:twitter' ? <Twitter size={14} className="text-indigo-400" />
+        : task.icon === 'icon:repost' ? <Zap size={14} className="text-green-400" />
+        : task.icon === 'icon:heart' ? <Heart size={14} className="text-pink-400" />
+        : task.icon === 'icon:discord' ? <MessageSquare size={14} className="text-indigo-400" />
+        : task.icon === 'icon:telegram' ? <Send size={14} className="text-sky-400" />
+        : task.icon === 'icon:globe' ? <Globe size={14} className="text-slate-400" />
+        : task.icon === 'icon:calendar' ? <Calendar size={14} className="text-orange-400" />
+        : task.icon === 'icon:nft' ? <ShieldCheck size={14} className="text-emerald-400" />
+        : task.icon === 'icon:token' ? <Coins size={14} className="text-amber-400" />
+        : null
+      ) : null;
+      const headerIconClass = (resolvedKind === 'nft_hold' || resolvedKind === 'token_hold') ? 'rounded-full' : '';
       const iconNode = !isOnboardingVariant ? (
         task.icon?.startsWith('icon:') ? (
           <div
-            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox} ${headerIconClass}`}
             style={{ background: `${state.accentColor}10` }}
           >
-            {task.icon === 'icon:coin' && <Coins size={14} className="text-yellow-400" />}
-            {task.icon === 'icon:trophy' && <Trophy size={14} className="text-yellow-400" />}
-            {task.icon === 'icon:gem' && <Gem size={14} className="text-yellow-400" />}
-            {task.icon === 'icon:sword' && <Sword size={14} className="text-yellow-400" />}
-            {task.icon === 'icon:crown' && <Crown size={14} className="text-yellow-400" />}
-            {task.icon === 'icon:twitter' && <Twitter size={14} className="text-indigo-400" />}
-            {task.icon === 'icon:repost' && <Zap size={14} className="text-green-400" />}
-            {task.icon === 'icon:heart' && <Heart size={14} className="text-pink-400" />}
-            {task.icon === 'icon:discord' && <MessageSquare size={14} className="text-indigo-400" />}
-            {task.icon === 'icon:telegram' && <Send size={14} className="text-sky-400" />}
-            {task.icon === 'icon:globe' && <Globe size={14} className="text-slate-400" />}
-            {task.icon === 'icon:calendar' && <Calendar size={14} className="text-orange-400" />}
+            {mappedIcon || fallbackIcon || <Sparkles size={14} className="text-emerald-300/80" />}
           </div>
         ) : task.icon ? (
           <div
-            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox}`}
+            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox} ${headerIconClass}`}
             style={{ background: `${state.accentColor}10` }}
           >
             <img
@@ -1562,6 +1594,13 @@ const Widget: React.FC<WidgetProps> = ({
               className="h-4 w-4 md:h-5 md:w-5 object-contain"
               loading="lazy"
             />
+          </div>
+        ) : fallbackIcon ? (
+          <div
+            className={`flex h-5 w-5 md:h-6 md:w-6 items-center justify-center overflow-hidden ${activeTheme.iconBox} ${headerIconClass}`}
+            style={{ background: `${state.accentColor}10` }}
+          >
+            {fallbackIcon}
           </div>
         ) : null
       ) : null;
@@ -1716,93 +1755,100 @@ const Widget: React.FC<WidgetProps> = ({
             )}
             {isQuizTask ? (
               <div className="space-y-1.5">
-                {quizType === 'multiple_choice' ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="grid grid-cols-1 gap-2">
-                      {quizChoices.map((choice, index) => {
-                        const isSelected = selectedChoice === index;
-                        return (
-                          <button
-                            key={`${task.id}-choice-${index}`}
-                            onClick={() => handleOnboardingSubmit(task, index)}
-                            disabled={isCompleted || isLocked || isChecking}
-                            className={`py-2 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${isSelected ? 'border-indigo-400 bg-indigo-500/20 text-white' : 'border-white/10 bg-white/5'} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
-                          >
-                            {choice}
-                          </button>
-                        );
-                      })}
+                <div
+                  className={`pt-2 mt-1 border-t ${dividerClass}`}
+                  style={{ borderColor: themedBorderColor ? `${themedBorderColor}80` : undefined }}
+                >
+                  {quizType === 'multiple_choice' ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-1 gap-2">
+                        {quizChoices.map((choice, index) => {
+                          const isSelected = selectedChoice === index;
+                          return (
+                            <button
+                              key={`${task.id}-choice-${index}`}
+                              onClick={() => handleOnboardingSubmit(task, index)}
+                              disabled={isCompleted || isLocked || isChecking}
+                              className={`py-2 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${isSelected ? 'border-indigo-400 bg-indigo-500/20 text-white' : choiceBaseClass} disabled:opacity-50`}
+                            >
+                              {choice}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {showFeedback && (
+                        <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                          {feedback.message}
+                        </p>
+                      )}
                     </div>
-                    {showFeedback && (
-                      <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
-                        {feedback.message}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col md:flex-row gap-2">
-                    <input
-                      value={inputValue}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setOnboardingInputs(prev => ({ ...prev, [task.id]: value }));
-                        setOnboardingFeedback(prev => {
-                          if (!prev[task.id]) return prev;
-                          const next = { ...prev };
-                          delete next[task.id];
-                          return next;
-                        });
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleOnboardingSubmit(task);
-                        }
-                      }}
-                      disabled={isCompleted || isLocked}
-                      placeholder="Type the secret code..."
-                      className={`w-full h-7 md:h-9 px-2 md:px-3 rounded-lg bg-white/5 border text-[10px] md:text-[11px] ${inputBorderClass} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
-                    />
-                    <button
-                      onClick={() => handleOnboardingSubmit(task)}
-                      disabled={isCompleted || isLocked}
-                      style={{
-                        ...((!isLightTheme && !isTransparentTheme) ? {
-                          backgroundColor: isCompleted ? '#94a3b8' : themePrimary,
-                          borderColor: isCompleted ? '#94a3b8' : (activeTheme.colors?.secondary || themePrimary),
+                  ) : (
+                    <div className="flex flex-col md:flex-row gap-2">
+                      <input
+                        value={inputValue}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setOnboardingInputs(prev => ({ ...prev, [task.id]: value }));
+                          setOnboardingFeedback(prev => {
+                            if (!prev[task.id]) return prev;
+                            const next = { ...prev };
+                            delete next[task.id];
+                            return next;
+                          });
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleOnboardingSubmit(task);
+                          }
+                        }}
+                        disabled={isCompleted || isLocked}
+                        placeholder="Type the secret code..."
+                        className={`w-full h-7 md:h-9 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] ${inputBorderClass} ${inputSurfaceClass} ${isLightTheme ? 'text-slate-900' : 'text-white'} disabled:opacity-50`}
+                        style={{ borderColor: themedBorderColor && feedback?.type !== 'error' ? `${themedBorderColor}80` : undefined }}
+                      />
+                      <button
+                        onClick={() => handleOnboardingSubmit(task)}
+                        disabled={isCompleted || isLocked}
+                        style={{
+                          ...((!isLightTheme && !isTransparentTheme) ? {
+                          backgroundColor: isCompleted ? '#94a3b8' : actionPrimary,
+                          borderColor: isCompleted ? '#94a3b8' : (activeTheme.colors?.secondary || actionPrimary),
+                          color: activeTheme.colors?.text || 'white',
                           cursor: isCompleted ? 'not-allowed' : 'pointer'
                         } : (isTransparentTheme ? {
-                          borderColor: isCompleted ? '#94a3b8' : themePrimary,
+                          borderColor: isCompleted ? '#94a3b8' : actionPrimary,
                           backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
                           color: isCompleted ? '#94a3b8' : 'white',
                           cursor: isCompleted ? 'not-allowed' : 'pointer'
                         } : {
-                          backgroundColor: isCompleted ? '#e2e8f0' : themePrimary,
-                          color: isCompleted ? '#94a3b8' : undefined,
-                          borderColor: isCompleted ? '#e2e8f0' : themePrimary,
+                          backgroundColor: isCompleted ? '#e2e8f0' : actionPrimary,
+                          color: isCompleted ? '#94a3b8' : (state.activeTheme === 'aura' ? '#ffffff' : (activeTheme.colors?.text || getReadableTextColor(actionPrimary))),
+                          borderColor: isCompleted ? '#e2e8f0' : actionPrimary,
                           cursor: isCompleted ? 'not-allowed' : 'pointer'
                         })),
-                        ...(flashColor ? {
-                          backgroundColor: flashColor,
-                          borderColor: flashColor,
-                          color: 'white'
-                        } : {})
-                      }}
-                      className={`w-full md:w-32 h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
-                    >
-                      {isCompleted ? (
-                        <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
-                      ) : isChecking ? (
-                        <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Checking</span>
-                      ) : isSuccess ? (
-                        <span className="flex items-center gap-1">Correct</span>
-                      ) : isError ? (
-                        <span className="flex items-center gap-1">Wrong</span>
-                      ) : (
-                        <span className="flex items-center gap-1">Check</span>
-                      )}
-                    </button>
-                  </div>
-                )}
+                          ...(flashColor ? {
+                            backgroundColor: flashColor,
+                            borderColor: flashColor,
+                            color: 'white'
+                          } : {})
+                        }}
+                        className={`w-full md:w-32 h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
+                      >
+                        {isCompleted ? (
+                          <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
+                        ) : isChecking ? (
+                          <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Checking</span>
+                        ) : isSuccess ? (
+                          <span className="flex items-center gap-1">Correct</span>
+                        ) : isError ? (
+                          <span className="flex items-center gap-1">Wrong</span>
+                        ) : (
+                          <span className="flex items-center gap-1">Check</span>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {quizType !== 'multiple_choice' && showFeedback && (
                   <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {feedback.message}
@@ -1817,6 +1863,14 @@ const Widget: React.FC<WidgetProps> = ({
                     ? 'border-rose-500/50 bg-rose-500/5'
                     : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
               }`}>
+                <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">
+                  <div className={`flex h-6 w-6 items-center justify-center rounded-full ${activeTheme.iconBox}`} style={{ background: `${state.accentColor}10` }}>
+                    <ShieldCheck size={12} className="text-emerald-400" />
+                  </div>
+                  <span className={`text-[8px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-700' : 'text-white/80'}`}>
+                    NFT Holder
+                  </span>
+                </div>
                 {/* Background Image */}
                 {(nftBgImage || projectIconUrl) && (
                   <>
@@ -1959,6 +2013,14 @@ const Widget: React.FC<WidgetProps> = ({
                     ? 'border-rose-500/50 bg-rose-500/5'
                     : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
               }`}>
+                <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">
+                  <div className={`flex h-6 w-6 items-center justify-center rounded-full ${activeTheme.iconBox}`} style={{ background: `${state.accentColor}10` }}>
+                    <Coins size={12} className="text-amber-400" />
+                  </div>
+                  <span className={`text-[8px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-700' : 'text-white/80'}`}>
+                    Token Holder
+                  </span>
+                </div>
                 {/* Background Glow */}
                 <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${
                   isTokenChecking || isTokenSigning ? 'opacity-40' : ''
@@ -2408,7 +2470,8 @@ const Widget: React.FC<WidgetProps> = ({
                         backgroundColor: `${themePrimary}20`
                       } : {
                         backgroundColor: themePrimary,
-                        borderColor: activeTheme.colors?.secondary || themePrimary
+                        borderColor: activeTheme.colors?.secondary || themePrimary,
+                        color: activeTheme.colors?.text
                       }
                     }
                     className={`w-full py-1.5 md:py-3 font-black text-[11px] md:text-[11px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
