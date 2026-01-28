@@ -1430,6 +1430,85 @@ const Editor: React.FC<EditorProps> = ({
     setEditForm(null);
   };
 
+  const getDomainUrl = () => {
+    const raw = (state.projectDomain || '').trim();
+    if (!raw) return '';
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    return `https://${raw}`;
+  };
+
+  const getSocialUrl = (key: keyof ProjectSocialLinks) => {
+    const value = (state.projectSocials?.[key] || '').trim();
+    return value || '';
+  };
+
+  const hydrateTemplate = (template: typeof TASK_TEMPLATES[0]) => {
+    const name = state.projectName?.trim() || 'our project';
+    const domainUrl = getDomainUrl();
+    const twitter = getSocialUrl('twitter');
+    const discord = getSocialUrl('discord');
+    const telegram = getSocialUrl('telegram');
+    const website = domainUrl || template.link;
+
+    switch (template.id) {
+      case 'tpl-twitter-follow':
+        return {
+          ...template,
+          link: twitter || template.link,
+          desc: twitter
+            ? `Follow ${name} on X for the latest updates and announcements.`
+            : template.desc
+        };
+      case 'tpl-twitter-repost':
+        return {
+          ...template,
+          link: twitter || template.link,
+          desc: twitter
+            ? `Repost the latest ${name} update on X.`
+            : template.desc
+        };
+      case 'tpl-twitter-like':
+        return {
+          ...template,
+          link: twitter || template.link,
+          desc: twitter
+            ? `Like the latest ${name} announcement on X.`
+            : template.desc
+        };
+      case 'tpl-discord-join':
+        return {
+          ...template,
+          link: discord || template.link,
+          desc: discord
+            ? `Join the ${name} Discord to chat with the community.`
+            : template.desc
+        };
+      case 'tpl-telegram-join':
+        return {
+          ...template,
+          link: telegram || template.link,
+          desc: telegram
+            ? `Join the ${name} Telegram for instant updates.`
+            : template.desc
+        };
+      case 'tpl-visit-web':
+        return {
+          ...template,
+          link: website,
+          desc: domainUrl
+            ? `Explore ${name} and learn more on the official website.`
+            : template.desc
+        };
+      case 'tpl-daily-checkin':
+        return {
+          ...template,
+          link: website || template.link
+        };
+      default:
+        return template;
+    }
+  };
+
   const addTemplateTask = (template: typeof TASK_TEMPLATES[0]) => {
     const remaining = calculateXPRemaining();
     if (remaining <= 0) {
@@ -1437,15 +1516,16 @@ const Editor: React.FC<EditorProps> = ({
       return;
     }
 
+    const hydrated = hydrateTemplate(template);
     const newTask: Task = {
       id: Date.now(),
-      title: template.title,
-      desc: template.desc,
-      link: template.link,
-      icon: template.icon,
-      xp: Math.min(template.xp, remaining),
-      section: template.section as Task['section'],
-      kind: template.kind as Task['kind'],
+      title: hydrated.title,
+      desc: hydrated.desc,
+      link: hydrated.link,
+      icon: hydrated.icon,
+      xp: Math.min(hydrated.xp, remaining),
+      section: hydrated.section as Task['section'],
+      kind: hydrated.kind as Task['kind'],
       question: '',
       answer: '',
       nftContract: '',
