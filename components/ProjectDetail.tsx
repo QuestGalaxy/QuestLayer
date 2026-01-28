@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ExternalLink,
@@ -26,7 +26,7 @@ import {
   Facebook
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
-import { fetchProjectDetails, fetchProjectStats, fetchUserXP } from '../lib/supabase';
+import { fetchProjectDetails, fetchProjectStats, fetchUserXP, rewardDailyShare } from '../lib/supabase';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 
@@ -148,9 +148,37 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     return () => window.removeEventListener('resize', measure);
   }, [project?.description, showFullDescription]);
 
+  const [shareRewardMessage, setShareRewardMessage] = useState<string | null>(null);
+
+  const triggerShareReward = useCallback(async () => {
+    if (!address) {
+      setShareRewardMessage('Connect wallet to earn XP');
+      return;
+    }
+    if (!project?.id) return;
+
+    try {
+      const result = await rewardDailyShare(address, project.id);
+      if (result.alreadyClaimed) {
+        setShareRewardMessage('Daily share already claimed');
+        return;
+      }
+      if (result.xpAwarded > 0) {
+        const stats = await fetchUserXP(address);
+        setUserStats(stats);
+        setNextLevelXP(stats.level * 3000);
+        setShareRewardMessage(`+${result.xpAwarded} XP credited!`);
+      }
+    } catch (err) {
+      console.error('Share reward failed:', err);
+      setShareRewardMessage('Share logged soon. Try again if it does not appear.');
+    }
+  }, [address, project?.id]);
+
   const BadgeWithTooltip: React.FC<{
     children: React.ReactNode;
     tooltipText: React.ReactNode;
+    className?: string;
   }> = ({ children, tooltipText }) => (
     <div className="relative flex items-center z-30 group/tooltip">
       {children}
@@ -313,25 +341,76 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     }
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `QuestLayer - ${project.name}`,
-          text: `Join ${project.name} on QuestLayer and earn rewards!`,
-          url: url,
-        });
-      } catch (err) {
-        // Fallback to clipboard
-        navigator.clipboard.writeText(url);
-        alert('Link copied to clipboard!');
+  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isShareMenuOpen) return;
+    const handleClick = (event: MouseEvent) => {
+      if (!shareMenuRef.current) return;
+      if (!shareMenuRef.current.contains(event.target as Node)) {
+        setIsShareMenuOpen(false);
       }
-    } else {
-      navigator.clipboard.writeText(url);
-      alert('Link copied to clipboard!');
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isShareMenuOpen]);
+
+  const buildShareUrl = useCallback((platform: string) => {
+    if (!project) return '';
+    const shareUrl = window.location.href;
+    let shareText = `Join ${project.name} on QuestLayer and earn rewards!`;
+
+    switch (platform) {
+      case 'x':
+        shareText = `Excited to be engaging with ${project.name} on QuestLayer and earning rewards! 🚀`;
+        return `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      case 'tg':
+        return `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+      case 'wa':
+        return `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+      case 'fb':
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+      case 'li':
+        return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+      case 'rd':
+        return `https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`;
+      default:
+        return '';
     }
-  };
+  }, [project]);
+
+  const handleShareOption = useCallback(async (platform: string) => {
+    const shareUrl = window.location.href;
+    if (platform === 'copy') {
+      await navigator.clipboard.writeText(shareUrl);
+      setShareRewardMessage('Link copied. Share to earn rewards daily.');
+      triggerShareReward();
+      return;
+    }
+
+    if (platform === 'ig') {
+      await navigator.clipboard.writeText(shareUrl);
+      window.open('https://www.instagram.com/', '_blank');
+      setShareRewardMessage('Link copied. Paste into Instagram.');
+      triggerShareReward();
+      return;
+    }
+
+    if (platform === 'dc') {
+      await navigator.clipboard.writeText(shareUrl);
+      window.open('https://discord.com/channels/@me', '_blank');
+      setShareRewardMessage('Link copied. Paste into Discord.');
+      triggerShareReward();
+      return;
+    }
+
+    const url = buildShareUrl(platform);
+    if (url) {
+      window.open(url, '_blank');
+      triggerShareReward();
+    }
+  }, [buildShareUrl, triggerShareReward]);
 
   if (loading) {
     return (
@@ -434,7 +513,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
 
           <div className="flex-1 space-y-8 w-full relative z-10">
             <div className="space-y-6">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <BadgeWithTooltip
                   tooltipText={isVerified ? 'Official, verified quest.' : 'Community quest. Not verified.'}
                 >
@@ -445,13 +524,62 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                     {isVerified ? 'Official Quest' : 'Unofficial Quest'}
                   </div>
                 </BadgeWithTooltip>
-                <button
-                  onClick={handleShare}
-                  className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300 hover:text-white hover:border-indigo-500/60 hover:bg-indigo-500/20 transition-all"
-                  title="Share Project"
-                >
-                  <Share2 size={12} className="animate-pulse" /> Share Quest
-                </button>
+                <div ref={shareMenuRef} className="relative inline-flex">
+                  <button
+                    onClick={() => setIsShareMenuOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 md:px-4 md:py-1.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.3em] text-indigo-300 hover:text-white hover:border-indigo-500/60 hover:bg-indigo-500/20 transition-all"
+                    title="Share Project"
+                  >
+                    <Share2 size={12} className="animate-pulse" /> Share Quest
+                  </button>
+                  <BadgeWithTooltip tooltipText="Share to earn rewards daily">
+                    <span className="absolute -top-2.5 -right-2.5 inline-flex items-center whitespace-nowrap rounded-full border border-yellow-400/60 bg-yellow-400/15 px-2 py-0.5 text-[8px] font-black text-yellow-200 tracking-[0.3em] shadow-[0_0_16px_rgba(234,179,8,0.45)] animate-bounce">
+                      +150 XP
+                    </span>
+                  </BadgeWithTooltip>
+                  {isShareMenuOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-64 rounded-2xl border border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-2xl z-[120] p-2">
+                      <div className="mb-2 px-3 pt-2 text-[9px] font-black uppercase tracking-[0.3em] text-slate-400">
+                        Share to Earn 150XP
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 px-1 text-[11px] font-semibold text-slate-100">
+                        <button onClick={() => handleShareOption('wa')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <MessageSquare size={14} className="text-emerald-300" /> WhatsApp
+                        </button>
+                        <button onClick={() => handleShareOption('tg')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <Send size={14} className="text-sky-300" /> Telegram
+                        </button>
+                        <button onClick={() => handleShareOption('x')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <Twitter size={14} className="text-slate-200" /> Twitter / X
+                        </button>
+                        <button onClick={() => handleShareOption('fb')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <Facebook size={14} className="text-blue-400" /> Facebook
+                        </button>
+                        <button onClick={() => handleShareOption('li')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <Linkedin size={14} className="text-sky-400" /> LinkedIn
+                        </button>
+                        <button onClick={() => handleShareOption('rd')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <Globe size={14} className="text-orange-300" /> Reddit
+                        </button>
+                        <button onClick={() => handleShareOption('ig')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <Instagram size={14} className="text-pink-300" /> Instagram
+                        </button>
+                        <button onClick={() => handleShareOption('dc')} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors">
+                          <MessageSquare size={14} className="text-indigo-300" /> Discord
+                        </button>
+                      </div>
+                      {shareRewardMessage && (
+                        <div className="mx-3 my-2 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[10px] font-semibold text-emerald-200">
+                          {shareRewardMessage}
+                        </div>
+                      )}
+                      <div className="my-1 h-px bg-white/5" />
+                      <button onClick={() => handleShareOption('copy')} className="mx-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-semibold text-slate-100 hover:bg-white/5 transition-colors">
+                        <ExternalLink size={14} className="text-slate-300" /> Copy link
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-6">

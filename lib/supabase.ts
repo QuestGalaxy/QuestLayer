@@ -285,3 +285,84 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
     return { projectId: '', error: err };
   }
 };
+
+export interface DailyShareRewardResult {
+  xpAwarded: number;
+  alreadyClaimed?: boolean;
+  totalXP?: number;
+}
+
+export const rewardDailyShare = async (
+  walletAddress: string,
+  projectId: string,
+  xpReward = 150
+): Promise<DailyShareRewardResult> => {
+  if (!walletAddress || !projectId) {
+    return { xpAwarded: 0 };
+  }
+
+  const { data: user, error: userError } = await supabase
+    .from('end_users')
+    .upsert(
+      {
+        project_id: projectId,
+        wallet_address: walletAddress
+      },
+      { onConflict: 'project_id,wallet_address' }
+    )
+    .select('id')
+    .single();
+
+  if (userError) {
+    throw userError;
+  }
+
+  const platform = 'daily_share_button';
+  const { error: boostError } = await supabase
+    .from('viral_boost_completions')
+    .insert({
+      user_id: user.id,
+      project_id: projectId,
+      platform
+    });
+
+  if (boostError) {
+    const isDailyLimit = boostError.code === '23505' || (boostError.details?.includes && boostError.details.includes('viral_boost_completions_daily_unique'));
+    if (isDailyLimit) {
+      return { xpAwarded: 0, alreadyClaimed: true };
+    }
+    throw boostError;
+  }
+
+  const { data: progress, error: progressError } = await supabase
+    .from('user_progress')
+    .select('xp')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (progressError) {
+    throw progressError;
+  }
+
+  const previousXP = progress?.xp ?? 0;
+  const newTotal = previousXP + xpReward;
+
+  if (progress) {
+    const { error: updateError } = await supabase
+      .from('user_progress')
+      .update({ xp: newTotal })
+      .eq('user_id', user.id);
+    if (updateError) {
+      throw updateError;
+    }
+  } else {
+    const { error: insertError } = await supabase
+      .from('user_progress')
+      .insert({ user_id: user.id, xp: xpReward, streak: 1 });
+    if (insertError) {
+      throw insertError;
+    }
+  }
+
+  return { xpAwarded: xpReward, totalXP: newTotal };
+};
