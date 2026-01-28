@@ -263,6 +263,7 @@ export const syncProjectToSupabase = async (state: AppState, ownerAddress?: stri
             is_sponsored: task.isSponsored,
             task_section: task.section ?? 'missions',
             task_kind: task.kind ?? 'link',
+            reward_cadence: task.rewardCadence ?? 'once',
             question: task.question ?? '',
             answer: task.answer ?? '',
             nft_contract: task.nftContract ?? null,

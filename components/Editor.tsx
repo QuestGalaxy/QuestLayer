@@ -6,7 +6,7 @@ import {
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
   Send, Globe, Calendar, Zap, Heart, ArrowRight, Sparkles, Info, ShieldCheck,
-  Github, Linkedin, Youtube, Instagram, Facebook, CheckCircle2, FileText, Image as ImageIcon, Users
+  Github, Linkedin, Youtube, Instagram, Facebook, CheckCircle2, FileText, Image as ImageIcon, Users, RefreshCw
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 import { playSynthesizedSound } from '../lib/audio-effects.js';
@@ -21,7 +21,8 @@ const TASK_TEMPLATES = [
     xp: 50,
     category: 'Social',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'tpl-twitter-repost',
@@ -32,7 +33,8 @@ const TASK_TEMPLATES = [
     xp: 100,
     category: 'Social',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'tpl-twitter-like',
@@ -43,7 +45,8 @@ const TASK_TEMPLATES = [
     xp: 25,
     category: 'Social',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'tpl-discord-join',
@@ -54,7 +57,8 @@ const TASK_TEMPLATES = [
     xp: 150,
     category: 'Community',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'tpl-telegram-join',
@@ -65,7 +69,8 @@ const TASK_TEMPLATES = [
     xp: 50,
     category: 'Community',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'tpl-visit-web',
@@ -76,7 +81,8 @@ const TASK_TEMPLATES = [
     xp: 10,
     category: 'General',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'tpl-daily-checkin',
@@ -87,7 +93,8 @@ const TASK_TEMPLATES = [
     xp: 20,
     category: 'Daily',
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'daily'
   }
 ];
 
@@ -329,6 +336,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
     const addTask = (partial: Omit<Task, 'id'>) => {
       tasks.push({
         id: `basic-${stamp}-${tasks.length}`,
+        rewardCadence: partial.rewardCadence ?? 'once',
         ...partial
       });
     };
@@ -501,6 +509,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         xp: 120,
         section: 'onboarding',
         kind: 'quiz',
+        rewardCadence: 'once',
         question: 'What is this project called?',
         answer: name
       },
@@ -513,6 +522,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         xp: 120,
         section: 'onboarding',
         kind: 'quiz',
+        rewardCadence: 'once',
         question: 'Which domain hosts the official site?',
         answer: hostname
       },
@@ -525,6 +535,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
         xp: 120,
         section: 'onboarding',
         kind: 'quiz',
+        rewardCadence: 'once',
         question: 'Name one official community channel.',
         answer: community
       }
@@ -1407,6 +1418,7 @@ const Editor: React.FC<EditorProps> = ({
       xp: Math.min(100, remaining), // Auto-cap at remaining
       section: 'missions',
       kind: 'link',
+      rewardCadence: 'once',
       question: '',
       answer: '',
       nftContract: '',
@@ -1526,6 +1538,7 @@ const Editor: React.FC<EditorProps> = ({
       xp: Math.min(hydrated.xp, remaining),
       section: hydrated.section as Task['section'],
       kind: hydrated.kind as Task['kind'],
+      rewardCadence: hydrated.rewardCadence ?? 'once',
       question: '',
       answer: '',
       nftContract: '',
@@ -1562,6 +1575,7 @@ const Editor: React.FC<EditorProps> = ({
         xp: xpPerTask,
         section: 'onboarding',
         kind: 'quiz',
+        rewardCadence: 'once',
         question: 'What is this project called?',
         answer: projectNameAnswer
       },
@@ -1574,6 +1588,7 @@ const Editor: React.FC<EditorProps> = ({
         xp: xpPerTask,
         section: 'onboarding',
         kind: 'quiz',
+        rewardCadence: 'once',
         question: 'Which page would you visit for docs?',
         answer: 'docs'
       },
@@ -1586,6 +1601,7 @@ const Editor: React.FC<EditorProps> = ({
         xp: xpPerTask,
         section: 'onboarding',
         kind: 'quiz',
+        rewardCadence: 'once',
         question: 'Where does the community hang out?',
         answer: 'discord'
       }
@@ -1610,6 +1626,7 @@ const Editor: React.FC<EditorProps> = ({
       xp: Math.min(100, remaining),
       section: 'missions',
       kind: 'nft_hold',
+      rewardCadence: 'once',
       question: '',
       answer: '',
       nftContract: '0x...',
@@ -1636,6 +1653,7 @@ const Editor: React.FC<EditorProps> = ({
       xp: Math.min(100, remaining),
       section: 'missions',
       kind: 'token_hold',
+      rewardCadence: 'once',
       question: '',
       answer: '',
       nftContract: '',
@@ -1731,6 +1749,7 @@ const Editor: React.FC<EditorProps> = ({
       ...task,
       section: task.section ?? 'missions',
       kind: task.kind ?? 'link',
+      rewardCadence: task.rewardCadence ?? 'once',
       question: task.question ?? '',
       answer: task.answer ?? '',
       nftContract: task.nftContract ?? '',
@@ -1796,6 +1815,7 @@ const Editor: React.FC<EditorProps> = ({
         link: isLink ? (editForm.link || '') : '',
         section: editForm.section ?? 'missions',
         kind: resolvedKind,
+        rewardCadence: editForm.rewardCadence ?? 'once',
         question: editForm.question ?? '',
         answer: editForm.answer ?? '',
         nftContract: isNftHold ? (editForm.nftContract || '').trim() : '',
@@ -2390,6 +2410,7 @@ const Editor: React.FC<EditorProps> = ({
             {state.tasks.map((task) => {
               const resolvedKind = task.kind ?? 'link';
               const resolvedSection = task.section ?? 'missions';
+              const isDaily = (task.rewardCadence ?? 'once') === 'daily';
               return (
               <div key={task.id} className="bg-white/5 rounded-2xl border border-white/5 overflow-hidden transition-all group">
                 {editingId !== task.id ? (
@@ -2429,6 +2450,12 @@ const Editor: React.FC<EditorProps> = ({
                           {resolvedKind !== 'link' && (
                             <span className="text-[7px] font-black bg-sky-500/10 text-sky-300 px-1 rounded uppercase tracking-tighter border border-sky-500/20">
                               {resolvedKind === 'quiz' ? 'Question' : resolvedKind === 'nft_hold' ? 'NFT Hold' : 'Token Hold'}
+                            </span>
+                          )}
+                          {isDaily && (
+                            <span className="text-[7px] font-black bg-indigo-500/10 text-indigo-300 px-1 rounded uppercase tracking-tighter border border-indigo-500/20 inline-flex items-center gap-1">
+                              <RefreshCw size={10} />
+                              Daily
                             </span>
                           )}
                           {task.isSponsored && (
@@ -2473,7 +2500,7 @@ const Editor: React.FC<EditorProps> = ({
                     ref={editingId === task.id ? editPanelRef : null}
                     className="p-5 bg-indigo-600/5 border-l-4 border-indigo-500 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300"
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <div className="space-y-1">
                         <label className="text-[9px] font-bold text-slate-500 uppercase">Task Section</label>
                         <select
@@ -2496,6 +2523,17 @@ const Editor: React.FC<EditorProps> = ({
                           <option value="quiz">Question</option>
                           <option value="nft_hold">NFT Hold</option>
                           <option value="token_hold">Token Hold</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold text-slate-500 uppercase">Reward Cadence</label>
+                        <select
+                          value={editForm?.rewardCadence ?? 'once'}
+                          onChange={(e) => setEditForm(prev => prev ? { ...prev, rewardCadence: e.target.value as Task['rewardCadence'] } : null)}
+                          className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-[11px] text-white focus:border-indigo-500"
+                        >
+                          <option value="once">One-time</option>
+                          <option value="daily">Daily</option>
                         </select>
                       </div>
                     </div>

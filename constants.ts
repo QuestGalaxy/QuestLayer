@@ -161,7 +161,8 @@ export const SPONSORED_TASKS: Task[] = [
     xp: 100,
     isSponsored: true,
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'sp-telegram-join',
@@ -172,7 +173,8 @@ export const SPONSORED_TASKS: Task[] = [
     xp: 100,
     isSponsored: true,
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'sp-medium-follow',
@@ -183,7 +185,8 @@ export const SPONSORED_TASKS: Task[] = [
     xp: 100,
     isSponsored: true,
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   },
   {
     id: 'sp-mint-lootbox',
@@ -194,7 +197,8 @@ export const SPONSORED_TASKS: Task[] = [
     xp: 100,
     isSponsored: true,
     section: 'missions',
-    kind: 'link'
+    kind: 'link',
+    rewardCadence: 'once'
   }
 ];
 

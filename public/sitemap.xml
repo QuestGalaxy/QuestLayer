@@ -256,6 +256,21 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://questlayer.app/store/0f0bd0d4-83c4-46fe-a85e-f0fbb7724115</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://questlayer.app/store/80233666-b106-4db9-b80c-d9a75ecac301</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://questlayer.app/store/a325a590-3538-4f74-90de-9742cc5ddaf0</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://questlayer.app/store/a42c8937-bcb3-4824-a663-14239a547707</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -492,11 +507,6 @@
   </url>
   <url>
     <loc>https://questlayer.app/store/ffbf28bd-c4f8-4bbb-9c26-f259bf5f6e8c</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://questlayer.app/store/1fbd9f62-71e9-4638-8e67-12805d8d0435</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -5,6 +5,7 @@ export type ThemeType = 'sleek' | 'cyber' | 'minimal' | 'gaming' | 'brutal' | 'g
 
 export type TaskSection = 'missions' | 'onboarding';
 export type TaskKind = 'link' | 'quiz' | 'nft_hold' | 'token_hold';
+export type TaskRewardCadence = 'once' | 'daily';
 
 export interface Task {
   id: string | number;
@@ -17,6 +18,7 @@ export interface Task {
   isDemo?: boolean;
   section: TaskSection;
   kind: TaskKind;
+  rewardCadence?: TaskRewardCadence;
   question?: string;
   answer?: string;
   nftContract?: string;

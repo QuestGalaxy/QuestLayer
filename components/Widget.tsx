@@ -96,7 +96,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [dbProjectId, setDbProjectId] = useState<string | null>(null);
   const [dbUserId, setDbUserId] = useState<string | null>(null);
   const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
-  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string | number>>(new Set());
+  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const [onboardingInputs, setOnboardingInputs] = useState<Record<string | number, string>>({});
   const [onboardingFeedback, setOnboardingFeedback] = useState<Record<string | number, { type: 'error' | 'success'; message: string }>>({});
   const [onboardingCheckStatus, setOnboardingCheckStatus] = useState<Record<string | number, 'checking' | 'success' | 'error'>>({});
@@ -116,6 +116,19 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const [viralDayKey, setViralDayKey] = useState(() => getUtcDayRange().key);
+  const resolveRewardCadence = (task: Task) => task.rewardCadence ?? 'once';
+  const getCompletionKey = (task: Task, dayKey = getUtcDayRange().key) => {
+    const id = String(task.id);
+    return resolveRewardCadence(task) === 'daily' ? `${id}:${dayKey}` : id;
+  };
+  const isTaskCompleted = (task: Task) => completedTaskIds.has(getCompletionKey(task));
+  const markTaskCompleted = (task: Task, dayKey = getUtcDayRange().key) => {
+    setCompletedTaskIds(prev => {
+      const next = new Set(prev);
+      next.add(getCompletionKey(task, dayKey));
+      return next;
+    });
+  };
 
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const shareVerifyTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
@@ -423,18 +436,35 @@ const Widget: React.FC<WidgetProps> = ({
         // 5. Fetch completed tasks
         const { data: completions } = await supabase
           .from('task_completions')
-          .select('task_id')
+          .select('task_id, completed_on, created_at')
           .eq('user_id', userId);
 
         if (completions) {
-          const dbCompletedIds = new Set(completions.map(c => c.task_id));
-          const localCompletedIds = new Set<string | number>();
+          const todayKey = getUtcDayRange().key;
+          const dbCompletionsByTask = new Map<string, Set<string>>();
 
+          completions.forEach((completion) => {
+            const completedOn = completion.completed_on
+              || (completion.created_at ? completion.created_at.slice(0, 10) : null);
+            if (!completedOn) return;
+            if (!dbCompletionsByTask.has(completion.task_id)) {
+              dbCompletionsByTask.set(completion.task_id, new Set());
+            }
+            dbCompletionsByTask.get(completion.task_id)!.add(completedOn);
+          });
+
+          const localCompletedIds = new Set<string>();
           state.tasks.forEach(t => {
             const dbUuid = taskMapping[t.id];
-            // If task is in DB and completed, mark it.
-            if (dbUuid && dbCompletedIds.has(dbUuid)) {
-              localCompletedIds.add(t.id);
+            if (!dbUuid) return;
+            const completedDays = dbCompletionsByTask.get(dbUuid);
+            if (!completedDays || completedDays.size === 0) return;
+            if (resolveRewardCadence(t) === 'daily') {
+              if (completedDays.has(todayKey)) {
+                localCompletedIds.add(getCompletionKey(t, todayKey));
+              }
+            } else {
+              localCompletedIds.add(getCompletionKey(t));
             }
           });
 
@@ -715,7 +745,7 @@ const Widget: React.FC<WidgetProps> = ({
   const completeQuest = (task: Task, options?: { skipDb?: boolean; xpAwarded?: number }) => {
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     // Prevent multiple triggers if already completing
-    if (completedTaskIds.has(task.id)) return;
+    if (isTaskCompleted(task)) return;
 
     const xpAwarded = options?.xpAwarded ?? task.xp;
 
@@ -726,7 +756,7 @@ const Widget: React.FC<WidgetProps> = ({
       ...prev,
       userXP: prev.userXP + xpAwarded
     }));
-    setCompletedTaskIds(prev => new Set(prev).add(task.id));
+    markTaskCompleted(task);
     setLoadingId(null);
     setGlobalXP(prev => prev + xpAwarded);
 
@@ -747,9 +777,11 @@ const Widget: React.FC<WidgetProps> = ({
         }
 
         if (dbTaskId) {
+          const todayKey = getUtcDayRange().key;
           await supabase.from('task_completions').insert({
             user_id: dbUserId,
-            task_id: dbTaskId
+            task_id: dbTaskId,
+            completed_on: resolveRewardCadence(task) === 'daily' ? todayKey : undefined
           });
 
           // Fetch latest XP to be safe (race conditions)
@@ -843,7 +875,7 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const handleNftHoldVerify = async (task: Task) => {
-    if (completedTaskIds.has(task.id)) return;
+    if (isTaskCompleted(task)) return;
     if (!effectiveConnected || !address) {
       await open();
       return;
@@ -918,7 +950,7 @@ const Widget: React.FC<WidgetProps> = ({
       }
 
       if (payload?.alreadyCompleted) {
-        setCompletedTaskIds(prev => new Set(prev).add(task.id));
+        markTaskCompleted(task);
         setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Already verified.' } } as any));
         return;
       }
@@ -950,7 +982,7 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const handleTokenHoldVerify = async (task: Task) => {
-    if (completedTaskIds.has(task.id)) return;
+    if (isTaskCompleted(task)) return;
     if (!effectiveConnected || !address) {
       await open();
       return;
@@ -1025,7 +1057,7 @@ const Widget: React.FC<WidgetProps> = ({
       }
 
       if (payload?.alreadyCompleted) {
-        setCompletedTaskIds(prev => new Set(prev).add(task.id));
+        markTaskCompleted(task);
         setTokenVerifyState(prev => ({ ...prev, [task.id]: { status: 'success', message: 'Already verified.' } } as any));
         return;
       }
@@ -1045,7 +1077,7 @@ const Widget: React.FC<WidgetProps> = ({
   };
 
   const handleOnboardingSubmit = (task: Task) => {
-    if (completedTaskIds.has(task.id)) return;
+    if (isTaskCompleted(task)) return;
     if (onboardingCheckStatus[task.id] === 'checking') return;
     const input = onboardingInputs[task.id] ?? '';
     if (!input.trim()) {
@@ -1383,8 +1415,8 @@ const Widget: React.FC<WidgetProps> = ({
     return rawKind === 'secret' ? 'quiz' : (rawKind as Task['kind']);
   };
   const sortTasksByCompletion = (tasks: Task[]) => [...tasks].sort((a, b) => {
-    const aCompleted = completedTaskIds.has(a.id);
-    const bCompleted = completedTaskIds.has(b.id);
+    const aCompleted = isTaskCompleted(a);
+    const bCompleted = isTaskCompleted(b);
     if (aCompleted === bCompleted) return 0;
     return aCompleted ? 1 : -1;
   });
@@ -1396,7 +1428,7 @@ const Widget: React.FC<WidgetProps> = ({
       const isQuizTask = resolvedKind === 'quiz';
       const isNftTask = resolvedKind === 'nft_hold';
       const isTokenTask = resolvedKind === 'token_hold';
-      const isCompleted = completedTaskIds.has(task.id);
+      const isCompleted = isTaskCompleted(task);
       const isLoading = loadingId === task.id;
       const inputValue = onboardingInputs[task.id] ?? '';
       const feedback = onboardingFeedback[task.id];
@@ -1461,6 +1493,7 @@ const Widget: React.FC<WidgetProps> = ({
         : 'border-white/10 focus:border-indigo-500';
       const showFeedback = Boolean(feedback && (!checkStatus || checkStatus === 'error'));
       const showTypeBadge = showTypeTag && !isQuizTask;
+      const isDaily = resolveRewardCadence(task) === 'daily';
       const iconNode = !isOnboardingVariant ? (
         task.icon?.startsWith('icon:') ? (
           <div
@@ -1529,6 +1562,20 @@ const Widget: React.FC<WidgetProps> = ({
                       <span className={`text-[9px] md:text-[9px] font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-600' : 'text-white/70'}`}>
                         Question
                       </span>
+                      {isDaily && (
+                        <span
+                          className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0 inline-flex items-center gap-1`}
+                          style={{
+                            backgroundColor: `${state.accentColor}10`,
+                            borderColor: `${state.accentColor}20`,
+                            color: state.accentColor
+                          }}
+                          title="Recurring daily reward"
+                        >
+                          <RefreshCw size={10} />
+                          Daily
+                        </span>
+                      )}
                       {task.isSponsored && (
                         <span
                           className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0`}
@@ -1574,6 +1621,20 @@ const Widget: React.FC<WidgetProps> = ({
                         }}
                       >
                         {resolvedKind === 'nft_hold' ? 'NFT Hold' : (resolvedKind === 'token_hold' ? 'Token Hold' : 'Link')}
+                      </span>
+                    )}
+                    {isDaily && (
+                      <span
+                        className={`text-[8px] md:text-[8px] font-black px-1 rounded uppercase tracking-tighter border shrink-0 inline-flex items-center gap-1`}
+                        style={{
+                          backgroundColor: `${state.accentColor}10`,
+                          borderColor: `${state.accentColor}20`,
+                          color: state.accentColor
+                        }}
+                        title="Recurring daily reward"
+                      >
+                        <RefreshCw size={10} />
+                        Daily
                       </span>
                     )}
                     {task.isSponsored && (
@@ -1994,7 +2055,7 @@ const Widget: React.FC<WidgetProps> = ({
   };
   const onboardingTasks = state.tasks.filter(task => resolveTaskSection(task) === 'onboarding');
   const missionTasks = state.tasks.filter(task => resolveTaskSection(task) !== 'onboarding');
-  const onboardingCompletedCount = onboardingTasks.filter(task => completedTaskIds.has(task.id)).length;
+  const onboardingCompletedCount = onboardingTasks.filter(task => isTaskCompleted(task)).length;
   const onboardingXP = onboardingTasks.reduce((acc, task) => acc + (task.xp || 0), 0);
   const onboardingAccent = themeBorder || state.accentColor;
 

@@ -142,7 +142,7 @@ export default async function handler(req: any, res: any) {
 
   const { data: task, error: taskError } = await supabase
     .from('tasks')
-    .select('id, project_id, task_kind, xp_reward, nft_contract, nft_chain_id')
+    .select('id, project_id, task_kind, xp_reward, nft_contract, nft_chain_id, reward_cadence')
     .eq('id', taskId)
     .eq('project_id', projectId)
     .single();
@@ -194,12 +194,17 @@ export default async function handler(req: any, res: any) {
 
   const userId = user.id;
 
-  const { data: existingCompletion } = await supabase
+  const cadence = task.reward_cadence ?? 'once';
+  const todayKey = new Date().toISOString().slice(0, 10);
+  let completionQuery = supabase
     .from('task_completions')
     .select('id')
     .eq('user_id', userId)
-    .eq('task_id', task.id)
-    .maybeSingle();
+    .eq('task_id', task.id);
+  if (cadence === 'daily') {
+    completionQuery = completionQuery.eq('completed_on', todayKey);
+  }
+  const { data: existingCompletion } = await completionQuery.maybeSingle();
 
   if (existingCompletion?.id) {
     res.status(200).json({ success: true, alreadyCompleted: true });
@@ -244,7 +249,8 @@ export default async function handler(req: any, res: any) {
     .from('task_completions')
     .insert({
       user_id: userId,
-      task_id: task.id
+      task_id: task.id,
+      completed_on: cadence === 'daily' ? todayKey : undefined
     });
 
   if (completionError) {

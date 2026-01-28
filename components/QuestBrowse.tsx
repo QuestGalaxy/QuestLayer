@@ -696,6 +696,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           isSponsored: t.is_sponsored,
           section: t.task_section ?? 'missions',
           kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
+          rewardCadence: t.reward_cadence ?? 'once',
           question: t.question ?? '',
           answer: t.answer ?? '',
           nftContract: t.nft_contract ?? '',

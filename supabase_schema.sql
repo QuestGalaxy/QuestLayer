@@ -31,6 +31,7 @@ create table if not exists tasks (
   is_sponsored boolean default false,
   task_section text default 'missions',
   task_kind text default 'link',
+  reward_cadence text default 'once',
   question text,
   answer text,
   nft_contract text,
@@ -42,6 +43,7 @@ create table if not exists tasks (
 
 alter table tasks add column if not exists task_section text default 'missions';
 alter table tasks add column if not exists task_kind text default 'link';
+alter table tasks add column if not exists reward_cadence text default 'once';
 alter table tasks add column if not exists question text;
 alter table tasks add column if not exists answer text;
 alter table tasks add column if not exists nft_contract text;
@@ -73,8 +75,13 @@ create table if not exists task_completions (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   user_id uuid references end_users(id) on delete cascade not null,
   task_id uuid references tasks(id) on delete cascade not null,
-  unique(user_id, task_id)
+  completed_on date default (timezone('utc', now())::date),
+  unique(user_id, task_id, completed_on)
 );
+
+alter table task_completions add column if not exists completed_on date default (timezone('utc', now())::date);
+alter table task_completions drop constraint if exists task_completions_user_id_task_id_key;
+create unique index if not exists task_completions_daily_unique on task_completions (user_id, task_id, completed_on);
 
 -- Enable Row Level Security (RLS)
 alter table projects enable row level security;
