@@ -75,8 +75,8 @@ const getFaviconUrl = (link: string) => {
     const parts = hostname.split('.');
     if (parts.length < 2 || parts[parts.length - 1].length < 2) return '';
     
-    // Use Google's newer favicon API which provides higher resolution
-    return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${hostname}&size=128`;
+    // Use Google's s2 API which returns a default icon instead of 404 when not found
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`;
   } catch {
     return '';
   }
@@ -253,12 +253,12 @@ const BrowseCard: React.FC<{
         <div 
           className="absolute -bottom-6 left-6 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-xl z-20 border-4 border-slate-900 transition-transform group-hover:scale-110 duration-300 overflow-hidden"
           style={{ 
-            backgroundColor: getFaviconUrl(project.domain) ? 'transparent' : project.accent_color 
+            backgroundColor: (project.logo_url || getFaviconUrl(project.domain)) ? 'transparent' : project.accent_color 
           }}
         >
-          {getFaviconUrl(project.domain) ? (
+          {(project.logo_url || getFaviconUrl(project.domain)) ? (
             <img 
-              src={getFaviconUrl(project.domain)}
+              src={project.logo_url || getFaviconUrl(project.domain)}
               alt={project.name}
               className="w-full h-full object-cover"
               onLoad={(e) => {
@@ -282,7 +282,7 @@ const BrowseCard: React.FC<{
             />
           ) : null}
           <div 
-            style={{ display: getFaviconUrl(project.domain) ? 'none' : 'flex' }}
+            style={{ display: (project.logo_url || getFaviconUrl(project.domain)) ? 'none' : 'flex' }}
             className="items-center justify-center w-full h-full"
           >
             <Zap size={24} fill="currentColor" />
