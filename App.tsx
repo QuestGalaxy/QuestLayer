@@ -65,6 +65,11 @@ const App: React.FC = () => {
     const params = new URLSearchParams(search);
     return params.get('projectId');
   };
+  const getLeaderboardIdFromQuery = (search: string) => {
+    if (!search) return null;
+    const params = new URLSearchParams(search);
+    return params.get('leaderboardId');
+  };
 
   const openSubmitModal = () => {
     submitModalReturnPathRef.current = window.location.pathname + window.location.search;
@@ -78,6 +83,13 @@ const App: React.FC = () => {
       setSelectedProjectId(projectIdFromQuery);
       setCurrentPage('projectdetail');
       window.history.replaceState(null, '', `/store/${projectIdFromQuery}`);
+      return;
+    }
+    const leaderboardIdFromQuery = getLeaderboardIdFromQuery(window.location.search);
+    if (leaderboardIdFromQuery) {
+      setLeaderboardProjectId(leaderboardIdFromQuery);
+      setCurrentPage('leaderboard');
+      window.history.replaceState(null, '', `/leaderboard/${leaderboardIdFromQuery}`);
       return;
     }
 
@@ -250,19 +262,55 @@ const App: React.FC = () => {
     } else if (currentPage === 'leaderboard') {
       const lbPath = leaderboardProjectId ? `/leaderboard/${leaderboardProjectId}` : '/leaderboard';
       window.history.pushState(null, '', lbPath);
-      applySeo({
-        title: 'QuestLayer Leaderboard - Compete & Win Daily Rewards',
-        description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
-        path: lbPath,
-        image: '/leaderboard.jpeg'
-      });
-      applyJsonLd({
-        '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        name: 'QuestLayer Leaderboard',
-        description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
-        url: `https://questlayer.app${lbPath}`
-      });
+
+      if (leaderboardProjectId) {
+        // Fetch project name for better SEO title
+        fetchProjectDetails(leaderboardProjectId).then(({ project }) => {
+          if (project) {
+            const title = `${project.name} Leaderboard | QuestLayer`;
+            const description = project.description
+              ? `Check out the top performers in ${project.name} on QuestLayer. Join the competition and earn rewards!`
+              : `Join the competition on the ${project.name} Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards.`;
+            const image = project.banner_url || project.logo_url || '/leaderboard.jpeg';
+
+            applySeo({
+              title,
+              description,
+              path: lbPath,
+              image
+            });
+            applyJsonLd({
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: title,
+              description,
+              url: `https://questlayer.app${lbPath}`
+            });
+          }
+        }).catch(() => {
+          // Fallback if fetch fails
+          applySeo({
+            title: 'QuestLayer Leaderboard - Compete & Win Daily Rewards',
+            description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
+            path: lbPath,
+            image: '/leaderboard.jpeg'
+          });
+        });
+      } else {
+        applySeo({
+          title: 'QuestLayer Leaderboard - Compete & Win Daily Rewards',
+          description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
+          path: lbPath,
+          image: '/leaderboard.jpeg'
+        });
+        applyJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: 'QuestLayer Leaderboard',
+          description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
+          url: `https://questlayer.app${lbPath}`
+        });
+      }
     } else if (currentPage === 'submit') {
       const submitPath = window.location.pathname === '/store/submit' ? '/store/submit' : '/submit';
       window.history.pushState(null, '', submitPath);

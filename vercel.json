@@ -66,6 +66,8 @@
     { "source": "/store/submit/", "destination": "/submit.html" },
     { "source": "/store/:id", "destination": "/api/store?id=:id" },
     { "source": "/store/:id/", "destination": "/api/store?id=:id" },
+    { "source": "/leaderboard/:id", "destination": "/api/leaderboard?id=:id" },
+    { "source": "/leaderboard/:id/", "destination": "/api/leaderboard?id=:id" },
     { "source": "/leaderboard", "destination": "/leaderboard.html" },
     { "source": "/leaderboard/", "destination": "/leaderboard.html" },
     { "source": "/builder", "destination": "/builder.html" },
