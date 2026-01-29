@@ -1,0 +1,32 @@
+[
+  {
+    "site": "uniswap.com",
+    "questions": [
+      {
+        "q": "Uniswap is best known as what?",
+        "options": ["Decentralized exchange", "Search engine", "Email provider"],
+        "answer": "Decentralized exchange"
+      },
+      {
+        "q": "What is the main action users perform on Uniswap?",
+        "options": ["Swapping tokens", "Booking flights", "Posting photos"],
+        "answer": "Swapping tokens"
+      },
+      {
+        "q": "What can users provide to earn fees?",
+        "options": ["Liquidity", "Customer support", "Legal advice"],
+        "answer": "Liquidity"
+      },
+      {
+        "q": "Does Uniswap require a traditional bank account?",
+        "options": ["No", "Yes", "Only for VIPs"],
+        "answer": "No"
+      },
+      {
+        "q": "Uniswap primarily operates on which technology?",
+        "options": ["Blockchain", "Cloud SQL", "Mainframe"],
+        "answer": "Blockchain"
+      }
+    ]
+  }
+]

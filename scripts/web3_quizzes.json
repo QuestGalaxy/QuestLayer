@@ -1,0 +1,702 @@
+[
+  {
+    "site": "aave.com",
+    "questions": [
+      { "q": "What is the primary function of Aave?", "options": ["Crypto lending/borrowing", "Video streaming", "Social networking"], "answer": "Crypto lending/borrowing" },
+      { "q": "Users primarily use Aave to earn what?", "options": ["Interest", "Airline miles", "Loyalty points"], "answer": "Interest" },
+      { "q": "Aave is a protocol in which sector?", "options": ["DeFi", "Healthcare", "E-sports"], "answer": "DeFi" },
+      { "q": "What type of asset is GHO on Aave?", "options": ["Stablecoin", "NFT", "Stock"], "answer": "Stablecoin" },
+      { "q": "Who governs the Aave protocol?", "options": ["Token holders", "A central bank", "The UN"], "answer": "Token holders" }
+    ]
+  },
+  {
+    "site": "api3.org",
+    "questions": [
+      { "q": "What does API3 primarily provide?", "options": ["Decentralized APIs", "Web hosting", "Email services"], "answer": "Decentralized APIs" },
+      { "q": "What is the main problem API3 solves?", "options": ["Connecting smart contracts to real-world data", "Speeding up internet connection", "Storing photos"], "answer": "Connecting smart contracts to real-world data" },
+      { "q": "What are API3's data feeds called?", "options": ["dAPIs", "Webhooks", "Torrents"], "answer": "dAPIs" },
+      { "q": "API3 operates in which ecosystem?", "options": ["Web3", "E-commerce", "Travel"], "answer": "Web3" },
+      { "q": "What can providers earn with API3?", "options": ["OEV rewards", "Frequent flyer miles", "Gift cards"], "answer": "OEV rewards" }
+    ]
+  },
+  {
+    "site": "coincollect.org",
+    "questions": [
+      { "q": "What is CoinCollect's main focus?", "options": ["NFT DeFi", "Ride sharing", "Food delivery"], "answer": "NFT DeFi" },
+      { "q": "What can users do with NFTs on CoinCollect?", "options": ["Stake them", "Print them", "Rent them"], "answer": "Stake them" },
+      { "q": "What is the native token of CoinCollect?", "options": ["$COLLECT", "$BITCOIN", "$DOLLAR"], "answer": "$COLLECT" },
+      { "q": "CoinCollect includes a launchpad for what?", "options": ["IDOs", "Rockets", "Books"], "answer": "IDOs" },
+      { "q": "Which technology does CoinCollect use?", "options": ["Blockchain", "AI only", "Cloud only"], "answer": "Blockchain" }
+    ]
+  },
+  {
+    "site": "audius.co",
+    "questions": [
+      { "q": "What is Audius?", "options": ["Music streaming platform", "Video editor", "Photo gallery"], "answer": "Music streaming platform" },
+      { "q": "Audius aims to empower who?", "options": ["Musicians/Creators", "Doctors", "Lawyers"], "answer": "Musicians/Creators" },
+      { "q": "Is Audius centralized or decentralized?", "options": ["Decentralized", "Centralized", "Neither"], "answer": "Decentralized" },
+      { "q": "What can you mainly listen to on Audius?", "options": ["Music", "Podcasts only", "Audiobooks only"], "answer": "Music" },
+      { "q": "Audius uses which technology?", "options": ["Blockchain", "Satellite", "Radio"], "answer": "Blockchain" }
+    ]
+  },
+  {
+    "site": "avatarsai.net",
+    "questions": [
+      { "q": "What is the main product of AvatarsAI?", "options": ["NFT Avatars", "AI Chatbots", "Virtual Assistants"], "answer": "NFT Avatars" },
+      { "q": "What can users do with their Avatars?", "options": ["Battle and Stake", "Cook", "Drive"], "answer": "Battle and Stake" },
+      { "q": "AvatarsAI is set in what kind of world?", "options": ["Metaverse", "Ancient Rome", "Modern City"], "answer": "Metaverse" },
+      { "q": "The Avatars are minted as what?", "options": ["NFTs", "JPEGs only", "Physical cards"], "answer": "NFTs" },
+      { "q": "What token is associated with the platform?", "options": ["AVATAR", "GOLD", "CREDIT"], "answer": "AVATAR" }
+    ]
+  },
+  {
+    "site": "balancer.fi",
+    "questions": [
+      { "q": "Balancer is primarily a?", "options": ["Automated Market Maker", "Social Network", "News Site"], "answer": "Automated Market Maker" },
+      { "q": "What can users create on Balancer?", "options": ["Liquidity Pools", "Blog posts", "Videos"], "answer": "Liquidity Pools" },
+      { "q": "Balancer operates in which sector?", "options": ["DeFi", "Gaming", "Education"], "answer": "DeFi" },
+      { "q": "What is a key feature of Balancer pools?", "options": ["Customizability", "Fixed fees only", "Single asset only"], "answer": "Customizability" },
+      { "q": "Balancer is built on?", "options": ["Blockchain", "Mainframe", "Android"], "answer": "Blockchain" }
+    ]
+  },
+  {
+    "site": "bitquery.io",
+    "questions": [
+      { "q": "What does Bitquery provide?", "options": ["Blockchain data", "Cryptocurrency mining", "Wallet services"], "answer": "Blockchain data" },
+      { "q": "Who is the target audience for Bitquery?", "options": ["Developers/Enterprises", "Gamers", "Shoppers"], "answer": "Developers/Enterprises" },
+      { "q": "What kind of APIs does Bitquery offer?", "options": ["GraphQL", "Soap", "XML only"], "answer": "GraphQL" },
+      { "q": "Bitquery allows users to query data from?", "options": ["Multiple blockchains", "Only Bitcoin", "Only Ethereum"], "answer": "Multiple blockchains" },
+      { "q": "What is 'MoneyFlow' used for?", "options": ["Tracing funds", "Sending money", "Printing cash"], "answer": "Tracing funds" }
+    ]
+  },
+  {
+    "site": "blitzbrawler.com",
+    "questions": [
+      { "q": "What is Blitz Brawler?", "options": ["NFT Soccer Game", "Cooking App", "Weather Station"], "answer": "NFT Soccer Game" },
+      { "q": "What are the characters called?", "options": ["Brawlers", "Minions", "Champions"], "answer": "Brawlers" },
+      { "q": "What is the native token?", "options": ["$BLITZ", "$KICK", "$GOAL"], "answer": "$BLITZ" },
+      { "q": "What can players do with Brawlers?", "options": ["Battle/Compete", "Eat", "Sleep"], "answer": "Battle/Compete" },
+      { "q": "Blitz Brawler combines gaming with?", "options": ["Cryptocurrency", "Virtual Reality only", "Board games"], "answer": "Cryptocurrency" }
+    ]
+  },
+  {
+    "site": "compound.finance",
+    "questions": [
+      { "q": "What is Compound used for?", "options": ["Lending and Borrowing", "Chatting", "Dating"], "answer": "Lending and Borrowing" },
+      { "q": "Compound is a protocol in?", "options": ["DeFi", "TradFi", "CeFi"], "answer": "DeFi" },
+      { "q": "Users supply assets to earn?", "options": ["Interest", "Coupons", "Stickers"], "answer": "Interest" },
+      { "q": "To borrow assets, users must provide?", "options": ["Collateral", "ID", "Signature"], "answer": "Collateral" },
+      { "q": "Compound runs on?", "options": ["Blockchain", "Visa Network", "PayPal"], "answer": "Blockchain" }
+    ]
+  },
+  {
+    "site": "cryptoads.xyz",
+    "questions": [
+      { "q": "What is CryptoAds?", "options": ["Advertising Network", "Social Media", "Video Game"], "answer": "Advertising Network" },
+      { "q": "What industry does it target?", "options": ["Crypto/Web3", "Fashion", "Automotive"], "answer": "Crypto/Web3" },
+      { "q": "What is the native token mentioned?", "options": ["CRAD", "ADZ", "COIN"], "answer": "CRAD" },
+      { "q": "Why use CryptoAds over Google Ads?", "options": ["Crypto-friendly targeting", "Cheaper only", "Better colors"], "answer": "Crypto-friendly targeting" },
+      { "q": "It connects advertisers with?", "options": ["Publishers", "Bankers", "Farmers"], "answer": "Publishers" }
+    ]
+  },
+  {
+    "site": "curve.fi",
+    "questions": [
+      { "q": "What is Curve Finance?", "options": ["DEX for stablecoins", "Stock market", "Bank"], "answer": "DEX for stablecoins" },
+      { "q": "Curve is known for?", "options": ["Low slippage", "High fees", "Slow transactions"], "answer": "Low slippage" },
+      { "q": "What assets are primarily traded on Curve?", "options": ["Stablecoins", "NFTs", "Real estate"], "answer": "Stablecoins" },
+      { "q": "Liquidity providers on Curve earn?", "options": ["Fees", "Salaries", "Debts"], "answer": "Fees" },
+      { "q": "Curve is a major player in?", "options": ["DeFi", "Logistics", "Manufacturing"], "answer": "DeFi" }
+    ]
+  },
+  {
+    "site": "daylight.xyz",
+    "questions": [
+      { "q": "What does Daylight help users find?", "options": ["Onchain abilities/Airdrops", "Restaurants", "Hotels"], "answer": "Onchain abilities/Airdrops" },
+      { "q": "Daylight is a tool for?", "options": ["Discovery", "Trading", "Mining"], "answer": "Discovery" },
+      { "q": "What kind of items does it track?", "options": ["Mints and Claims", "Stocks", "Groceries"], "answer": "Mints and Claims" },
+      { "q": "Daylight personalizes content based on?", "options": ["Wallet history", "Browser history", "Location"], "answer": "Wallet history" },
+      { "q": "Is Daylight a wallet itself?", "options": ["No", "Yes", "Maybe"], "answer": "No" }
+    ]
+  },
+  {
+    "site": "defillama.com",
+    "questions": [
+      { "q": "What is DefiLlama?", "options": ["Data aggregator", "Llama farm", "Exchange"], "answer": "Data aggregator" },
+      { "q": "What key metric does DefiLlama track?", "options": ["Total Value Locked (TVL)", "User height", "Weather"], "answer": "Total Value Locked (TVL)" },
+      { "q": "DefiLlama covers which sector?", "options": ["DeFi", "Sports", "Politics"], "answer": "DeFi" },
+      { "q": "Can you check yields on DefiLlama?", "options": ["Yes", "No", "Only for Bitcoin"], "answer": "Yes" },
+      { "q": "Is DefiLlama a centralized exchange?", "options": ["No", "Yes", "Partially"], "answer": "No" }
+    ]
+  },
+  {
+    "site": "ens.domains",
+    "questions": [
+      { "q": "What does ENS stand for?", "options": ["Ethereum Name Service", "English Name System", "Easy Name Server"], "answer": "Ethereum Name Service" },
+      { "q": "What does ENS do?", "options": ["Turns addresses into names", "Mines crypto", "Stores files"], "answer": "Turns addresses into names" },
+      { "q": "An ENS name typically ends in?", "options": [".eth", ".com", ".net"], "answer": ".eth" },
+      { "q": "ENS names are actually?", "options": ["NFTs", "Emails", "Usernames"], "answer": "NFTs" },
+      { "q": "What can you link to an ENS name?", "options": ["Crypto addresses", "Physical house keys", "Car keys"], "answer": "Crypto addresses" }
+    ]
+  },
+  {
+    "site": "fantom.foundation",
+    "questions": [
+      { "q": "What is Fantom?", "options": ["Layer 1 Blockchain", "Video Game", "Wallet App"], "answer": "Layer 1 Blockchain" },
+      { "q": "Fantom is known for being?", "options": ["Fast and scalable", "Slow and expensive", "Offline"], "answer": "Fast and scalable" },
+      { "q": "What is the native token of Fantom?", "options": ["FTM", "ETH", "BTC"], "answer": "FTM" },
+      { "q": "Fantom supports?", "options": ["Smart Contracts", "Only Bitcoin", "No code"], "answer": "Smart Contracts" },
+      { "q": "What mechanism does Fantom use?", "options": ["Lachesis Consensus", "Proof of Work", "Proof of Burn"], "answer": "Lachesis Consensus" }
+    ]
+  },
+  {
+    "site": "faros.com.tr",
+    "questions": [
+      { "q": "What industry is Faros in?", "options": ["Hospitality/Hotels", "Crypto Mining", "Car Manufacturing"], "answer": "Hospitality/Hotels" },
+      { "q": "Is Faros a blockchain project?", "options": ["No", "Yes", "Maybe"], "answer": "No" },
+      { "q": "What does Faros operate?", "options": ["Hotels and Restaurants", "Crypto Exchanges", "Space Rockets"], "answer": "Hotels and Restaurants" },
+      { "q": "Where is Faros likely based?", "options": ["Turkey", "Mars", "Antarctica"], "answer": "Turkey" },
+      { "q": "Does Faros sell NFTs on its homepage?", "options": ["No", "Yes", "Exclusively"], "answer": "No" }
+    ]
+  },
+  {
+    "site": "galxe.com",
+    "questions": [
+      { "q": "What is Galxe?", "options": ["Web3 credential data network", "Galaxy telescope", "Shoe brand"], "answer": "Web3 credential data network" },
+      { "q": "What do users complete on Galxe?", "options": ["Quests/Campaigns", "Homework", "Surveys for cash"], "answer": "Quests/Campaigns" },
+      { "q": "What do users usually earn on Galxe?", "options": ["OATs/NFTs/Points", "Physical coins", "Diplomas"], "answer": "OATs/NFTs/Points" },
+      { "q": "Galxe helps projects build?", "options": ["Community", "Buildings", "Roads"], "answer": "Community" },
+      { "q": "Galxe ID is related to?", "options": ["Web3 Identity", "Passport", "Driver's License"], "answer": "Web3 Identity" }
+    ]
+  },
+  {
+    "site": "hedera.com",
+    "questions": [
+      { "q": "What technology does Hedera use?", "options": ["Hashgraph", "Blockchain", "Tangle"], "answer": "Hashgraph" },
+      { "q": "Hedera targets which sector?", "options": ["Enterprise/Institutional", "Personal Blogs", "Kids Games"], "answer": "Enterprise/Institutional" },
+      { "q": "What is the native currency of Hedera?", "options": ["HBAR", "HED", "ERA"], "answer": "HBAR" },
+      { "q": "Who governs Hedera?", "options": ["Governing Council", "One CEO", "Anonymous group"], "answer": "Governing Council" },
+      { "q": "Hedera claims to be?", "options": ["Carbon negative/Green", "Energy intensive", "Slow"], "answer": "Carbon negative/Green" }
+    ]
+  },
+  {
+    "site": "lotshare.app",
+    "questions": [
+      { "q": "What is Lotshare's main proposition?", "options": ["Land Tokenization", "Car Sharing", "File Sharing"], "answer": "Land Tokenization" },
+      { "q": "Lotshare uses what technology?", "options": ["Blockchain/NFTs", "Cloud Storage", "Bluetooth"], "answer": "Blockchain/NFTs" },
+      { "q": "Users can invest in?", "options": ["Real Estate/Land", "Stocks", "Gold"], "answer": "Real Estate/Land" },
+      { "q": "Lotshare aims to make land investment?", "options": ["Accessible/Fractional", "Expensive", "Impossible"], "answer": "Accessible/Fractional" },
+      { "q": "What do investors receive?", "options": ["Digital Tokens", "Paper Deeds", "Keys"], "answer": "Digital Tokens" }
+    ]
+  },
+  {
+    "site": "beasthunter.app",
+    "questions": [
+      { "q": "What is Beast Hunter?", "options": ["Blockchain Game", "Hunting Gear Shop", "Zoo Guide"], "answer": "Blockchain Game" },
+      { "q": "What do players do in the game?", "options": ["Catch beasts", "Plant flowers", "Race cars"], "answer": "Catch beasts" },
+      { "q": "What token is associated with it?", "options": ["$HUNT", "$BEAST", "$ZOO"], "answer": "$HUNT" },
+      { "q": "Beast Hunter uses which tech?", "options": ["Web3/NFTs", "VR only", "Console only"], "answer": "Web3/NFTs" },
+      { "q": "Can players earn rewards?", "options": ["Yes", "No", "Only on Sundays"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "cyberpunk3.com",
+    "questions": [
+      { "q": "What is CyberPunk Space?", "options": ["Web3 Digital Nation", "Movie streaming", "Comic book store"], "answer": "Web3 Digital Nation" },
+      { "q": "What NFT is key to the platform?", "options": ["Passport/Citizen NFT", "Sword NFT", "Car NFT"], "answer": "Passport/Citizen NFT" },
+      { "q": "What is the token symbol?", "options": ["$ACE", "$CYBER", "$PUNK"], "answer": "$ACE" },
+      { "q": "What is the goal of the project?", "options": ["Democratic Governance", "Selling t-shirts", "Making movies"], "answer": "Democratic Governance" },
+      { "q": "It is built for which era?", "options": ["Web3", "Web2", "Web1"], "answer": "Web3" }
+    ]
+  },
+  {
+    "site": "decentraland.org",
+    "questions": [
+      { "q": "What is Decentraland?", "options": ["Virtual World/Metaverse", "Social Media", "Crypto Wallet"], "answer": "Virtual World/Metaverse" },
+      { "q": "Who owns Decentraland?", "options": ["The Community (DAO)", "Facebook", "Google"], "answer": "The Community (DAO)" },
+      { "q": "What is the currency of Decentraland?", "options": ["MANA", "SAND", "COIN"], "answer": "MANA" },
+      { "q": "What can you buy in Decentraland?", "options": ["LAND/Wearables", "Real food", "Plane tickets"], "answer": "LAND/Wearables" },
+      { "q": "Decentraland runs on which chain?", "options": ["Ethereum", "Bitcoin", "Solana"], "answer": "Ethereum" }
+    ]
+  },
+  {
+    "site": "felixsmile.com",
+    "questions": [
+      { "q": "What is FELIX?", "options": ["Hospitality/Restaurant Brand", "Crypto Token", "Tech Startup"], "answer": "Hospitality/Restaurant Brand" },
+      { "q": "What does FELIX offer?", "options": ["Food, Music, Atmosphere", "Cloud Computing", "Banking"], "answer": "Food, Music, Atmosphere" },
+      { "q": "Is FELIX a Web3 project?", "options": ["No", "Yes", "Exclusively"], "answer": "No" },
+      { "q": "What kind of events does FELIX host?", "options": ["Live Music", "Hackathons", "Crypto Trading"], "answer": "Live Music" },
+      { "q": "FELIX is a?", "options": ["Physical Business", "Virtual World", "Mobile App"], "answer": "Physical Business" }
+    ]
+  },
+  {
+    "site": "gnosis.io",
+    "questions": [
+      { "q": "What is Gnosis best known for?", "options": ["Gnosis Chain/Safe", "Search Engine", "Video Hosting"], "answer": "Gnosis Chain/Safe" },
+      { "q": "Gnosis offers a card named?", "options": ["Gnosis Card", "Green Card", "Gold Card"], "answer": "Gnosis Card" },
+      { "q": "Gnosis Chain is compatible with?", "options": ["EVM (Ethereum)", "Bitcoin only", "None"], "answer": "EVM (Ethereum)" },
+      { "q": "What is Gnosis Safe?", "options": ["Multisig Wallet", "Antivirus", "Password Manager"], "answer": "Multisig Wallet" },
+      { "q": "Gnosis focuses on?", "options": ["Decentralized Infrastructure", "Social Gaming", "E-books"], "answer": "Decentralized Infrastructure" }
+    ]
+  },
+  {
+    "site": "key2web3.com",
+    "questions": [
+      { "q": "What is Key 2 Web3?", "options": ["Gateway to Metaverse", "Key Manufacturer", "Locksmith"], "answer": "Gateway to Metaverse" },
+      { "q": "What is the core product?", "options": ["KEY NFT", "Physical Key", "Password Generator"], "answer": "KEY NFT" },
+      { "q": "Holders of the NFT can?", "options": ["Stake and Earn", "Open doors", "Start cars"], "answer": "Stake and Earn" },
+      { "q": "It integrates with which game?", "options": ["QuestGalaxy", "Fortnite", "Minecraft"], "answer": "QuestGalaxy" },
+      { "q": "The goal is to democratize?", "options": ["Web3 Access", "Water Access", "Internet Speed"], "answer": "Web3 Access" }
+    ]
+  },
+  {
+    "site": "legends.pokemon.com",
+    "questions": [
+      { "q": "What is this website for?", "options": ["Pokémon Legends: Z-A Game", "Crypto Trading", "NFT Collection"], "answer": "Pokémon Legends: Z-A Game" },
+      { "q": "Is this a blockchain game?", "options": ["No", "Yes", "Maybe"], "answer": "No" },
+      { "q": "Who publishes this game?", "options": ["Nintendo/Pokémon Company", "Sony", "Microsoft"], "answer": "Nintendo/Pokémon Company" },
+      { "q": "The game is for which console?", "options": ["Nintendo Switch", "PlayStation 5", "Xbox"], "answer": "Nintendo Switch" },
+      { "q": "What is the setting?", "options": ["Lumiose City", "New York", "London"], "answer": "Lumiose City" }
+    ]
+  },
+  {
+    "site": "opensea.io",
+    "questions": [
+      { "q": "What is OpenSea?", "options": ["NFT Marketplace", "Sea Map", "Boat Rental"], "answer": "NFT Marketplace" },
+      { "q": "What can you buy on OpenSea?", "options": ["Digital Collectibles", "Real ships", "Fish"], "answer": "Digital Collectibles" },
+      { "q": "OpenSea supports?", "options": ["Multiple Chains", "Only Bitcoin", "No Crypto"], "answer": "Multiple Chains" },
+      { "q": "What do you need to use OpenSea?", "options": ["Crypto Wallet", "Credit Card only", "Passport"], "answer": "Crypto Wallet" },
+      { "q": "Creators can earn what on OpenSea?", "options": ["Royalties", "Salary", "Tips only"], "answer": "Royalties" }
+    ]
+  },
+  {
+    "site": "paragraph.com",
+    "questions": [
+      { "q": "What is Paragraph?", "options": ["Web3 Publishing Platform", "Text Editor", "Dictionary"], "answer": "Web3 Publishing Platform" },
+      { "q": "Paragraph allows writers to?", "options": ["Monetize/Grow Audience", "Fix grammar", "Print books"], "answer": "Monetize/Grow Audience" },
+      { "q": "How can readers subscribe?", "options": ["Wallet or Email", "Phone only", "Fax"], "answer": "Wallet or Email" },
+      { "q": "Content on Paragraph can be?", "options": ["Token-gated/NFTs", "Deleted by anyone", "Paper only"], "answer": "Token-gated/NFTs" },
+      { "q": "It focuses on?", "options": ["Ownership", "Centralization", "Ads"], "answer": "Ownership" }
+    ]
+  },
+  {
+    "site": "placedj.com",
+    "questions": [
+      { "q": "What is PlaceDJ?", "options": ["AI Music for Venues", "DJ Booking Agency", "Speaker Shop"], "answer": "AI Music for Venues" },
+      { "q": "PlaceDJ uses what technology?", "options": ["AI and Blockchain", "CDs", "Vinyl"], "answer": "AI and Blockchain" },
+      { "q": "What token does it use?", "options": ["$DJ", "$MUSIC", "$SONG"], "answer": "$DJ" },
+      { "q": "It aims to solve?", "options": ["Music Licensing/Curation", "Venue Lighting", "Ticket Sales"], "answer": "Music Licensing/Curation" },
+      { "q": "Who is it for?", "options": ["Venues/Restaurants", "Schools", "Hospitals"], "answer": "Venues/Restaurants" }
+    ]
+  },
+  {
+    "site": "pump.fun",
+    "questions": [
+      { "q": "What is Pump.fun?", "options": ["Meme Coin Launchpad", "Fitness App", "Gas Station"], "answer": "Meme Coin Launchpad" },
+      { "q": "What is the main feature?", "options": ["Fair Launch Trading", "Pumping iron", "Buying gas"], "answer": "Fair Launch Trading" },
+      { "q": "It is popular for?", "options": ["Meme Coins", "Blue Chip Stocks", "Bonds"], "answer": "Meme Coins" },
+      { "q": "Pump.fun is on which chain usually?", "options": ["Solana", "Bitcoin", "Ripple"], "answer": "Solana" },
+      { "q": "What happens to the coins?", "options": ["Traded on bonding curve", "Burnt immediately", "Saved in bank"], "answer": "Traded on bonding curve" }
+    ]
+  },
+  {
+    "site": "questgalaxy.com",
+    "questions": [
+      { "q": "What is QuestGalaxy?", "options": ["Web3 Game Studio", "Space Agency", "Travel Blog"], "answer": "Web3 Game Studio" },
+      { "q": "What is a game mentioned?", "options": ["GhostAlien", "Mario", "Zelda"], "answer": "GhostAlien" },
+      { "q": "QuestGalaxy uses?", "options": ["NFTs", "Floppy disks", "Cartridges"], "answer": "NFTs" },
+      { "q": "It aims to bridge?", "options": ["Gaming and Blockchain", "Earth and Mars", "Cats and Dogs"], "answer": "Gaming and Blockchain" },
+      { "q": "Do players own assets?", "options": ["Yes", "No", "Maybe"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "rarible.com",
+    "questions": [
+      { "q": "What is Rarible?", "options": ["Multichain NFT Marketplace", "Car Dealership", "Candy Shop"], "answer": "Multichain NFT Marketplace" },
+      { "q": "Rarible supports?", "options": ["Multiple Blockchains", "Only Ethereum", "No Crypto"], "answer": "Multiple Blockchains" },
+      { "q": "What is the native token?", "options": ["RARI", "RARE", "RIB"], "answer": "RARI" },
+      { "q": "Users can earn what?", "options": ["Rewards", "Sandwiches", "Stickers"], "answer": "Rewards" },
+      { "q": "Rarible allows users to?", "options": ["Create/Sell NFTs", "Rent houses", "Buy food"], "answer": "Create/Sell NFTs" }
+    ]
+  },
+  {
+    "site": "superwalk.io",
+    "questions": [
+      { "q": "What is SuperWalk?", "options": ["Move-to-Earn Service", "Shoe Store", "Map App"], "answer": "Move-to-Earn Service" },
+      { "q": "How do users earn?", "options": ["Walking/Running", "Sleeping", "Eating"], "answer": "Walking/Running" },
+      { "q": "What NFT is required for Pro mode?", "options": ["Shoes", "Hats", "Gloves"], "answer": "Shoes" },
+      { "q": "SuperWalk combines fitness with?", "options": ["Blockchain", "VR", "Cooking"], "answer": "Blockchain" },
+      { "q": "Is there a free mode?", "options": ["Yes", "No", "Only on weekends"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "thegraph.com",
+    "questions": [
+      { "q": "What is The Graph?", "options": ["Indexing Protocol", "Drawing Tool", "Calculator"], "answer": "Indexing Protocol" },
+      { "q": "It organizes data for?", "options": ["Blockchains", "Libraries", "Supermarkets"], "answer": "Blockchains" },
+      { "q": "What are the APIs called?", "options": ["Subgraphs", "Subways", "Submarines"], "answer": "Subgraphs" },
+      { "q": "The Graph is often called the?", "options": ["Google of Web3", "Facebook of Web3", "Amazon of Web3"], "answer": "Google of Web3" },
+      { "q": "What is the token symbol?", "options": ["GRT", "GRP", "GRA"], "answer": "GRT" }
+    ]
+  },
+  {
+    "site": "tokenpocket.pro",
+    "questions": [
+      { "q": "What is TokenPocket?", "options": ["Crypto Wallet", "Jeans Pocket", "Coin Purse"], "answer": "Crypto Wallet" },
+      { "q": "Is it custodial or non-custodial?", "options": ["Non-custodial", "Custodial", "Neither"], "answer": "Non-custodial" },
+      { "q": "TokenPocket supports?", "options": ["Multi-chain", "Single-chain", "No-chain"], "answer": "Multi-chain" },
+      { "q": "Does it have a mobile app?", "options": ["Yes", "No", "Only desktop"], "answer": "Yes" },
+      { "q": "It allows access to?", "options": ["DApps", "ATMs", "Gyms"], "answer": "DApps" }
+    ]
+  },
+  {
+    "site": "juice.finance",
+    "questions": [
+      { "q": "What is Juice Finance?", "options": ["Cross-Margin DeFi", "Juice Bar", "Fruit Shop"], "answer": "Cross-Margin DeFi" },
+      { "q": "It operates in which ecosystem?", "options": ["Blast", "Solana", "Bitcoin"], "answer": "Blast" },
+      { "q": "Juice allows users to use?", "options": ["Leverage", "Coupons", "Cash only"], "answer": "Leverage" },
+      { "q": "It focuses on maximizing?", "options": ["Points/Yield", "Sugar intake", "Vitamin C"], "answer": "Points/Yield" },
+      { "q": "Users can borrow?", "options": ["USDB", "USD", "EUR"], "answer": "USDB" }
+    ]
+  },
+  {
+    "site": "immutable.com",
+    "questions": [
+      { "q": "Immutable is a platform for?", "options": ["Web3 Gaming", "Music", "Movies"], "answer": "Web3 Gaming" },
+      { "q": "It uses what technology?", "options": ["Layer 2 Scaling", "Layer 1", "Database"], "answer": "Layer 2 Scaling" },
+      { "q": "Immutable Passport is a?", "options": ["Gaming Wallet/ID", "Travel Document", "Book"], "answer": "Gaming Wallet/ID" },
+      { "q": "What is the token?", "options": ["IMX", "MUT", "BLE"], "answer": "IMX" },
+      { "q": "It offers what for transactions?", "options": ["Gas-free minting", "High fees", "Slow speeds"], "answer": "Gas-free minting" }
+    ]
+  },
+  {
+    "site": "infura.io",
+    "questions": [
+      { "q": "What does Infura provide?", "options": ["Blockchain Nodes/APIs", "Web Design", "Marketing"], "answer": "Blockchain Nodes/APIs" },
+      { "q": "Infura is a tool for?", "options": ["Developers", "Gamers", "Artists"], "answer": "Developers" },
+      { "q": "It is owned by?", "options": ["Consensys", "Google", "Microsoft"], "answer": "Consensys" },
+      { "q": "Infura helps connect to?", "options": ["Ethereum/IPFS", "The Internet", "Bluetooth"], "answer": "Ethereum/IPFS" },
+      { "q": "What is DIN?", "options": ["Decentralized Infrastructure Network", "Dinner", "Noise"], "answer": "Decentralized Infrastructure Network" }
+    ]
+  },
+  {
+    "site": "instadapp.io",
+    "questions": [
+      { "q": "What is Instadapp?", "options": ["DeFi Management Protocol", "Photo App", "Social Network"], "answer": "DeFi Management Protocol" },
+      { "q": "What is Avocado?", "options": ["Smart Wallet", "Fruit", "Guacamole"], "answer": "Smart Wallet" },
+      { "q": "Instadapp helps users?", "options": ["Manage DeFi Positions", "Take photos", "Cook"], "answer": "Manage DeFi Positions" },
+      { "q": "It supports?", "options": ["Multiple Chains", "Only Bitcoin", "No Crypto"], "answer": "Multiple Chains" },
+      { "q": "Does it have a token?", "options": ["INST", "DAPP", "AVO"], "answer": "INST" }
+    ]
+  },
+  {
+    "site": "livepeer.org",
+    "questions": [
+      { "q": "What is Livepeer?", "options": ["Video Infrastructure Network", "Live TV", "Chat App"], "answer": "Video Infrastructure Network" },
+      { "q": "It is decentralized?", "options": ["Yes", "No", "Maybe"], "answer": "Yes" },
+      { "q": "What does it do for video?", "options": ["Transcoding/Streaming", "Recording only", "Watching only"], "answer": "Transcoding/Streaming" },
+      { "q": "What is the token?", "options": ["LPT", "VID", "LIVE"], "answer": "LPT" },
+      { "q": "Livepeer recently added features for?", "options": ["AI Video", "Cooking", "Driving"], "answer": "AI Video" }
+    ]
+  },
+  {
+    "site": "magiceden.io",
+    "questions": [
+      { "q": "What is Magic Eden?", "options": ["NFT Marketplace", "Garden Shop", "Magic Trick Store"], "answer": "NFT Marketplace" },
+      { "q": "It started on which chain?", "options": ["Solana", "Ethereum", "Bitcoin"], "answer": "Solana" },
+      { "q": "Does it support Bitcoin Ordinals?", "options": ["Yes", "No", "Never"], "answer": "Yes" },
+      { "q": "What can you do on Magic Eden?", "options": ["Mint/Trade NFTs", "Plant flowers", "Cast spells"], "answer": "Mint/Trade NFTs" },
+      { "q": "Is it multi-chain?", "options": ["Yes", "No", "Solana Only"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "mail3.me",
+    "questions": [
+      { "q": "What is Mail3?", "options": ["Web3 Email Protocol", "Post Office", "Courier"], "answer": "Web3 Email Protocol" },
+      { "q": "Your email address is your?", "options": ["Wallet Address/ENS", "Phone Number", "Street Address"], "answer": "Wallet Address/ENS" },
+      { "q": "Users can earn what?", "options": ["Incentives/Tokens", "Stamps", "Paper"], "answer": "Incentives/Tokens" },
+      { "q": "It ensures?", "options": ["Privacy/Security", "Spam", "Delays"], "answer": "Privacy/Security" },
+      { "q": "Is it decentralized?", "options": ["Yes", "No", "Partially"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "mirror.xyz",
+    "questions": [
+      { "q": "What is Mirror?", "options": ["Decentralized Publishing", "Glass Factory", "Social Media"], "answer": "Decentralized Publishing" },
+      { "q": "Writers can turn posts into?", "options": ["NFTs", "Books", "Newspapers"], "answer": "NFTs" },
+      { "q": "Mirror is built on?", "options": ["Ethereum/Optimism", "Facebook", "WordPress"], "answer": "Ethereum/Optimism" },
+      { "q": "Can you subscribe with a wallet?", "options": ["Yes", "No", "Email only"], "answer": "Yes" },
+      { "q": "Who owns the content?", "options": ["The Creator", "Mirror", "Google"], "answer": "The Creator" }
+    ]
+  },
+  {
+    "site": "nitroclash.net",
+    "questions": [
+      { "q": "What is NitroClash?", "options": ["P2E Racing Game", "Car Wash", "Mechanic Shop"], "answer": "P2E Racing Game" },
+      { "q": "What do players drive?", "options": ["Combat Rigs", "Bicycles", "Scooters"], "answer": "Combat Rigs" },
+      { "q": "What is the token?", "options": ["$NITRO", "$GAS", "$SPEED"], "answer": "$NITRO" },
+      { "q": "It is set in a?", "options": ["Post-apocalyptic world", "Candy land", "Underwater"], "answer": "Post-apocalyptic world" },
+      { "q": "Can you stake NFTs?", "options": ["Yes", "No", "Maybe"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "nouns.wtf",
+    "questions": [
+      { "q": "What is Nouns?", "options": ["DAO/NFT Project", "Clothing Brand", "Dictionary"], "answer": "DAO/NFT Project" },
+      { "q": "How often is a Noun auctioned?", "options": ["Every day", "Every month", "Every year"], "answer": "Every day" },
+      { "q": "One Noun equals?", "options": ["One Vote", "Two Votes", "No Votes"], "answer": "One Vote" },
+      { "q": "Proceeds go to?", "options": ["DAO Treasury", "Founders", "Charity only"], "answer": "DAO Treasury" },
+      { "q": "The artwork is?", "options": ["Generative/On-chain", "Hand drawn", "Photos"], "answer": "Generative/On-chain" }
+    ]
+  },
+  {
+    "site": "oncyber.io",
+    "questions": [
+      { "q": "What is Oncyber?", "options": ["Metaverse Galleries", "Cyber Security", "Robot Shop"], "answer": "Metaverse Galleries" },
+      { "q": "What do users display?", "options": ["NFTs/Digital Art", "Physical Paintings", "Cars"], "answer": "NFTs/Digital Art" },
+      { "q": "Is it 3D?", "options": ["Yes", "No", "Text only"], "answer": "Yes" },
+      { "q": "Can you create your own space?", "options": ["Yes", "No", "Only developers"], "answer": "Yes" },
+      { "q": "It runs in the?", "options": ["Browser", "Console only", "TV"], "answer": "Browser" }
+    ]
+  },
+  {
+    "site": "optimism.io",
+    "questions": [
+      { "q": "What is Optimism?", "options": ["Ethereum Layer 2", "Bitcoin Fork", "New Internet"], "answer": "Ethereum Layer 2" },
+      { "q": "What technology does it use?", "options": ["Optimistic Rollups", "ZK Rollups", "Plasma"], "answer": "Optimistic Rollups" },
+      { "q": "What is the OP Stack?", "options": ["Modular Blockchain Framework", "Pancake Stack", "Book Stack"], "answer": "Modular Blockchain Framework" },
+      { "q": "What is the token?", "options": ["OP", "OPT", "MISM"], "answer": "OP" },
+      { "q": "It aims to scale?", "options": ["Ethereum", "Bitcoin", "Solana"], "answer": "Ethereum" }
+    ]
+  },
+  {
+    "site": "orbiter.finance",
+    "questions": [
+      { "q": "What is Orbiter Finance?", "options": ["Cross-Rollup Bridge", "Space Ship", "Bank"], "answer": "Cross-Rollup Bridge" },
+      { "q": "It moves assets between?", "options": ["Layer 2s", "Banks", "Countries"], "answer": "Layer 2s" },
+      { "q": "Orbiter is known for?", "options": ["Speed/Low Fees", "High Fees", "Slowness"], "answer": "Speed/Low Fees" },
+      { "q": "Does it support Ethereum?", "options": ["Yes", "No", "Only Bitcoin"], "answer": "Yes" },
+      { "q": "It focuses on?", "options": ["Interoperability", "Isolation", "Gaming"], "answer": "Interoperability" }
+    ]
+  },
+  {
+    "site": "pancakeswap.finance",
+    "questions": [
+      { "q": "What is PancakeSwap?", "options": ["DEX (Decentralized Exchange)", "Bakery", "Recipe Site"], "answer": "DEX (Decentralized Exchange)" },
+      { "q": "It is most popular on which chain?", "options": ["BNB Chain", "Ethereum", "Solana"], "answer": "BNB Chain" },
+      { "q": "What is the token?", "options": ["CAKE", "PAN", "SWAP"], "answer": "CAKE" },
+      { "q": "Users can earn by?", "options": ["Farming/Staking", "Baking", "Eating"], "answer": "Farming/Staking" },
+      { "q": "Does it have a lottery?", "options": ["Yes", "No", "Maybe"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "phantom.app",
+    "questions": [
+      { "q": "What is Phantom?", "options": ["Crypto Wallet", "Ghost Game", "Messaging App"], "answer": "Crypto Wallet" },
+      { "q": "It was originally built for?", "options": ["Solana", "Bitcoin", "Ethereum"], "answer": "Solana" },
+      { "q": "Does it support NFTs?", "options": ["Yes", "No", "Text only"], "answer": "Yes" },
+      { "q": "Is it self-custodial?", "options": ["Yes", "No", "Bank owned"], "answer": "Yes" },
+      { "q": "Can you swap tokens in-app?", "options": ["Yes", "No", "External only"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "pickle.finance",
+    "questions": [
+      { "q": "What is Pickle Finance?", "options": ["Yield Aggregator", "Food Blog", "Pickle Shop"], "answer": "Yield Aggregator" },
+      { "q": "What are the vaults called?", "options": ["Jars", "Cans", "Boxes"], "answer": "Jars" },
+      { "q": "What is the token?", "options": ["PICKLE", "CUCUMBER", "DILL"], "answer": "PICKLE" },
+      { "q": "It helps users?", "options": ["Auto-compound Yield", "Make pickles", "Lose money"], "answer": "Auto-compound Yield" },
+      { "q": "It operates on?", "options": ["DeFi", "TradFi", "FarmFi"], "answer": "DeFi" }
+    ]
+  },
+  {
+    "site": "playdapp.io",
+    "questions": [
+      { "q": "What is PlayDapp?", "options": ["Web3 Gaming Platform", "App Store", "Music Player"], "answer": "Web3 Gaming Platform" },
+      { "q": "It aims to connect?", "options": ["Web2 and Web3 Users", "Cars and Roads", "Cats and Dogs"], "answer": "Web2 and Web3 Users" },
+      { "q": "What is the marketplace for?", "options": ["Game Items/NFTs", "Groceries", "Clothes"], "answer": "Game Items/NFTs" },
+      { "q": "What is the token?", "options": ["PDA", "PLAY", "DAPP"], "answer": "PDA" },
+      { "q": "It focuses on?", "options": ["Interoperability", "Isolation", "Single game"], "answer": "Interoperability" }
+    ]
+  },
+  {
+    "site": "quicknode.com",
+    "questions": [
+      { "q": "What is QuickNode?", "options": ["Blockchain Infrastructure", "VPN Service", "Speed Test"], "answer": "Blockchain Infrastructure" },
+      { "q": "Who uses QuickNode?", "options": ["Developers/Enterprises", "Gamers", "Chefs"], "answer": "Developers/Enterprises" },
+      { "q": "What does it provide?", "options": ["RPC Nodes/APIs", "Free Wifi", "Laptops"], "answer": "RPC Nodes/APIs" },
+      { "q": "Does it support multiple chains?", "options": ["Yes", "No", "Only one"], "answer": "Yes" },
+      { "q": "It helps to?", "options": ["Scale DApps", "Play games", "Watch movies"], "answer": "Scale DApps" }
+    ]
+  },
+  {
+    "site": "rarimo.com",
+    "questions": [
+      { "q": "What is Rarimo?", "options": ["Interoperability/Identity Protocol", "Social Network", "Video Game"], "answer": "Interoperability/Identity Protocol" },
+      { "q": "It uses what tech for privacy?", "options": ["Zero-Knowledge (ZK)", "Passwords", "Firewalls"], "answer": "Zero-Knowledge (ZK)" },
+      { "q": "What is RariMe?", "options": ["Identity Wallet", "Food Delivery", "Chat App"], "answer": "Identity Wallet" },
+      { "q": "What is Freedom Tool?", "options": ["Anonymous Voting", "VPN", "Game"], "answer": "Anonymous Voting" },
+      { "q": "Rarimo focuses on?", "options": ["Cross-chain/Privacy", "Centralization", "Ads"], "answer": "Cross-chain/Privacy" }
+    ]
+  },
+  {
+    "site": "raydium.io",
+    "questions": [
+      { "q": "What is Raydium?", "options": ["AMM/DEX on Solana", "Radio Station", "Element"], "answer": "AMM/DEX on Solana" },
+      { "q": "It shares liquidity with?", "options": ["Serum (OpenBook)", "Uniswap", "PancakeSwap"], "answer": "Serum (OpenBook)" },
+      { "q": "What is the token?", "options": ["RAY", "RAD", "SOL"], "answer": "RAY" },
+      { "q": "Users can do what?", "options": ["Swap/Farm", "Listen to music", "Watch TV"], "answer": "Swap/Farm" },
+      { "q": "It is built on?", "options": ["Solana", "Ethereum", "Bitcoin"], "answer": "Solana" }
+    ]
+  },
+  {
+    "site": "sapienx.app",
+    "questions": [
+      { "q": "What is SapienX?", "options": ["AI & Web3 Business Tools", "Monkey Game", "History App"], "answer": "AI & Web3 Business Tools" },
+      { "q": "It integrates?", "options": ["AI, Web3, DAO", "Cars, Planes, Trains", "Food, Water, Air"], "answer": "AI, Web3, DAO" },
+      { "q": "What is the token?", "options": ["$X", "$SAPIEN", "$MAN"], "answer": "$X" },
+      { "q": "Who is it for?", "options": ["Businesses/Enterprises", "Pets", "Kids"], "answer": "Businesses/Enterprises" },
+      { "q": "Does it use NFTs?", "options": ["Yes", "No", "Never"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "snapshot.org",
+    "questions": [
+      { "q": "What is Snapshot?", "options": ["Voting Platform", "Camera App", "Photo Gallery"], "answer": "Voting Platform" },
+      { "q": "Snapshot voting is?", "options": ["Off-chain/Gasless", "On-chain/Expensive", "Paper-based"], "answer": "Off-chain/Gasless" },
+      { "q": "Who uses Snapshot?", "options": ["DAOs", "Banks", "Schools"], "answer": "DAOs" },
+      { "q": "How do you vote?", "options": ["With Tokens/NFTs", "With ID", "With Cash"], "answer": "With Tokens/NFTs" },
+      { "q": "Is it widely used in DeFi?", "options": ["Yes", "No", "Rarely"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "somniumspace.com",
+    "questions": [
+      { "q": "What is Somnium Space?", "options": ["VR Metaverse", "Sleep App", "Space Game"], "answer": "VR Metaverse" },
+      { "q": "It focuses on?", "options": ["Virtual Reality", "2D Games", "Text"], "answer": "Virtual Reality" },
+      { "q": "Can you own land?", "options": ["Yes", "No", "Rent only"], "answer": "Yes" },
+      { "q": "What is the currency?", "options": ["CUBE", "GOLD", "SOM"], "answer": "CUBE" },
+      { "q": "It works with?", "options": ["VR Headsets", "Calculators", "Radios"], "answer": "VR Headsets" }
+    ]
+  },
+  {
+    "site": "splinterlands.com",
+    "questions": [
+      { "q": "What is Splinterlands?", "options": ["Card Battle Game", "Woodworking Site", "Puzzle"], "answer": "Card Battle Game" },
+      { "q": "The cards are?", "options": ["NFTs", "Paper", "Plastic"], "answer": "NFTs" },
+      { "q": "What is the main token?", "options": ["SPS/DEC", "SPL", "LAND"], "answer": "SPS/DEC" },
+      { "q": "Can you rent cards?", "options": ["Yes", "No", "Buy only"], "answer": "Yes" },
+      { "q": "It runs on which chain?", "options": ["Hive", "Ethereum", "Solana"], "answer": "Hive" }
+    ]
+  },
+  {
+    "site": "staratlas.com",
+    "questions": [
+      { "q": "What is Star Atlas?", "options": ["Space MMO Game", "Astronomy App", "Map"], "answer": "Space MMO Game" },
+      { "q": "It is built on?", "options": ["Solana", "Ethereum", "Bitcoin"], "answer": "Solana" },
+      { "q": "What engine does it use?", "options": ["Unreal Engine 5", "Unity", "Flash"], "answer": "Unreal Engine 5" },
+      { "q": "What are the ships?", "options": ["NFTs", "Drawings", "Models"], "answer": "NFTs" },
+      { "q": "It features an economy with?", "options": ["ATLAS/POLIS", "Gold/Silver", "Credits"], "answer": "ATLAS/POLIS" }
+    ]
+  },
+  {
+    "site": "superfluid.finance",
+    "questions": [
+      { "q": "What does Superfluid do?", "options": ["Money Streaming", "Water Cooling", "Fluid Dynamics"], "answer": "Money Streaming" },
+      { "q": "Streams happen?", "options": ["Every second", "Monthly", "Yearly"], "answer": "Every second" },
+      { "q": "It is used for?", "options": ["Salaries/Subscriptions", "Buying coffee", "One-time payments"], "answer": "Salaries/Subscriptions" },
+      { "q": "What are the tokens called?", "options": ["Super Tokens", "Fluid Tokens", "Flow Tokens"], "answer": "Super Tokens" },
+      { "q": "Is it on-chain?", "options": ["Yes", "No", "Off-chain"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "superrare.com",
+    "questions": [
+      { "q": "What is SuperRare?", "options": ["Crypto Art Marketplace", "Steakhouse", "Museum"], "answer": "Crypto Art Marketplace" },
+      { "q": "It focuses on?", "options": ["1/1 Artworks", "Mass produced items", "Tickets"], "answer": "1/1 Artworks" },
+      { "q": "What is the token?", "options": ["RARE", "ART", "SUPER"], "answer": "RARE" },
+      { "q": "Who can sell art?", "options": ["Curated Artists", "Anyone", "Robots"], "answer": "Curated Artists" },
+      { "q": "It runs on?", "options": ["Ethereum", "Solana", "Tezos"], "answer": "Ethereum" }
+    ]
+  },
+  {
+    "site": "sushi.com",
+    "questions": [
+      { "q": "What is Sushi?", "options": ["Decentralized Exchange", "Japanese Restaurant", "Fish Market"], "answer": "Decentralized Exchange" },
+      { "q": "What is the token?", "options": ["SUSHI", "FISH", "RICE"], "answer": "SUSHI" },
+      { "q": "It offers?", "options": ["Swapping/Lending", "Cooking classes", "Fishing trips"], "answer": "Swapping/Lending" },
+      { "q": "Is it multi-chain?", "options": ["Yes", "No", "Ethereum Only"], "answer": "Yes" },
+      { "q": "It started as a fork of?", "options": ["Uniswap", "Bitcoin", "Aave"], "answer": "Uniswap" }
+    ]
+  },
+  {
+    "site": "uniswap.com",
+    "questions": [
+      { "q": "What is Uniswap?", "options": ["Decentralized Exchange", "University", "Clothing Swap"], "answer": "Decentralized Exchange" },
+      { "q": "What symbol is the logo?", "options": ["Unicorn", "Horse", "Lion"], "answer": "Unicorn" },
+      { "q": "It uses which model?", "options": ["AMM", "Order Book", "Auction"], "answer": "AMM" },
+      { "q": "What is the token?", "options": ["UNI", "SWAP", "DEX"], "answer": "UNI" },
+      { "q": "You can earn fees by?", "options": ["Providing Liquidity", "Trading", "Watching ads"], "answer": "Providing Liquidity" }
+    ]
+  },
+  {
+    "site": "uniswap.org",
+    "questions": [
+      { "q": "Uniswap.org represents?", "options": ["The Protocol/Governance", "The Commercial Company", "A Fan Site"], "answer": "The Protocol/Governance" },
+      { "q": "What is the main function?", "options": ["Token Swapping", "Social Media", "Email"], "answer": "Token Swapping" },
+      { "q": "It runs primarily on?", "options": ["Ethereum", "Bitcoin", "Ripple"], "answer": "Ethereum" },
+      { "q": "Is KYC required?", "options": ["No", "Yes", "Sometimes"], "answer": "No" },
+      { "q": "Who governs the protocol?", "options": ["UNI holders", "The CEO", "Miners"], "answer": "UNI holders" }
+    ]
+  },
+  {
+    "site": "versum.xyz",
+    "questions": [
+      { "q": "What was Versum?", "options": ["NFT Marketplace", "Video Game", "Chat App"], "answer": "NFT Marketplace" },
+      { "q": "It was on which chain?", "options": ["Tezos", "Ethereum", "Solana"], "answer": "Tezos" },
+      { "q": "What is its current status?", "options": ["Shut down", "Active", "Beta"], "answer": "Shut down" },
+      { "q": "It focused on?", "options": ["Art", "Music", "Land"], "answer": "Art" },
+      { "q": "Was it green/eco-friendly?", "options": ["Yes", "No", "Unknown"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "walletconnect.com",
+    "questions": [
+      { "q": "What does WalletConnect do?", "options": ["Connects Wallets to DApps", "Stores Money", "Mines Crypto"], "answer": "Connects Wallets to DApps" },
+      { "q": "It is a?", "options": ["Protocol", "Wallet", "Exchange"], "answer": "Protocol" },
+      { "q": "How do you usually connect?", "options": ["Scan QR Code", "Enter Password", "Fingerprint"], "answer": "Scan QR Code" },
+      { "q": "Is it safe?", "options": ["Yes, it's a bridge", "No, it takes your keys", "Maybe"], "answer": "Yes, it's a bridge" },
+      { "q": "Does it support many wallets?", "options": ["Yes, hundreds", "No, only one", "Only MetaMask"], "answer": "Yes, hundreds" }
+    ]
+  },
+  {
+    "site": "zerion.io",
+    "questions": [
+      { "q": "What is Zerion?", "options": ["Web3 Smart Wallet/Tracker", "Mining Pool", "Node Provider"], "answer": "Web3 Smart Wallet/Tracker" },
+      { "q": "What can you track?", "options": ["Entire Portfolio", "Steps", "Calories"], "answer": "Entire Portfolio" },
+      { "q": "Does it support NFTs?", "options": ["Yes", "No", "Text only"], "answer": "Yes" },
+      { "q": "Can you trade in Zerion?", "options": ["Yes", "No", "View only"], "answer": "Yes" },
+      { "q": "Is it non-custodial?", "options": ["Yes", "No", "Bank owned"], "answer": "Yes" }
+    ]
+  },
+  {
+    "site": "zidanogo.com",
+    "questions": [
+      { "q": "What is Zidanogo focused on?", "options": ["Airdrops", "Car Racing", "Cooking"], "answer": "Airdrops" },
+      { "q": "What are the NFTs called?", "options": ["GentleMals", "Zidans", "AirDrops"], "answer": "GentleMals" },
+      { "q": "What is the token?", "options": ["Z", "GO", "DROP"], "answer": "Z" },
+      { "q": "Users can do what with NFTs?", "options": ["Stake them", "Eat them", "Burn them"], "answer": "Stake them" },
+      { "q": "It aims to unleash?", "options": ["World of Airdrops", "World of War", "World of Sports"], "answer": "World of Airdrops" }
+    ]
+  },
+  {
+    "site": "zksync.io",
+    "questions": [
+      { "q": "What is ZKsync?", "options": ["Layer 2 Scaling Solution", "Layer 1 Blockchain", "Wallet"], "answer": "Layer 2 Scaling Solution" },
+      { "q": "It uses what technology?", "options": ["ZK Rollups", "Optimistic Rollups", "Sidechain"], "answer": "ZK Rollups" },
+      { "q": "What does ZK stand for?", "options": ["Zero Knowledge", "Zero Kinetic", "Zone Key"], "answer": "Zero Knowledge" },
+      { "q": "It aims to solve?", "options": ["Ethereum Scalability", "Bitcoin Mining", "Internet Speed"], "answer": "Ethereum Scalability" },
+      { "q": "Is it EVM compatible?", "options": ["Yes", "No", "Partially"], "answer": "Yes" }
+    ]
+  }
+]
