@@ -471,9 +471,9 @@ const App: React.FC = () => {
   const isConnecting = status === 'connecting' || status === 'reconnecting';
 
   const buildPublishSnapshot = (snapshotState: AppState) => {
-      const tasks = snapshotState.tasks.map(task => ({
-        id: task.id,
-        title: task.title,
+    const tasks = snapshotState.tasks.map(task => ({
+      id: task.id,
+      title: task.title,
       desc: task.desc,
       link: task.link,
       icon: task.icon,
@@ -554,6 +554,18 @@ const App: React.FC = () => {
     setCurrentPage('landing');
   }, [currentPage, isConnected, isConnecting]);
 
+  const handleGlobalLeaderboard = () => {
+    setLeaderboardProjectId(null);
+    setCurrentPage('leaderboard');
+    window.history.pushState(null, '', '/leaderboard');
+  };
+
+  const handleProjectLeaderboard = (projectId: string) => {
+    setLeaderboardProjectId(projectId);
+    setCurrentPage('leaderboard');
+    window.history.pushState(null, '', `/leaderboard/${projectId}`);
+  };
+
   if (currentPage === 'landing') {
     return (
       <>
@@ -599,10 +611,7 @@ const App: React.FC = () => {
       <>
         <QuestBrowse
           onBack={() => setCurrentPage('landing')}
-          onLeaderboard={() => {
-            setLeaderboardProjectId(null);
-            setCurrentPage('leaderboard');
-          }}
+          onLeaderboard={handleGlobalLeaderboard}
           onWidgetBuilder={() => setCurrentPage('dashboard')}
           onSubmitProject={openSubmitModal}
           onProjectDetails={openProjectDetails}
@@ -638,6 +647,7 @@ const App: React.FC = () => {
               window.history.pushState(null, '', '/browse');
             }
           }}
+          onLeaderboard={handleGlobalLeaderboard}
           onContinue={({ projectId, domain }) => {
             setPendingBrowseRequest({ projectId, url: domain || undefined });
             setCurrentPage('questbrowse');
@@ -676,12 +686,8 @@ const App: React.FC = () => {
           setPendingBrowseRequest({ projectId, url: domain || undefined });
           setCurrentPage('questbrowse');
         }}
-        onLeaderboard={(projectId) => {
-          setLeaderboardProjectId(projectId);
-          setCurrentPage('leaderboard');
-          // Update URL immediately for better UX
-          window.history.pushState(null, '', `/leaderboard/${projectId}`);
-        }}
+        onLeaderboard={handleGlobalLeaderboard}
+        onProjectLeaderboard={handleProjectLeaderboard}
         onWidgetBuilder={() => setCurrentPage('builder')}
         onSubmitProject={() => setCurrentPage('submit')}
       />

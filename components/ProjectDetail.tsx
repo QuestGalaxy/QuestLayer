@@ -34,7 +34,7 @@ const getFaviconUrl = (link: string) => {
   try {
     if (!link || link.length < 4) return '';
     let validLink = link.trim();
-    validLink = validLink.replace(/[\/.]+$/, ''); 
+    validLink = validLink.replace(/[\/.]+$/, '');
     if (!validLink.startsWith('http://') && !validLink.startsWith('https://')) {
       validLink = `https://${validLink}`;
     }
@@ -51,12 +51,13 @@ interface ProjectDetailProps {
   projectId: string;
   onBack: () => void;
   onOpen: (payload: { projectId: string; domain?: string | null }) => void;
-  onLeaderboard: (projectId: string) => void;
+  onLeaderboard: () => void;
+  onProjectLeaderboard: (projectId: string) => void;
   onWidgetBuilder?: () => void;
   onSubmitProject?: () => void;
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen, onLeaderboard, onWidgetBuilder, onSubmitProject }) => {
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen, onLeaderboard, onProjectLeaderboard, onWidgetBuilder, onSubmitProject }) => {
   const [project, setProject] = useState<any | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [stats, setStats] = useState<any | null>(null);
@@ -279,11 +280,11 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
 
   const lastVerifiedLabel = project?.last_ping_at
     ? new Date(project.last_ping_at).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
     : 'Not verified yet';
 
   const isVerified = Boolean(project?.last_ping_at);
@@ -464,9 +465,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
         nextLevelXP={nextLevelXP}
         onConnect={() => open()}
         onDisconnect={() => disconnect()}
-        onLeaderboard={() => {
-          if (project?.id) onLeaderboard(project.id);
-        }}
+        onLeaderboard={onLeaderboard}
         onWidgetBuilder={onWidgetBuilder}
         onSubmitProject={onSubmitProject}
       />
@@ -491,9 +490,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
           <div className="absolute inset-0 z-0 overflow-hidden rounded-[2rem] md:rounded-[3rem]">
             {ogImage ? (
               <div className="absolute inset-0">
-                <img 
-                  src={ogImage} 
-                  alt="" 
+                <img
+                  src={ogImage}
+                  alt=""
                   className="w-full h-full object-cover opacity-30 blur-[1px] group-hover:opacity-40 group-hover:scale-105 transition-all duration-700"
                 />
                 {/* Stronger left-to-right gradient for text readability */}
@@ -502,10 +501,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
               </div>
             ) : (
-              <div 
+              <div
                 className="absolute inset-0 opacity-10"
-                style={{ 
-                  background: `radial-gradient(circle at 20% 50%, ${accentColor} 0%, transparent 70%)` 
+                style={{
+                  background: `radial-gradient(circle at 20% 50%, ${accentColor} 0%, transparent 70%)`
                 }}
               />
             )}
@@ -595,7 +594,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                     }}
                   >
                     {logoSrc ? (
-                      <img 
+                      <img
                         src={logoSrc}
                         alt={project.name}
                         className="w-full h-full object-cover"
@@ -625,7 +624,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                       </div>
                     )}
                   </div>
-                  
+
                   <h1 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">
                     {project.name}
                   </h1>
@@ -732,7 +731,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
                 </span>
               </button>
               <button
-                onClick={() => onLeaderboard(project.id)}
+                onClick={() => onProjectLeaderboard(project.id)}
                 className="flex-1 min-w-0 px-3 py-3 sm:px-6 sm:py-3.5 md:px-8 md:py-4 rounded-xl md:rounded-2xl border border-white/10 bg-white/5 text-white/80 text-[11px] sm:text-sm font-black uppercase tracking-[0.12em] sm:tracking-widest hover:text-white hover:border-white/20 hover:bg-white/10 transition-all active:scale-95"
               >
                 <span className="inline-flex items-center justify-center gap-2 sm:gap-3 w-full">
@@ -743,7 +742,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
             </div>
           </div>
 
-          
+
 
           {/* Key Stats Sidebar */}
           <div className="w-full lg:w-80 grid grid-cols-2 lg:grid-cols-1 gap-4 relative z-10">
