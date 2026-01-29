@@ -11,7 +11,8 @@ export interface Tier {
 }
 
 export const TIERS: Tier[] = [
-    { name: 'Bronze Explorer', minLevel: 1, icon: '🥉', color: 'text-orange-400' },
+    { name: 'Rookie', minLevel: 1, icon: '👣', color: 'text-slate-500' },
+    { name: 'Bronze Explorer', minLevel: 3, icon: '🥉', color: 'text-orange-400' },
     { name: 'Silver Questant', minLevel: 11, icon: '🥈', color: 'text-slate-300' },
     { name: 'Gold Vanguard', minLevel: 26, icon: '🥇', color: 'text-yellow-400' },
     { name: 'Platinum Legend', minLevel: 51, icon: '💎', color: 'text-cyan-400' },
