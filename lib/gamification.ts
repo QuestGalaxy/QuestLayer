@@ -19,21 +19,21 @@ export const TIERS: Tier[] = [
 ];
 
 /**
- * Calculates current level from total XP using a parabolic scaling curve.
- * Formula: Level = floor((XP / 1000)^(2/3)) + 1
+ * Calculates current level from total XP using a much steeper RPG scaling curve.
+ * Formula: Level = floor((XP / 2000)^(1/2.2)) + 1
  */
 export const calculateLevel = (xp: number): number => {
     if (xp <= 0) return 1;
-    return Math.floor(Math.pow(xp / 1000, 2 / 3)) + 1;
+    return Math.floor(Math.pow(xp / 2000, 1 / 2.2)) + 1;
 };
 
 /**
  * Calculates the total XP required to REACH a specific level.
- * Formula: XP = 1000 * (Level - 1)^1.5
+ * Formula: XP = 2000 * (Level - 1)^2.2
  */
 export const calculateXpForLevel = (level: number): number => {
     if (level <= 1) return 0;
-    return Math.floor(1000 * Math.pow(level - 1, 1.5));
+    return Math.floor(2000 * Math.pow(level - 1, 2.2));
 };
 
 /**
