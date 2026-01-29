@@ -80,20 +80,19 @@ const App: React.FC = () => {
       window.history.replaceState(null, '', `/store/${projectIdFromQuery}`);
       return;
     }
-    if (currentPage !== 'projectdetail' || selectedProjectId) return;
-    const fromPath = getProjectIdFromPath(window.location.pathname);
-    if (fromPath) {
-      setSelectedProjectId(fromPath);
-    } else {
+
+    if (currentPage === 'projectdetail' && !selectedProjectId) {
+      const fromPath = getProjectIdFromPath(window.location.pathname);
+      if (fromPath) {
+        setSelectedProjectId(fromPath);
+      }
+    } else if (currentPage === 'leaderboard' && !leaderboardProjectId) {
       const lbProjectId = getLeaderboardProjectIdFromPath(window.location.pathname);
       if (lbProjectId) {
         setLeaderboardProjectId(lbProjectId);
-        setCurrentPage('leaderboard');
-      } else {
-        setCurrentPage('questbrowse');
       }
     }
-  }, [currentPage, selectedProjectId]);
+  }, [currentPage, selectedProjectId, leaderboardProjectId]);
 
   const closeSubmitModal = () => {
     setIsSubmitModalOpen(false);
@@ -252,8 +251,8 @@ const App: React.FC = () => {
       const lbPath = leaderboardProjectId ? `/leaderboard/${leaderboardProjectId}` : '/leaderboard';
       window.history.pushState(null, '', lbPath);
       applySeo({
-        title: 'QuestLayer Leaderboard - Your XP Legacy',
-        description: 'See top QuestLayer users and compete for the highest XP rank.',
+        title: 'QuestLayer Leaderboard - Compete & Win Daily Rewards',
+        description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
         path: lbPath,
         image: '/leaderboard.jpeg'
       });
@@ -261,7 +260,7 @@ const App: React.FC = () => {
         '@context': 'https://schema.org',
         '@type': 'WebPage',
         name: 'QuestLayer Leaderboard',
-        description: 'See top QuestLayer users and compete for the highest XP rank.',
+        description: 'Join the competition on the QuestLayer Leaderboard! Earn XP, track your rank, and unlock exclusive daily and weekly rewards. Build your legacy now.',
         url: `https://questlayer.app${lbPath}`
       });
     } else if (currentPage === 'submit') {
