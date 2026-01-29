@@ -1,21 +1,27 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import Editor from './components/Editor.tsx';
-import Widget from './components/Widget.tsx';
-import LandingPage from './components/LandingPage.tsx';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
+const Editor = React.lazy(() => import('./components/Editor.tsx'));
+const Widget = React.lazy(() => import('./components/Widget.tsx'));
+const LandingPage = React.lazy(() => import('./components/LandingPage.tsx'));
 import { AppState, Task, Position, ThemeType } from './types';
 import { INITIAL_TASKS } from './constants';
-import { Layout, Monitor, Smartphone, Globe, Shield, Menu } from 'lucide-react';
+import { Layout, Monitor, Smartphone, Globe, Shield, Menu, Loader2 } from 'lucide-react';
 import { syncProjectToSupabase } from './lib/supabase';
 import { useAppKit, useDisconnect, useAppKitAccount } from '@reown/appkit/react';
 
-import Dashboard from './components/Dashboard.tsx';
-import ExplorePage from './components/ExplorePage.tsx';
-import QuestBrowse from './components/QuestBrowse.tsx';
-import LeaderboardPage from './components/LeaderboardPage.tsx';
-import SubmitProject from './components/SubmitProject.tsx';
-import ProjectDetail from './components/ProjectDetail.tsx';
+const Dashboard = React.lazy(() => import('./components/Dashboard.tsx'));
+const ExplorePage = React.lazy(() => import('./components/ExplorePage.tsx'));
+const QuestBrowse = React.lazy(() => import('./components/QuestBrowse.tsx'));
+const LeaderboardPage = React.lazy(() => import('./components/LeaderboardPage.tsx'));
+const SubmitProject = React.lazy(() => import('./components/SubmitProject.tsx'));
+const ProjectDetail = React.lazy(() => import('./components/ProjectDetail.tsx'));
 import { fetchProjectDetails, deleteProject } from './lib/supabase';
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-screen bg-slate-950 text-indigo-400">
+    <Loader2 className="w-10 h-10 animate-spin" />
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard' | 'builder' | 'explore' | 'questbrowse' | 'leaderboard' | 'submit' | 'projectdetail'>(() => {
@@ -568,7 +574,7 @@ const App: React.FC = () => {
 
   if (currentPage === 'landing') {
     return (
-      <>
+      <Suspense fallback={<LoadingFallback />}>
         <LandingPage
           onLaunch={() => {
             setAllowAutoLaunch(true);
@@ -594,21 +600,23 @@ const App: React.FC = () => {
             }}
           />
         )}
-      </>
+      </Suspense>
     );
   }
 
   if (currentPage === 'explore') {
     return (
-      <ExplorePage
-        onBack={() => setCurrentPage('landing')}
-      />
+      <Suspense fallback={<LoadingFallback />}>
+        <ExplorePage
+          onBack={() => setCurrentPage('landing')}
+        />
+      </Suspense>
     );
   }
 
   if (currentPage === 'questbrowse') {
     return (
-      <>
+      <Suspense fallback={<LoadingFallback />}>
         <QuestBrowse
           onBack={() => setCurrentPage('landing')}
           onLeaderboard={handleGlobalLeaderboard}
@@ -628,13 +636,13 @@ const App: React.FC = () => {
             }}
           />
         )}
-      </>
+      </Suspense>
     );
   }
 
   if (currentPage === 'leaderboard') {
     return (
-      <>
+      <Suspense fallback={<LoadingFallback />}>
         <LeaderboardPage
           onBack={() => {
             if (leaderboardProjectId) {
@@ -666,7 +674,7 @@ const App: React.FC = () => {
             }}
           />
         )}
-      </>
+      </Suspense>
     );
   }
 
@@ -679,7 +687,8 @@ const App: React.FC = () => {
       );
     }
     return (
-      <ProjectDetail
+      <Suspense fallback={<LoadingFallback />}>
+        <ProjectDetail
         projectId={selectedProjectId}
         onBack={() => setCurrentPage('questbrowse')}
         onOpen={({ projectId, domain }) => {
@@ -691,23 +700,27 @@ const App: React.FC = () => {
         onWidgetBuilder={() => setCurrentPage('builder')}
         onSubmitProject={() => setCurrentPage('submit')}
       />
+      </Suspense>
     );
   }
 
   if (currentPage === 'submit') {
     const submitReturnPage = window.location.pathname.startsWith('/store') ? 'questbrowse' : 'landing';
     return (
-      <SubmitProject
+      <Suspense fallback={<LoadingFallback />}>
+        <SubmitProject
         mode="page"
         onClose={() => setCurrentPage(submitReturnPage)}
         onOpenBuilder={() => setCurrentPage('builder')}
       />
+      </Suspense>
     );
   }
 
   if (currentPage === 'dashboard') {
     return (
-      <Dashboard
+      <Suspense fallback={<LoadingFallback />}>
+        <Dashboard
         onSelectProject={async (id) => {
           // Fetch and Load
           try {
@@ -838,11 +851,13 @@ const App: React.FC = () => {
           }
         }}
       />
+      </Suspense>
     );
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
+    <Suspense fallback={<LoadingFallback />}>
+      <div className="flex flex-col md:flex-row h-[100dvh] w-full overflow-hidden text-slate-100 font-['Inter'] bg-slate-950 animate-in fade-in duration-700">
       {/* Mobile Tab Navigation */}
       <div className="md:hidden flex bg-slate-900 border-b border-white/10 shrink-0 z-10">
         <button
@@ -1025,6 +1040,7 @@ const App: React.FC = () => {
         </main>
       </div>
     </div>
+    </Suspense>
   );
 };
 
