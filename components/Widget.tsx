@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Task, Position, ThemeType, AppState } from '../types.ts';
-import { THEMES } from '../constants.ts';
+import { Task, Position, ThemeType, AppState } from '../types';
+import { calculateLevel as getCalculatedLevel, getLevelProgress, getTier } from '../lib/gamification';
+import { THEMES } from '../constants';
 import {
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2,
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown,
@@ -276,7 +277,7 @@ const Widget: React.FC<WidgetProps> = ({
       if (state.projectDomain) {
         url = state.projectDomain.startsWith('http') ? state.projectDomain : `https://${state.projectDomain}`;
       }
-      
+
       // If we have a URL, try to fetch high-res metadata
       if (url) {
         try {
@@ -292,7 +293,7 @@ const Widget: React.FC<WidgetProps> = ({
           console.warn('[QuestLayer] Failed to fetch project metadata (likely due to local dev environment):', e);
         }
       }
-      
+
       // Fallback: If API fails or no URL, we don't set nftBgImage here.
       // We will handle fallback in the render to use projectIconUrl
     };
@@ -673,20 +674,20 @@ const Widget: React.FC<WidgetProps> = ({
     // Use Global XP if available (connected), otherwise local XP (preview/unconnected)
     const effectiveXP = effectiveConnected ? (globalXP > xp ? globalXP : xp) : xp;
 
-    const xpPerLevel = 3000;
-    const lvl = Math.floor(effectiveXP / xpPerLevel) + 1;
-    const progress = ((effectiveXP % xpPerLevel) / xpPerLevel) * 100;
-    const nextLevelXP = lvl * xpPerLevel;
-    const xpNeeded = nextLevelXP - effectiveXP;
+    const progressData = getLevelProgress(effectiveXP);
 
-    return { lvl, progress: Math.floor(progress), xpNeeded, effectiveXP };
+    return {
+      lvl: progressData.level,
+      progress: Math.floor(progressData.progress),
+      xpNeeded: progressData.xpRequired - progressData.xpInLevel,
+      effectiveXP
+    };
   };
 
   const getRankName = () => {
-    const { lvl } = calculateLevel(visualXP); // VisualXP is local. We should use global for rank too.
-    if (lvl < 2) return "Pioneer";
-    if (lvl < 5) return "Guardian";
-    return "Overlord";
+    const { lvl } = calculateLevel(visualXP);
+    const tier = getTier(lvl);
+    return tier.name;
   };
 
   const claimDaily = async () => {
@@ -946,7 +947,7 @@ const Widget: React.FC<WidgetProps> = ({
     }
 
     setNftVerifyState(prev => ({ ...prev, [task.id]: { status: 'checking', message: 'Checking on-chain balance...' } } as any));
-    
+
     try {
       const response = await fetch(getApiUrl('/api/nft-hold'), {
         method: 'POST',
@@ -1559,20 +1560,20 @@ const Widget: React.FC<WidgetProps> = ({
         : (resolvedKind === 'token_hold' ? <Coins size={14} className="text-amber-400" /> : null);
       const mappedIcon = task.icon?.startsWith('icon:') ? (
         task.icon === 'icon:coin' ? <Coins size={14} className="text-yellow-400" />
-        : task.icon === 'icon:trophy' ? <Trophy size={14} className="text-yellow-400" />
-        : task.icon === 'icon:gem' ? <Gem size={14} className="text-yellow-400" />
-        : task.icon === 'icon:sword' ? <Sword size={14} className="text-yellow-400" />
-        : task.icon === 'icon:crown' ? <Crown size={14} className="text-yellow-400" />
-        : task.icon === 'icon:twitter' ? <Twitter size={14} className="text-indigo-400" />
-        : task.icon === 'icon:repost' ? <Zap size={14} className="text-green-400" />
-        : task.icon === 'icon:heart' ? <Heart size={14} className="text-pink-400" />
-        : task.icon === 'icon:discord' ? <MessageSquare size={14} className="text-indigo-400" />
-        : task.icon === 'icon:telegram' ? <Send size={14} className="text-sky-400" />
-        : task.icon === 'icon:globe' ? <Globe size={14} className="text-slate-400" />
-        : task.icon === 'icon:calendar' ? <Calendar size={14} className="text-orange-400" />
-        : task.icon === 'icon:nft' ? <ShieldCheck size={14} className="text-emerald-400" />
-        : task.icon === 'icon:token' ? <Coins size={14} className="text-amber-400" />
-        : null
+          : task.icon === 'icon:trophy' ? <Trophy size={14} className="text-yellow-400" />
+            : task.icon === 'icon:gem' ? <Gem size={14} className="text-yellow-400" />
+              : task.icon === 'icon:sword' ? <Sword size={14} className="text-yellow-400" />
+                : task.icon === 'icon:crown' ? <Crown size={14} className="text-yellow-400" />
+                  : task.icon === 'icon:twitter' ? <Twitter size={14} className="text-indigo-400" />
+                    : task.icon === 'icon:repost' ? <Zap size={14} className="text-green-400" />
+                      : task.icon === 'icon:heart' ? <Heart size={14} className="text-pink-400" />
+                        : task.icon === 'icon:discord' ? <MessageSquare size={14} className="text-indigo-400" />
+                          : task.icon === 'icon:telegram' ? <Send size={14} className="text-sky-400" />
+                            : task.icon === 'icon:globe' ? <Globe size={14} className="text-slate-400" />
+                              : task.icon === 'icon:calendar' ? <Calendar size={14} className="text-orange-400" />
+                                : task.icon === 'icon:nft' ? <ShieldCheck size={14} className="text-emerald-400" />
+                                  : task.icon === 'icon:token' ? <Coins size={14} className="text-amber-400" />
+                                    : null
       ) : null;
       const headerIconClass = (resolvedKind === 'nft_hold' || resolvedKind === 'token_hold') ? 'rounded-full' : '';
       const iconNode = !isOnboardingVariant ? (
@@ -1811,21 +1812,21 @@ const Widget: React.FC<WidgetProps> = ({
                         disabled={isCompleted || isLocked}
                         style={{
                           ...((!isLightTheme && !isTransparentTheme) ? {
-                          backgroundColor: isCompleted ? '#94a3b8' : actionPrimary,
-                          borderColor: isCompleted ? '#94a3b8' : (activeTheme.colors?.secondary || actionPrimary),
-                          color: activeTheme.colors?.text || 'white',
-                          cursor: isCompleted ? 'not-allowed' : 'pointer'
-                        } : (isTransparentTheme ? {
-                          borderColor: isCompleted ? '#94a3b8' : actionPrimary,
-                          backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
-                          color: isCompleted ? '#94a3b8' : 'white',
-                          cursor: isCompleted ? 'not-allowed' : 'pointer'
-                        } : {
-                          backgroundColor: isCompleted ? '#e2e8f0' : actionPrimary,
-                          color: isCompleted ? '#94a3b8' : (state.activeTheme === 'aura' ? '#ffffff' : (activeTheme.colors?.text || getReadableTextColor(actionPrimary))),
-                          borderColor: isCompleted ? '#e2e8f0' : actionPrimary,
-                          cursor: isCompleted ? 'not-allowed' : 'pointer'
-                        })),
+                            backgroundColor: isCompleted ? '#94a3b8' : actionPrimary,
+                            borderColor: isCompleted ? '#94a3b8' : (activeTheme.colors?.secondary || actionPrimary),
+                            color: activeTheme.colors?.text || 'white',
+                            cursor: isCompleted ? 'not-allowed' : 'pointer'
+                          } : (isTransparentTheme ? {
+                            borderColor: isCompleted ? '#94a3b8' : actionPrimary,
+                            backgroundColor: isCompleted ? '#94a3b820' : 'transparent',
+                            color: isCompleted ? '#94a3b8' : 'white',
+                            cursor: isCompleted ? 'not-allowed' : 'pointer'
+                          } : {
+                            backgroundColor: isCompleted ? '#e2e8f0' : actionPrimary,
+                            color: isCompleted ? '#94a3b8' : (state.activeTheme === 'aura' ? '#ffffff' : (activeTheme.colors?.text || getReadableTextColor(actionPrimary))),
+                            borderColor: isCompleted ? '#e2e8f0' : actionPrimary,
+                            cursor: isCompleted ? 'not-allowed' : 'pointer'
+                          })),
                           ...(flashColor ? {
                             backgroundColor: flashColor,
                             borderColor: flashColor,
@@ -1856,13 +1857,12 @@ const Widget: React.FC<WidgetProps> = ({
                 )}
               </div>
             ) : isNftTask ? (
-              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 group/nft ${
-                isCompleted || isNftSuccess
-                  ? 'border-emerald-500/50 bg-emerald-500/5'
-                  : isNftError
-                    ? 'border-rose-500/50 bg-rose-500/5'
-                    : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
-              }`}>
+              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 group/nft ${isCompleted || isNftSuccess
+                ? 'border-emerald-500/50 bg-emerald-500/5'
+                : isNftError
+                  ? 'border-rose-500/50 bg-rose-500/5'
+                  : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
+                }`}>
                 <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">
                   <div className={`flex h-6 w-6 items-center justify-center rounded-full ${activeTheme.iconBox}`} style={{ background: `${state.accentColor}10` }}>
                     <ShieldCheck size={12} className="text-emerald-400" />
@@ -1875,17 +1875,17 @@ const Widget: React.FC<WidgetProps> = ({
                 {(nftBgImage || projectIconUrl) && (
                   <>
                     <div className="absolute inset-0 opacity-30 pointer-events-none transition-opacity duration-700">
-                      <img 
-                        src={nftBgImage || projectIconUrl} 
-                        alt="" 
-                        className="w-full h-full object-cover blur-sm" 
+                      <img
+                        src={nftBgImage || projectIconUrl}
+                        alt=""
+                        className="w-full h-full object-cover blur-sm"
                         onError={(e) => {
                           // If main image fails, and we are not already using fallback, try fallback or hide
                           if (nftBgImage && e.currentTarget.src === nftBgImage) {
-                             if (projectIconUrl) e.currentTarget.src = projectIconUrl;
-                             else e.currentTarget.style.display = 'none';
+                            if (projectIconUrl) e.currentTarget.src = projectIconUrl;
+                            else e.currentTarget.style.display = 'none';
                           } else {
-                             e.currentTarget.style.display = 'none';
+                            e.currentTarget.style.display = 'none';
                           }
                         }}
                       />
@@ -1895,63 +1895,61 @@ const Widget: React.FC<WidgetProps> = ({
                 )}
 
                 {/* Background Glow */}
-                <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${
-                  isNftChecking || isNftSigning ? 'opacity-40' : ''
-                }`}
-                style={{
-                  background: isCompleted || isNftSuccess
-                    ? 'radial-gradient(circle at center, #10b981 0%, transparent 70%)'
-                    : isNftError
-                      ? 'radial-gradient(circle at center, #f43f5e 0%, transparent 70%)'
-                      : `radial-gradient(circle at center, ${state.accentColor} 0%, transparent 70%)`
-                }} />
+                <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${isNftChecking || isNftSigning ? 'opacity-40' : ''
+                  }`}
+                  style={{
+                    background: isCompleted || isNftSuccess
+                      ? 'radial-gradient(circle at center, #10b981 0%, transparent 70%)'
+                      : isNftError
+                        ? 'radial-gradient(circle at center, #f43f5e 0%, transparent 70%)'
+                        : `radial-gradient(circle at center, ${state.accentColor} 0%, transparent 70%)`
+                  }} />
 
                 <div className="relative p-4 flex flex-col items-center text-center space-y-3">
                   {/* Header / Project Banner Effect */}
                   <div className="flex flex-col items-center gap-2">
-                     <div className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-xl transition-transform duration-500 ${isNftBusy ? 'scale-110' : ''}`}
-                        style={{ borderColor: isCompleted ? '#10b981' : (isNftError ? '#f43f5e' : state.accentColor) }}
-                     >
-                        {projectIconUrl ? (
-                          <img src={projectIconUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                    <div className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-xl transition-transform duration-500 ${isNftBusy ? 'scale-110' : ''}`}
+                      style={{ borderColor: isCompleted ? '#10b981' : (isNftError ? '#f43f5e' : state.accentColor) }}
+                    >
+                      {projectIconUrl ? (
+                        <img src={projectIconUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <ShieldCheck size={24} className={isCompleted ? 'text-emerald-400' : 'text-white'} />
+                      )}
+                      {/* Status Indicator Icon */}
+                      <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
+                        {isCompleted || isNftSuccess ? (
+                          <CheckCircle2 size={12} className="text-emerald-400" />
+                        ) : isNftError ? (
+                          <XCircle size={12} className="text-rose-400" />
                         ) : (
-                          <ShieldCheck size={24} className={isCompleted ? 'text-emerald-400' : 'text-white'} />
+                          <Lock size={12} className="text-white/60" />
                         )}
-                        {/* Status Indicator Icon */}
-                        <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
-                           {isCompleted || isNftSuccess ? (
-                             <CheckCircle2 size={12} className="text-emerald-400" />
-                           ) : isNftError ? (
-                             <XCircle size={12} className="text-rose-400" />
-                           ) : (
-                             <Lock size={12} className="text-white/60" />
-                           )}
-                        </div>
-                     </div>
+                      </div>
+                    </div>
 
-                     <div className="space-y-0.5">
-                       <h4 className={`text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
-                         {state.projectName} Holder
-                       </h4>
-                       <p className={`text-[10px] font-medium ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
-                         NFT Verification
-                       </p>
-                     </div>
+                    <div className="space-y-0.5">
+                      <h4 className={`text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+                        {state.projectName} Holder
+                      </h4>
+                      <p className={`text-[10px] font-medium ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
+                        NFT Verification
+                      </p>
+                    </div>
                   </div>
 
                   {/* Dynamic Action Button */}
                   <button
                     onClick={() => handleNftHoldVerify(task)}
                     disabled={isCompleted || isNftBusy}
-                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${
-                      isCompleted || isNftSuccess
-                        ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
-                        : isNftError
-                          ? 'bg-rose-500 text-white hover:bg-rose-600'
-                          : isNftBusy
-                            ? 'cursor-wait'
-                            : 'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]'
-                    }`}
+                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${isCompleted || isNftSuccess
+                      ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                      : isNftError
+                        ? 'bg-rose-500 text-white hover:bg-rose-600'
+                        : isNftBusy
+                          ? 'cursor-wait'
+                          : 'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
                     style={!(isCompleted || isNftSuccess || isNftError) ? {
                       backgroundColor: state.accentColor,
                       color: 'white',
@@ -1998,21 +1996,19 @@ const Widget: React.FC<WidgetProps> = ({
                   </button>
 
                   {/* Feedback Message */}
-                  <div className={`text-[10px] font-bold transition-all duration-300 ${
-                    nftMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
-                  } ${isNftError ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  <div className={`text-[10px] font-bold transition-all duration-300 ${nftMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
+                    } ${isNftError ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {nftMessage}
                   </div>
                 </div>
               </div>
             ) : isTokenTask ? (
-              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 group/token ${
-                isCompleted || isTokenSuccess
-                  ? 'border-emerald-500/50 bg-emerald-500/5'
-                  : isTokenError
-                    ? 'border-rose-500/50 bg-rose-500/5'
-                    : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
-              }`}>
+              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-500 group/token ${isCompleted || isTokenSuccess
+                ? 'border-emerald-500/50 bg-emerald-500/5'
+                : isTokenError
+                  ? 'border-rose-500/50 bg-rose-500/5'
+                  : `border-white/10 ${isLightTheme ? 'bg-slate-50' : 'bg-white/5'} hover:border-white/20`
+                }`}>
                 <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5">
                   <div className={`flex h-6 w-6 items-center justify-center rounded-full ${activeTheme.iconBox}`} style={{ background: `${state.accentColor}10` }}>
                     <Coins size={12} className="text-amber-400" />
@@ -2022,63 +2018,61 @@ const Widget: React.FC<WidgetProps> = ({
                   </span>
                 </div>
                 {/* Background Glow */}
-                <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${
-                  isTokenChecking || isTokenSigning ? 'opacity-40' : ''
-                }`}
-                style={{
-                  background: isCompleted || isTokenSuccess
-                    ? 'radial-gradient(circle at center, #10b981 0%, transparent 70%)'
-                    : isTokenError
-                      ? 'radial-gradient(circle at center, #f43f5e 0%, transparent 70%)'
-                      : `radial-gradient(circle at center, ${state.accentColor} 0%, transparent 70%)`
-                }} />
+                <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${isTokenChecking || isTokenSigning ? 'opacity-40' : ''
+                  }`}
+                  style={{
+                    background: isCompleted || isTokenSuccess
+                      ? 'radial-gradient(circle at center, #10b981 0%, transparent 70%)'
+                      : isTokenError
+                        ? 'radial-gradient(circle at center, #f43f5e 0%, transparent 70%)'
+                        : `radial-gradient(circle at center, ${state.accentColor} 0%, transparent 70%)`
+                  }} />
 
                 <div className="relative p-4 flex flex-col items-center text-center space-y-3">
                   {/* Header / Project Banner Effect */}
                   <div className="flex flex-col items-center gap-2">
-                     <div className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-xl transition-transform duration-500 ${isTokenBusy ? 'scale-110' : ''}`}
-                        style={{ borderColor: isCompleted ? '#10b981' : (isTokenError ? '#f43f5e' : state.accentColor) }}
-                     >
-                        {projectIconUrl ? (
-                          <img src={projectIconUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                    <div className={`relative w-12 h-12 md:w-14 md:h-14 rounded-full border-2 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-xl transition-transform duration-500 ${isTokenBusy ? 'scale-110' : ''}`}
+                      style={{ borderColor: isCompleted ? '#10b981' : (isTokenError ? '#f43f5e' : state.accentColor) }}
+                    >
+                      {projectIconUrl ? (
+                        <img src={projectIconUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <Coins size={24} className={isCompleted ? 'text-emerald-400' : 'text-white'} />
+                      )}
+                      {/* Status Indicator Icon */}
+                      <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
+                        {isCompleted || isTokenSuccess ? (
+                          <CheckCircle2 size={12} className="text-emerald-400" />
+                        ) : isTokenError ? (
+                          <XCircle size={12} className="text-rose-400" />
                         ) : (
-                          <Coins size={24} className={isCompleted ? 'text-emerald-400' : 'text-white'} />
+                          <Lock size={12} className="text-white/60" />
                         )}
-                        {/* Status Indicator Icon */}
-                        <div className="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
-                           {isCompleted || isTokenSuccess ? (
-                             <CheckCircle2 size={12} className="text-emerald-400" />
-                           ) : isTokenError ? (
-                             <XCircle size={12} className="text-rose-400" />
-                           ) : (
-                             <Lock size={12} className="text-white/60" />
-                           )}
-                        </div>
-                     </div>
+                      </div>
+                    </div>
 
-                     <div className="space-y-0.5">
-                       <h4 className={`text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
-                         {state.projectName} Token
-                       </h4>
-                       <p className={`text-[10px] font-medium ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
-                         Token Verification
-                       </p>
-                     </div>
+                    <div className="space-y-0.5">
+                      <h4 className={`text-xs font-black uppercase tracking-widest ${isLightTheme ? 'text-slate-900' : 'text-white'}`}>
+                        {state.projectName} Token
+                      </h4>
+                      <p className={`text-[10px] font-medium ${isLightTheme ? 'text-slate-500' : 'text-white/60'}`}>
+                        Token Verification
+                      </p>
+                    </div>
                   </div>
 
                   {/* Dynamic Action Button */}
                   <button
                     onClick={() => handleTokenHoldVerify(task)}
                     disabled={isCompleted || isTokenBusy}
-                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${
-                      isCompleted || isTokenSuccess
-                        ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
-                        : isTokenError
-                          ? 'bg-rose-500 text-white hover:bg-rose-600'
-                          : isTokenBusy
-                            ? 'cursor-wait'
-                            : 'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]'
-                    }`}
+                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${isCompleted || isTokenSuccess
+                      ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                      : isTokenError
+                        ? 'bg-rose-500 text-white hover:bg-rose-600'
+                        : isTokenBusy
+                          ? 'cursor-wait'
+                          : 'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]'
+                      }`}
                     style={!(isCompleted || isTokenSuccess || isTokenError) ? {
                       backgroundColor: state.accentColor,
                       color: 'white',
@@ -2125,9 +2119,8 @@ const Widget: React.FC<WidgetProps> = ({
                   </button>
 
                   {/* Feedback Message */}
-                  <div className={`text-[10px] font-bold transition-all duration-300 ${
-                    tokenMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
-                  } ${isTokenError ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  <div className={`text-[10px] font-bold transition-all duration-300 ${tokenMessage ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0'
+                    } ${isTokenError ? 'text-rose-400' : 'text-emerald-400'}`}>
                     {tokenMessage}
                   </div>
                 </div>
@@ -2191,8 +2184,8 @@ const Widget: React.FC<WidgetProps> = ({
         maxHeight: (isOpen && maxPanelHeight)
           ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
           : undefined,
-        borderColor: themeBorderRaw === null 
-          ? undefined 
+        borderColor: themeBorderRaw === null
+          ? undefined
           : (themeBorder ?? (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}60` : 'rgba(255,255,255,0.08)')))
       }}
     >
@@ -2203,10 +2196,10 @@ const Widget: React.FC<WidgetProps> = ({
         <div className="flex items-center gap-2 md:gap-3 truncate">
           <div
             style={{
-                backgroundColor: projectIconUrl
-                  ? 'transparent'
-                  : (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}30` : themePrimary))
-              }}
+              backgroundColor: projectIconUrl
+                ? 'transparent'
+                : (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}30` : themePrimary))
+            }}
             className={`w-8 h-8 md:w-9 md:h-9 shadow-lg shrink-0 overflow-hidden flex items-center justify-center ${activeTheme.iconBox} ${isTransparentTheme ? '' : 'text-white'}`}
           >
             {projectIconUrl ? (

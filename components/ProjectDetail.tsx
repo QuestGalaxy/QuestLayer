@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import { fetchProjectDetails, fetchProjectStats, fetchUserXP, rewardDailyShare } from '../lib/supabase';
+import { calculateXpForLevel } from '../lib/gamification';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 
@@ -79,7 +80,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
       if (address) {
         const stats = await fetchUserXP(address);
         setUserStats(stats);
-        setNextLevelXP(stats.level * 3000);
+        setNextLevelXP(calculateXpForLevel(stats.level + 1));
       }
     };
     loadUserStats();
@@ -167,7 +168,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
       if (result.xpAwarded > 0) {
         const stats = await fetchUserXP(address);
         setUserStats(stats);
-        setNextLevelXP(stats.level * 3000);
+        setNextLevelXP(calculateXpForLevel(stats.level + 1));
         setShareRewardMessage(`+${result.xpAwarded} XP credited!`);
       }
     } catch (err) {

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, Crown, Flame, Globe, Loader2, Star, Trophy, Users, X, Gift, Wallet, AlertCircle, Check, Sword, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { fetchAllProjects, fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
+import { calculateXpForLevel, calculateLevel, getTier } from '../lib/gamification';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
 import AnimatedNumber from './AnimatedNumber';
@@ -531,8 +532,15 @@ const ProjectCard: React.FC<{
         </div>
         {userWallet && (
           <div className="absolute right-6 top-5 flex flex-col items-end gap-2">
-            <div className="rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-200">
-              Your XP {formatNumber(data.userXp)}
+            <div className="flex flex-col items-end gap-1">
+              <div className="rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-200">
+                Your XP {formatNumber(data.userXp)}
+              </div>
+              {data.userXp > 0 && (
+                <div className={`px-3 py-1 rounded-full bg-black/40 border border-white/10 text-[8px] font-black uppercase tracking-widest ${getTier(calculateLevel(data.userXp)).color}`}>
+                  {getTier(calculateLevel(data.userXp)).icon} {getTier(calculateLevel(data.userXp)).name}
+                </div>
+              )}
             </div>
             {data.userRank && (
               <div className="rounded-full bg-indigo-500/20 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-indigo-300">
@@ -716,7 +724,7 @@ const ProjectCard: React.FC<{
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -729,7 +737,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
   const [userProjectIds, setUserProjectIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
-  const [nextLevelXP, setNextLevelXP] = useState(3000);
+  const [nextLevelXP, setNextLevelXP] = useState(1000);
   const [leaderboardFilter, setLeaderboardFilter] = useState<'global' | 'mine'>('global');
   const [timeframe, setTimeframe] = useState<'all' | 'weekly'>('all');
 
@@ -761,7 +769,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
       if (address) {
         const stats = await fetchUserXP(address);
         setUserStats(stats);
-        setNextLevelXP(stats.level * 3000);
+        setNextLevelXP(calculateXpForLevel(stats.level + 1));
       }
     };
     loadUserStats();

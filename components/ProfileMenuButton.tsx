@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ExternalLink, Home, Layout, LogOut, ShoppingBag, Star, Trophy, Upload, User } from 'lucide-react';
 import ConnectCta from './ConnectCta';
 import AnimatedNumber from './AnimatedNumber';
+import { getTier } from '../lib/gamification';
 
 interface ProfileMenuButtonProps {
   isConnected: boolean;
@@ -30,6 +31,7 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
   onWidgetBuilder,
   onSubmitProject
 }) => {
+  const tier = getTier(level);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -53,9 +55,15 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
         onClick={() => setIsProfileOpen(!isProfileOpen)}
         className="flex items-center gap-2 md:gap-3 h-10 md:h-12 pl-1 pr-2 md:px-2 md:pr-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
       >
-        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+        <div
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform relative"
+          title={tier.name}
+        >
           <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden">
             <User size={16} className="text-white md:w-[18px] md:h-[18px]" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 text-[10px] md:text-xs">
+            {tier.icon}
           </div>
         </div>
         <div className="flex flex-col">
@@ -88,7 +96,12 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
                 </div>
               </div>
               <div className="flex-1">
-                <div className="text-lg font-black text-white tracking-tight">User</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-lg font-black text-white tracking-tight">User</div>
+                  <div className={`px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest ${tier.color}`}>
+                    {tier.icon} {tier.name}
+                  </div>
+                </div>
                 <div className="flex items-center gap-2 text-xs font-mono text-slate-400 mb-2">
                   {address?.slice(0, 6)}...{address?.slice(-4)}
                   <ExternalLink size={12} className="hover:text-white cursor-pointer transition-colors" />

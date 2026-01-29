@@ -156,6 +156,8 @@ export const fetchGlobalDashboardStats = async (ownerAddress: string) => {
   return data;
 };
 
+import { calculateLevel } from './gamification';
+
 export const fetchUserXP = async (walletAddress: string) => {
   // Use the RPC to get aggregated global XP across all projects
   const { data: globalXP, error } = await supabase.rpc('get_global_xp', { wallet_addr: walletAddress });
@@ -166,9 +168,7 @@ export const fetchUserXP = async (walletAddress: string) => {
   }
 
   const xp = globalXP || 0;
-  // Calculate Level based on standard formula (same as Widget.tsx)
-  const xpPerLevel = 3000;
-  const level = Math.floor(xp / xpPerLevel) + 1;
+  const level = calculateLevel(xp);
 
   return { xp, level };
 };
