@@ -6,6 +6,7 @@ import { calculateXpForLevel, calculateLevel, getTier } from '../lib/gamificatio
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import ProfileMenuButton from './ProfileMenuButton';
 import AnimatedNumber from './AnimatedNumber';
+import TierIcon from './TierIcon';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 
@@ -537,8 +538,9 @@ const ProjectCard: React.FC<{
                 Your XP {formatNumber(data.userXp)}
               </div>
               {data.userXp > 0 && (
-                <div className={`px-3 py-1 rounded-full bg-black/40 border border-white/10 text-[8px] font-black uppercase tracking-widest ${getTier(calculateLevel(data.userXp)).color}`}>
-                  {getTier(calculateLevel(data.userXp)).icon} {getTier(calculateLevel(data.userXp)).name}
+                <div className={`px-2.5 py-1 rounded-full bg-gradient-to-br ${getTier(calculateLevel(data.userXp)).bgGradient} border border-white/10 text-[8px] font-black uppercase tracking-widest ${getTier(calculateLevel(data.userXp)).color} shadow-lg ${getTier(calculateLevel(data.userXp)).shadow} backdrop-blur-md flex items-center gap-1.5`}>
+                  <TierIcon icon={getTier(calculateLevel(data.userXp)).icon} size={16} />
+                  <span className={`bg-gradient-to-br ${getTier(calculateLevel(data.userXp)).textGradient} bg-clip-text text-transparent`}>{getTier(calculateLevel(data.userXp)).name}</span>
                 </div>
               )}
             </div>

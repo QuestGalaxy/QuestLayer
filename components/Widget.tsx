@@ -8,8 +8,9 @@ import {
   LogOut, X, Zap, Trophy, Flame, ChevronRight, CheckCircle2,
   ShieldCheck, ExternalLink, Sparkles, Loader2, Send, Coins, Gem, Sword, Crown,
   MessageSquare, Facebook, Linkedin, Twitter, Globe, Calendar, Heart, User,
-  XCircle, Lock, RefreshCw, Shield
+  XCircle, Lock, RefreshCw, Shield, Bird, Star
 } from 'lucide-react';
+import TierIcon from './TierIcon';
 import { supabase, logProjectView } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import { useChainId, useSignMessage, useSwitchChain } from 'wagmi';
@@ -680,7 +681,8 @@ const Widget: React.FC<WidgetProps> = ({
       lvl: progressData.level,
       progress: Math.floor(progressData.progress),
       xpNeeded: progressData.xpRequired - progressData.xpInLevel,
-      effectiveXP
+      effectiveXP,
+      tier: progressData.tier
     };
   };
 
@@ -2330,22 +2332,34 @@ const Widget: React.FC<WidgetProps> = ({
                   <button
                     onClick={() => handleQuestLayerNav('/browse')}
                     title="Open profile"
-                    className={`w-7 h-7 md:w-10 md:h-10 flex items-center justify-center text-xs md:text-lg font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-transform hover:scale-105`}
-                    style={{ backgroundColor: isLightTheme ? '#000' : state.accentColor }}
+                    className={`w-8 h-8 md:w-11 md:h-11 flex items-center justify-center text-sm md:text-xl font-black text-white relative group/level ${activeTheme.iconBox} ${visualXP < state.userXP ? 'animate-pulse' : ''} transition-all duration-300 hover:scale-110 shadow-lg ${currentLevelData.tier.shadow}`}
+                    style={{
+                      backgroundColor: isLightTheme ? '#000' : state.accentColor,
+                      boxShadow: currentLevelData.lvl > 1 ? `0 0 20px ${currentLevelData.tier.color.replace('text-', '')}` : undefined
+                    }}
                   >
                     <span className="group-hover/level:opacity-0 transition-opacity">
                       {currentLevelData.lvl}
                     </span>
                     <span className="absolute inset-0 flex items-center justify-center opacity-0 scale-75 group-hover/level:opacity-100 group-hover/level:scale-100 transition-all">
-                      <span className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-white/20 flex items-center justify-center">
-                        <User className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/20 flex items-center justify-center">
+                        <User className="w-3 h-3 md:w-5 md:h-5" />
                       </span>
                     </span>
-                    {visualXP < state.userXP && <Sparkles size={6} className="absolute -top-1 -right-1 text-white animate-bounce" />}
+                    {visualXP < state.userXP && <Sparkles size={8} className="absolute -top-1 -right-1 text-white animate-bounce" />}
+
+                    {/* Tier Icon Badge on the corner of the level box */}
+                    <div className="absolute -top-3 -right-3 w-8 h-8 flex items-center justify-center filter drop-shadow-[0_0_12px_rgba(255,191,0,0.5)]">
+                      <TierIcon icon={currentLevelData.tier.icon} size={22} />
+                    </div>
                   </button>
-                  <div>
-                    <p className={`text-[10px] md:text-[10px] font-black uppercase ${isLightTheme ? 'text-slate-500' : 'opacity-60 text-white'}`}>Rank</p>
-                    <p className={`text-[11px] md:text-[11px] font-black uppercase tracking-widest ${isLightTheme ? 'text-indigo-700' : 'text-indigo-500'}`} style={!isLightTheme ? { color: themePrimary } : {}}>{getRankName()}</p>
+                  <div className="flex flex-col gap-0.5">
+                    <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>Current Tier</p>
+                    <div className="flex items-center gap-1.5 drop-shadow-[0_0_10px_currentColor]">
+                      <span className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest bg-gradient-to-br ${currentLevelData.tier.textGradient} bg-clip-text text-transparent flex items-center gap-1`}>
+                        {currentLevelData.tier.name}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <button
