@@ -275,7 +275,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuil
             Turn Any Website Into an Interactive <br className="hidden md:block" />
             <span className="relative inline-block">
               <span className="relative z-10 text-orange-500 italic underline decoration-orange-500/30 underline-offset-[12px]">Quest & Reward Hub</span>
-              <div className="absolute -inset-x-2 -inset-y-1 bg-orange-500/10 blur-xl rounded-full -z-0 animate-pulse" />
+              <span className="absolute -inset-x-2 -inset-y-1 bg-orange-500/10 blur-xl rounded-full -z-0 animate-pulse" />
             </span>
           </p>
           <div className="mt-10 flex flex-row items-center justify-center gap-x-3 sm:gap-x-6 px-4 sm:px-10 py-3 sm:py-4 bg-white/[0.03] border border-white/10 rounded-full max-w-[98vw] backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.05)]">
