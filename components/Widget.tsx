@@ -2539,7 +2539,11 @@ const Widget: React.FC<WidgetProps> = ({
                   <div className="flex flex-col gap-0.5">
                     <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>Current Tier</p>
                     <div className="flex items-center gap-1.5 drop-shadow-[0_0_10px_currentColor]">
-                      <span className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest bg-gradient-to-br ${currentLevelData.tier.textGradient} bg-clip-text text-transparent flex items-center gap-1`}>
+                      <span className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest flex items-center gap-1 ${
+                        isLightTheme
+                          ? (currentLevelData.tier.color || 'text-black')
+                          : (currentLevelData.tier.color || 'text-white')
+                      }`}>
                         {currentLevelData.tier.name}
                       </span>
                     </div>
