@@ -110,6 +110,8 @@ const Widget: React.FC<WidgetProps> = ({
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
   const isMinimalTheme = state.activeTheme === 'minimal';
+  const isBrutalTheme = state.activeTheme === 'brutal';
+  const isAuraTheme = state.activeTheme === 'aura';
   const [isConnectHover, setIsConnectHover] = useState(false);
 
   const getUtcDayRange = (date = new Date()) => {
@@ -1708,7 +1710,7 @@ const Widget: React.FC<WidgetProps> = ({
       return (
         <div key={task.id} className="relative">
           <div
-            className={`p-3 md:p-4 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''} ${isOnboardingVariant ? 'backdrop-blur-xl' : ''} ${isOnboardingVariant ? 'ring-1 ring-white/10' : ''}`}
+            className={`p-2 md:p-3 border border-opacity-20 shadow-sm transition-all relative overflow-hidden ${activeTheme.itemCard} ${isCompleted ? 'opacity-60 grayscale-[0.8]' : ''} ${isOnboardingVariant ? 'backdrop-blur-xl' : ''} ${isOnboardingVariant ? 'ring-1 ring-white/10' : ''}`}
             style={{
               borderColor: (themeBorderRaw && themeBorderRaw !== 'accent') ? `${themeBorderRaw}40` : undefined,
               boxShadow: (themeBorderRaw && themeBorderRaw !== 'accent') ? `3px 3px 0px 0px ${themeBorderRaw}20` : undefined,
@@ -2317,13 +2319,17 @@ const Widget: React.FC<WidgetProps> = ({
           : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))),
         '--ql-border-emphasis-soft': toRgba((themeBorderRaw === null
           ? (isLightTheme ? '#000000' : '#ffffff')
-          : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))), isLightTheme ? 0.35 : 0.22),
+          : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))), isLightTheme ? (isAuraTheme ? 0.6 : 0.35) : 0.22),
         '--ql-border-emphasis-strong': (themeBorderRaw === null
           ? (isLightTheme ? '#000000' : '#ffffff')
           : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))),
-        borderColor: themeBorderRaw === null
-          ? undefined
-          : (themeBorder ?? (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}60` : 'rgba(255,255,255,0.08)')))
+        borderColor: (isMinimalTheme || isBrutalTheme || isAuraTheme)
+          ? (isAuraTheme ? (themeBorder || state.accentColor) : '#000')
+          : (themeBorderRaw === null
+            ? undefined
+            : (themeBorder ?? (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}60` : 'rgba(255,255,255,0.08)')))),
+        borderWidth: (isMinimalTheme || isBrutalTheme || isAuraTheme) ? 2 : undefined,
+        borderStyle: (isMinimalTheme || isBrutalTheme || isAuraTheme) ? 'solid' : undefined
       }}
     >
       {/* Header */}
@@ -2409,7 +2415,7 @@ const Widget: React.FC<WidgetProps> = ({
       </div>
 
       {/* Body */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-5 md:space-y-6 custom-scroll">
+      <div className="flex-1 min-h-0 overflow-y-auto p-1 md:p-2 space-y-2 md:space-y-3 custom-scroll">
         {!effectiveConnected ? (
           <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
             <div className="space-y-2">
@@ -2423,7 +2429,7 @@ const Widget: React.FC<WidgetProps> = ({
                 Connect to unlock <br /><span className="opacity-40 text-xs md:text-sm">{state.projectName} Missions</span>
               </h3>
             </div>
-            <div className={`w-full space-y-3 text-left p-4 md:p-4 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
+            <div className={`w-full space-y-3 text-left p-2 md:p-3 rounded-xl border ${isLightTheme ? 'bg-slate-50 border-slate-200' : 'bg-white/5 border-white/5'}`}>
               <p className={`text-[11px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isLightTheme ? 'text-indigo-700' : 'text-indigo-400'}`} style={!isLightTheme ? { color: themePrimary } : {}}>
                 <ChevronRight size={8} /> Protocol Intel
               </p>
@@ -2452,7 +2458,7 @@ const Widget: React.FC<WidgetProps> = ({
               disabled={isConnecting}
               style={{
                 ...((!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})),
-                ...(isMinimalTheme ? {
+                ...((isMinimalTheme || isBrutalTheme) ? {
                   backgroundColor: isConnectHover ? '#ffffff' : '#000000',
                   color: isConnectHover ? '#000000' : '#ffffff',
                   borderColor: '#000000',
