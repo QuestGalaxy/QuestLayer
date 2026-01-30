@@ -30,6 +30,10 @@ type ProjectLeaderboard = {
   userXp: number;
   userRank: number | null;
   leaderboard: LeaderboardEntry[];
+  userId?: string | null;
+  claimStatus?: { daily: boolean; weekly: boolean };
+  claimableDaily?: boolean;
+  claimableWeekly?: boolean;
 };
 
 const PROJECT_PLACEHOLDER = 'QuestLayer';
@@ -250,17 +254,24 @@ const RewardsTable = () => (
 const ProjectCard: React.FC<{
   data: ProjectLeaderboard;
   userWallet?: string;
+  userId?: string | null;
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
   timeframe: 'all' | 'weekly';
   timeRemaining: string;
   onRewardClaimed?: (amount: number) => void;
-}> = ({ data, userWallet, onContinue, timeframe, timeRemaining, onRewardClaimed }) => {
+  initialClaimStatus?: { daily: boolean; weekly: boolean };
+}> = ({ data, userWallet, userId, onContinue, timeframe, timeRemaining, onRewardClaimed, initialClaimStatus }) => {
   const [ogImage, setOgImage] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const [claimStatus, setClaimStatus] = useState({ daily: false, weekly: false });
+  const [claimStatus, setClaimStatus] = useState(() => initialClaimStatus ?? { daily: false, weekly: false });
   const [claiming, setClaiming] = useState<'daily' | 'weekly' | null>(null);
+
+  useEffect(() => {
+    if (!initialClaimStatus) return;
+    setClaimStatus(initialClaimStatus);
+  }, [initialClaimStatus?.daily, initialClaimStatus?.weekly]);
 
   const [dailyTimeRemaining, setDailyTimeRemaining] = useState<string>('');
   const [weeklyTimeRemaining, setWeeklyTimeRemaining] = useState<string>('');
@@ -309,49 +320,12 @@ const ProjectCard: React.FC<{
     status: 'idle'
   });
 
-  // Check claim status on mount
   useEffect(() => {
-    if (!userWallet || !data.project?.id) return;
-
-    const checkStatus = async () => {
-      const { data: status, error } = await supabase.rpc('get_leaderboard_claim_status', {
-        p_user_id: userWallet, // Wait, RPC expects UUID user_id, but here we might only have wallet address?
-        // Actually, get_leaderboard_claim_status expects UUID.
-        // We need to resolve wallet to UUID first or update RPC to accept wallet.
-        // Let's check how we get user_id usually.
-        // In this component, we don't have user_id readily available in props, only wallet.
-        // However, we can use the 'user_progress' check logic or update RPC to take wallet.
-        // Updating RPC is better. But for now let's assume we can't easily change RPC without another file edit.
-        // Let's check if we can fetch user_id.
-        p_project_id: data.project.id
-      });
-    };
-    // Wait, the RPC 'get_leaderboard_claim_status' takes p_user_id (uuid).
-    // The prop 'userWallet' is a string (0x...).
-    // We need to find the user_id corresponding to this wallet for this project.
-    // Or better, update the RPC to accept wallet_address.
-  }, [userWallet, data.project?.id]);
-
-  // Let's look at how we can fix the RPC call issue.
-  // We can query end_users table to get ID.
-
-  useEffect(() => {
-    if (!userWallet || !data.project?.id) return;
+    if (!userId || !data.project?.id) return;
 
     const fetchStatus = async () => {
-      // 1. Get User ID
-      const { data: userData } = await supabase
-        .from('end_users')
-        .select('id')
-        .eq('project_id', data.project.id)
-        .eq('wallet_address', userWallet)
-        .single();
-
-      if (!userData) return;
-
-      // 2. Get Claim Status
       const { data: status } = await supabase.rpc('get_leaderboard_claim_status', {
-        p_user_id: userData.id,
+        p_user_id: userId,
         p_project_id: data.project.id
       });
 
@@ -364,7 +338,7 @@ const ProjectCard: React.FC<{
     };
 
     fetchStatus();
-  }, [userWallet, data.project?.id, claiming]); // Re-fetch after claiming
+  }, [userId, data.project?.id, claiming]); // Re-fetch after claiming
 
   const calculateReward = (rank: number, period: 'daily' | 'weekly') => {
     let amount = 0;
@@ -397,25 +371,14 @@ const ProjectCard: React.FC<{
   };
 
   const handleModalConfirm = async () => {
-    if (!userWallet || !data.project?.id || !claimModalState.rank) return;
+    if (!userId || !data.project?.id || !claimModalState.rank) return;
     const period = claimModalState.type;
     setClaimModalState(prev => ({ ...prev, status: 'claiming' }));
     setClaiming(period);
 
     try {
-      // 1. Get User ID
-      const { data: userData } = await supabase
-        .from('end_users')
-        .select('id')
-        .eq('project_id', data.project.id)
-        .eq('wallet_address', userWallet)
-        .single();
-
-      if (!userData) throw new Error('User not found');
-
-      // 2. Claim
       const { data: result, error } = await supabase.rpc('claim_leaderboard_reward', {
-        p_user_id: userData.id,
+        p_user_id: userId,
         p_project_id: data.project.id,
         p_period_type: period
       });
@@ -598,8 +561,8 @@ const ProjectCard: React.FC<{
               {/* Daily Claim Button */}
               <button
                 onClick={() => handleClaim('daily')}
-                disabled={!data.userRank || data.userRank > 10 || claimStatus.daily || claiming === 'daily'}
-                className={`relative group flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all duration-300 overflow-hidden ${!data.userRank || data.userRank > 10
+                disabled={!userId || !data.userRank || data.userRank > 10 || claimStatus.daily || claiming === 'daily'}
+                className={`relative group flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all duration-300 overflow-hidden ${!userId || !data.userRank || data.userRank > 10
                   ? 'border-white/5 bg-white/5 opacity-50 cursor-not-allowed grayscale'
                   : claimStatus.daily
                     ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
@@ -633,8 +596,8 @@ const ProjectCard: React.FC<{
               {/* Weekly Claim Button */}
               <button
                 onClick={() => handleClaim('weekly')}
-                disabled={!data.userRank || data.userRank > 10 || claimStatus.weekly || claiming === 'weekly'}
-                className={`relative group flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all duration-300 overflow-hidden ${!data.userRank || data.userRank > 10
+                disabled={!userId || !data.userRank || data.userRank > 10 || claimStatus.weekly || claiming === 'weekly'}
+                className={`relative group flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all duration-300 overflow-hidden ${!userId || !data.userRank || data.userRank > 10
                   ? 'border-white/5 bg-white/5 opacity-50 cursor-not-allowed grayscale'
                   : claimStatus.weekly
                     ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
@@ -819,6 +782,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
         const projectIds = uniqueProjects.map(project => project.id);
         const userXpByProject = new Map<string, number>();
         const userProjects = new Set<string>();
+        const userIdByProject = new Map<string, string>();
 
         if (address && projectIds.length > 0) {
           const { data: userLinks, error: userError } = await supabase
@@ -828,7 +792,10 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
             .in('project_id', projectIds);
 
           if (!userError && userLinks && userLinks.length > 0) {
-            userLinks.forEach(link => userProjects.add(link.project_id));
+            userLinks.forEach(link => {
+              userProjects.add(link.project_id);
+              if (link.id) userIdByProject.set(link.project_id, link.id);
+            });
 
             if (timeframe === 'all') {
               const userIds = userLinks.map(link => link.id);
@@ -853,6 +820,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
           uniqueProjects.map(async project => {
             const stats = project.stats;
             const userXp = (timeframe === 'all' && address) ? userXpByProject.get(project.id) || 0 : 0;
+            const userId = userIdByProject.get(project.id) ?? null;
 
             let leaderboard: LeaderboardEntry[] = [];
 
@@ -891,12 +859,33 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
               userRank = (count || 0) + 1;
             }
 
+            let claimStatus = { daily: false, weekly: false };
+            if (userId) {
+              const { data: status } = await supabase.rpc('get_leaderboard_claim_status', {
+                p_user_id: userId,
+                p_project_id: project.id
+              });
+              if (status) {
+                claimStatus = {
+                  daily: status.daily_claimed,
+                  weekly: status.weekly_claimed
+                };
+              }
+            }
+
+            const claimableDaily = Boolean(userRank && userRank <= 10 && !claimStatus.daily);
+            const claimableWeekly = Boolean(userRank && userRank <= 10 && !claimStatus.weekly);
+
             return {
               project,
               stats,
               userXp,
               userRank,
-              leaderboard
+              leaderboard,
+              userId,
+              claimStatus,
+              claimableDaily,
+              claimableWeekly
             };
           })
         );
@@ -942,7 +931,16 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
       return projects.filter(project => project.project?.id === focusProjectId);
     }
     if (leaderboardFilter === 'mine' && isConnected) {
-      return projects.filter(project => userProjectIds.has(project.project.id));
+      const mine = projects.filter(project => userProjectIds.has(project.project.id));
+      const sorted = [...mine].sort((a, b) => {
+        const priorityA = (a.claimableDaily ? 2 : 0) + (a.claimableWeekly ? 1 : 0);
+        const priorityB = (b.claimableDaily ? 2 : 0) + (b.claimableWeekly ? 1 : 0);
+        if (priorityB !== priorityA) return priorityB - priorityA;
+        const visitsA = a.stats?.total_visits || 0;
+        const visitsB = b.stats?.total_visits || 0;
+        return visitsB - visitsA;
+      });
+      return sorted;
     }
     return projects;
   }, [leaderboardFilter, isConnected, projects, userProjectIds, focusProjectId]);
@@ -1123,6 +1121,8 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
                   key={project.project.id}
                   data={project}
                   userWallet={address || undefined}
+                  userId={project.userId}
+                  initialClaimStatus={project.claimStatus}
                   onContinue={onContinue}
                   timeframe={timeframe}
                   timeRemaining={timeRemaining}
