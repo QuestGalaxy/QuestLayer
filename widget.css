@@ -45,4 +45,9 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
   }
+
+  [data-ql-root="true"].ql-outer-frame {
+    outline: 2px solid var(--ql-border-emphasis-strong, #000000);
+    outline-offset: -2px;
+  }
 }

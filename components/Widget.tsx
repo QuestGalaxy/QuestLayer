@@ -112,6 +112,7 @@ const Widget: React.FC<WidgetProps> = ({
   const isMinimalTheme = state.activeTheme === 'minimal';
   const isBrutalTheme = state.activeTheme === 'brutal';
   const isAuraTheme = state.activeTheme === 'aura';
+  const isGlassTheme = state.activeTheme === 'glass';
   const [isConnectHover, setIsConnectHover] = useState(false);
 
   const getUtcDayRange = (date = new Date()) => {
@@ -2340,7 +2341,7 @@ const Widget: React.FC<WidgetProps> = ({
     <div
       data-ql-root="true"
       data-ql-theme={isLightTheme ? 'light' : 'dark'}
-      className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col overflow-hidden theme-transition ${isFreeForm ? `${isPreview ? 'relative z-[130]' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]`}` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
+      className={`ql-outer-frame w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col overflow-hidden theme-transition ${isFreeForm ? `${isPreview ? 'relative z-[130]' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]`}` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
       style={{
         maxHeight: (isOpen && maxPanelHeight)
           ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
@@ -2354,13 +2355,14 @@ const Widget: React.FC<WidgetProps> = ({
         '--ql-border-emphasis-strong': (themeBorderRaw === null
           ? (isLightTheme ? '#000000' : '#ffffff')
           : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))),
-        borderColor: (isMinimalTheme || isBrutalTheme || isAuraTheme)
-          ? (isAuraTheme ? (themeBorder || state.accentColor) : '#000')
+        borderColor: (isMinimalTheme || isBrutalTheme || isAuraTheme || isGlassTheme)
+          ? (isAuraTheme ? (themeBorder || state.accentColor) : (isGlassTheme ? 'rgba(15, 23, 42, 0.2)' : '#000'))
           : (themeBorderRaw === null
             ? undefined
             : (themeBorder ?? (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}60` : 'rgba(255,255,255,0.08)')))),
-        borderWidth: (isMinimalTheme || isBrutalTheme || isAuraTheme) ? 2 : undefined,
-        borderStyle: (isMinimalTheme || isBrutalTheme || isAuraTheme) ? 'solid' : undefined
+        borderWidth: (isMinimalTheme || isBrutalTheme || isAuraTheme) ? 2 : (isGlassTheme ? 2 : undefined),
+        borderStyle: (isMinimalTheme || isBrutalTheme || isAuraTheme || isGlassTheme) ? 'solid' : undefined,
+        boxShadow: isGlassTheme ? 'inset 0 0 0 2px rgba(15, 23, 42, 0.2)' : undefined
       }}
     >
       {/* Header */}
