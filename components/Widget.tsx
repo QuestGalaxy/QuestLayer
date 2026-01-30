@@ -162,6 +162,24 @@ const Widget: React.FC<WidgetProps> = ({
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[\s\p{P}\p{S}]+/gu, '');
+  const toRgba = (value: string, alpha: number) => {
+    const trimmed = value.trim();
+    if (!trimmed.startsWith('#')) return value;
+    const hex = trimmed.replace('#', '');
+    if (hex.length === 3) {
+      const r = parseInt(hex[0] + hex[0], 16);
+      const g = parseInt(hex[1] + hex[1], 16);
+      const b = parseInt(hex[2] + hex[2], 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    if (hex.length === 6) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return value;
+  };
   const isAnswerMatch = (input: string, answer: string) => {
     const normalizedAnswer = normalizeAnswer(answer);
     if (!normalizedAnswer) return false;
@@ -2287,11 +2305,22 @@ const Widget: React.FC<WidgetProps> = ({
 
   const popupContent = (
     <div
+      data-ql-root="true"
+      data-ql-theme={isLightTheme ? 'light' : 'dark'}
       className={`w-[min(350px,calc(100vw-1rem))] md:w-[350px] flex flex-col overflow-hidden theme-transition ${isFreeForm ? `${isPreview ? 'relative z-[130]' : `${overlayPositionClasses} left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[2147483001]`}` : 'relative'} ${isOpen ? `${isPreview ? 'max-h-[calc(100%-3.5rem)]' : 'max-h-full'}` : ''} ${activeTheme.card} ${activeTheme.font} ${isLightTheme ? 'text-black' : 'text-white'}`}
       style={{
         maxHeight: (isOpen && maxPanelHeight)
           ? `${Math.max(280, Math.floor(maxPanelHeight / Math.max(0.8, effectiveScale)))}px`
           : undefined,
+        '--ql-border-emphasis': (themeBorderRaw === null
+          ? (isLightTheme ? '#000000' : '#ffffff')
+          : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))),
+        '--ql-border-emphasis-soft': toRgba((themeBorderRaw === null
+          ? (isLightTheme ? '#000000' : '#ffffff')
+          : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))), isLightTheme ? 0.35 : 0.22),
+        '--ql-border-emphasis-strong': (themeBorderRaw === null
+          ? (isLightTheme ? '#000000' : '#ffffff')
+          : (themeBorderRaw === 'accent' ? state.accentColor : (themeBorderRaw || (isLightTheme ? '#000000' : '#ffffff')))),
         borderColor: themeBorderRaw === null
           ? undefined
           : (themeBorder ?? (isLightTheme ? '#000' : (isTransparentTheme ? `${themePrimary}60` : 'rgba(255,255,255,0.08)')))
