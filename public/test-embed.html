@@ -94,6 +94,16 @@
         font-size: 0.75rem;
       }
 
+      .size-switcher {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .size-switcher .pos-btn {
+        flex: 1 1 0;
+      }
+
       /* Main Content */
       main {
         flex: 1;
@@ -381,6 +391,11 @@
           <button class="pos-btn" data-pos="top-left">Top Left</button>
           <button class="pos-btn" data-pos="free-form" style="grid-column: span 2;">Free Form (Inline)</button>
         </div>
+        <div class="size-switcher" id="size-switcher">
+          <button class="pos-btn" data-size="small">Small</button>
+          <button class="pos-btn" data-size="medium">Medium</button>
+          <button class="pos-btn" data-size="large">Large</button>
+        </div>
       </div>
 
       <div id="inline-widget-area" class="content-block" style="display: none;">
@@ -475,6 +490,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const currentPos = urlParams.get('pos') || 'bottom-right';
         const currentTheme = urlParams.get('theme') || 'quest';
+        const currentSize = urlParams.get('size') || 'medium';
 
         // Initialize Position Switcher UI
         const posButtons = document.querySelectorAll('.pos-btn[data-pos]');
@@ -504,6 +520,20 @@
           });
         });
 
+        // Initialize Size Switcher UI
+        const sizeButtons = document.querySelectorAll('.pos-btn[data-size]');
+        sizeButtons.forEach(btn => {
+          if (btn.dataset.size === currentSize) {
+            btn.classList.add('active');
+          }
+          btn.addEventListener('click', () => {
+            const newSize = btn.dataset.size;
+            const newUrl = new URL(window.location);
+            newUrl.searchParams.set('size', newSize);
+            window.location.href = newUrl.toString();
+          });
+        });
+
         // Mount Widget
         const script = document.createElement('script');
         script.src = EMBED_SRC;
@@ -512,7 +542,8 @@
           projectName: PROJECT_NAME,
           projectId: PROJECT_ID,
           position: currentPos,
-          activeTheme: currentTheme
+          activeTheme: currentTheme,
+          widgetSize: currentSize
         };
 
         if (currentPos === 'free-form') {

@@ -1471,10 +1471,10 @@ const Widget: React.FC<WidgetProps> = ({
   const currentLevelData = calculateLevel(visualXP);
   const shortAddress = address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '';
   const triggerSizeClass = state.widgetSize === 'small'
-    ? 'px-3 md:px-4 h-9 md:h-11'
+    ? 'px-2.5 md:px-3 h-8 md:h-10'
     : state.widgetSize === 'large'
-      ? 'px-5 md:px-7 h-12 md:h-16'
-      : 'px-4 md:px-6 h-10 md:h-14';
+      ? 'px-4 md:px-6 h-11 md:h-14'
+      : 'px-3 md:px-5 h-9 md:h-12';
   const triggerTextClass = state.widgetSize === 'small'
     ? 'text-xs md:text-sm'
     : state.widgetSize === 'large'
@@ -1543,7 +1543,8 @@ const Widget: React.FC<WidgetProps> = ({
       case 'minimal':
       case 'brutal':
         return {
-          borderColor: '#000'
+          borderColor: '#000',
+          boxShadow: '4px 4px 0px 0px #000'
         };
       default:
         return {
@@ -2852,7 +2853,7 @@ const Widget: React.FC<WidgetProps> = ({
             className={`${isPreview ? (isOpen ? 'relative z-[40]' : 'relative z-[120]') : 'z-40'} flex items-center gap-2 md:gap-3 ${triggerSizeClass} shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${(isPreview || isEmbedded) && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
           >
             {!effectiveConnected ? (
-              <span className={`flex items-center gap-1.5 md:gap-2 ${triggerTextClass}`}>
+              <span className={`flex items-center gap-1 md:gap-1.5 ${triggerTextClass}`}>
                 <Zap className={triggerIconClass} fill="currentColor" />
                 Connect
               </span>
