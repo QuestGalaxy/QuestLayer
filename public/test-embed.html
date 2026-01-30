@@ -74,6 +74,26 @@
         font-size: 1.5rem;
       }
 
+      .theme-ribbon {
+        position: sticky;
+        top: var(--nav-height);
+        z-index: 9;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        padding: 10px 16px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .theme-ribbon .pos-btn {
+        flex: 0 0 auto;
+        padding: 8px 14px;
+        font-size: 0.75rem;
+      }
+
       /* Main Content */
       main {
         flex: 1;
@@ -290,6 +310,19 @@
       <button class="menu-btn">☰</button>
     </header>
 
+    <div class="theme-ribbon" id="theme-switcher">
+      <button class="pos-btn" data-theme="sleek">Sleek</button>
+      <button class="pos-btn" data-theme="cyber">Cyber</button>
+      <button class="pos-btn" data-theme="minimal">Minimal</button>
+      <button class="pos-btn" data-theme="gaming">Gaming</button>
+      <button class="pos-btn" data-theme="brutal">Brutal</button>
+      <button class="pos-btn" data-theme="glass">Glass</button>
+      <button class="pos-btn" data-theme="terminal">Terminal</button>
+      <button class="pos-btn" data-theme="aura">Aura</button>
+      <button class="pos-btn" data-theme="avatar">Avatar</button>
+      <button class="pos-btn" data-theme="ironman">Ironman</button>
+    </div>
+
     <main>
       <div class="welcome-card">
         <h1>Welcome Back!</h1>
@@ -347,23 +380,6 @@
           <button class="pos-btn" data-pos="top-right">Top Right</button>
           <button class="pos-btn" data-pos="top-left">Top Left</button>
           <button class="pos-btn" data-pos="free-form" style="grid-column: span 2;">Free Form (Inline)</button>
-        </div>
-      </div>
-
-      <div class="controls-section" style="margin-top: 24px;">
-        <div class="section-title" style="margin-bottom: 8px;">Theme</div>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Select a visual style.</p>
-        <div class="control-grid" id="theme-switcher">
-          <button class="pos-btn" data-theme="sleek">Sleek</button>
-          <button class="pos-btn" data-theme="cyber">Cyber</button>
-          <button class="pos-btn" data-theme="minimal">Minimal</button>
-          <button class="pos-btn" data-theme="gaming">Gaming</button>
-          <button class="pos-btn" data-theme="brutal">Brutal</button>
-          <button class="pos-btn" data-theme="glass">Glass</button>
-          <button class="pos-btn" data-theme="terminal">Terminal</button>
-          <button class="pos-btn" data-theme="aura">Aura</button>
-          <button class="pos-btn" data-theme="avatar">Avatar</button>
-          <button class="pos-btn" data-theme="ironman">Ironman</button>
         </div>
       </div>
 
