@@ -336,7 +336,7 @@ const Widget: React.FC<WidgetProps> = ({
       try {
         const { data: project, error: projectError } = await supabase
           .from('projects')
-          .select('id, name, domain, description, social_links, accent_color, position, theme, logo_url, banner_url')
+          .select('id, name, domain, description, social_links, accent_color, position, theme, widget_size, logo_url, banner_url')
           .eq('id', projectId)
           .single();
         if (projectError) throw projectError;
@@ -360,7 +360,8 @@ const Widget: React.FC<WidgetProps> = ({
             projectBanner: project?.banner_url ?? prev.projectBanner,
             accentColor: project?.accent_color ?? prev.accentColor,
             position: (project?.position as Position) ?? prev.position,
-            activeTheme: (project?.theme as ThemeType) ?? prev.activeTheme
+            activeTheme: (project?.theme as ThemeType) ?? prev.activeTheme,
+            widgetSize: (project?.widget_size as AppState['widgetSize']) ?? prev.widgetSize
           };
 
           if (tasks && tasks.length > 0) {
@@ -1469,6 +1470,31 @@ const Widget: React.FC<WidgetProps> = ({
 
   const currentLevelData = calculateLevel(visualXP);
   const shortAddress = address ? `${address.slice(0, 4)}...${address.slice(-4)}` : '';
+  const triggerSizeClass = state.widgetSize === 'small'
+    ? 'px-3 md:px-4 h-9 md:h-11'
+    : state.widgetSize === 'large'
+      ? 'px-5 md:px-7 h-12 md:h-16'
+      : 'px-4 md:px-6 h-10 md:h-14';
+  const triggerTextClass = state.widgetSize === 'small'
+    ? 'text-xs md:text-sm'
+    : state.widgetSize === 'large'
+      ? 'text-base md:text-lg'
+      : 'text-sm md:text-sm';
+  const triggerIconClass = state.widgetSize === 'small'
+    ? 'w-[10px] h-[10px] md:w-[14px] md:h-[14px]'
+    : state.widgetSize === 'large'
+      ? 'w-[14px] h-[14px] md:w-[18px] md:h-[18px]'
+      : 'w-[12px] h-[12px] md:w-[16px] md:h-[16px]';
+  const triggerMetaClass = state.widgetSize === 'small'
+    ? 'text-[8px] md:text-[9px]'
+    : state.widgetSize === 'large'
+      ? 'text-[10px] md:text-[11px]'
+      : 'text-[9px] md:text-[10px]';
+  const triggerLevelClass = state.widgetSize === 'small'
+    ? 'text-sm md:text-base'
+    : state.widgetSize === 'large'
+      ? 'text-base md:text-xl'
+      : 'text-sm md:text-lg';
   const triggerStyle = (() => {
     if (isTransparentTheme) {
       return {
@@ -2823,21 +2849,21 @@ const Widget: React.FC<WidgetProps> = ({
               setIsOpen(prev => !prev);
             }}
             style={triggerStyle}
-            className={`${isPreview ? (isOpen ? 'relative z-[40]' : 'relative z-[120]') : 'z-40'} flex items-center gap-2 md:gap-3 px-4 md:px-6 h-10 md:h-14 shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${(isPreview || isEmbedded) && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
+            className={`${isPreview ? (isOpen ? 'relative z-[40]' : 'relative z-[120]') : 'z-40'} flex items-center gap-2 md:gap-3 ${triggerSizeClass} shadow-2xl theme-transition font-bold border-2 ${activeTheme.trigger} ${isLightTheme ? 'text-black' : 'text-white'} ${(isPreview || isEmbedded) && !isOpen ? 'animate-[pulse_3s_ease-in-out_infinite] hover:animate-none scale-110 hover:scale-125' : ''}`}
           >
             {!effectiveConnected ? (
-              <span className="flex items-center gap-1.5 md:gap-2 text-sm md:text-sm">
-                <Zap className="w-[12px] h-[12px] md:w-[16px] md:h-[16px]" fill="currentColor" />
+              <span className={`flex items-center gap-1.5 md:gap-2 ${triggerTextClass}`}>
+                <Zap className={triggerIconClass} fill="currentColor" />
                 Connect
               </span>
             ) : (
               <span className="flex items-center gap-2 md:gap-3">
-                <div className="bg-white/10 px-1 py-0.5 rounded text-[9px] md:text-[10px] font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none">
+                <div className={`bg-white/10 px-1 py-0.5 rounded ${triggerMetaClass} font-mono tracking-tighter uppercase truncate max-w-[40px] md:max-w-none`}>
                   {shortAddress}
                 </div>
                 <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 md:pl-2">
-                  <span className="text-[9px] md:text-[10px] font-black uppercase opacity-60">Lvl</span>
-                  <span className="text-sm md:text-lg font-black">{currentLevelData.lvl}</span>
+                  <span className={`${triggerMetaClass} font-black uppercase opacity-60`}>Lvl</span>
+                  <span className={`${triggerLevelClass} font-black`}>{currentLevelData.lvl}</span>
                 </div>
               </span>
             )}

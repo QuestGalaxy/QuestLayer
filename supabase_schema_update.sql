@@ -17,6 +17,9 @@ alter table leaderboard_reward_claims enable row level security;
 create policy "Users can read own leaderboard claims" on leaderboard_reward_claims for select using (true);
 create policy "Users can insert own leaderboard claims" on leaderboard_reward_claims for insert with check (true);
 
+-- Widget size (trigger button size)
+alter table projects add column if not exists widget_size text default 'medium';
+
 -- 14. Claim Leaderboard Reward RPC
 create or replace function claim_leaderboard_reward(
   p_user_id uuid,

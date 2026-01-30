@@ -15,6 +15,7 @@ create table if not exists projects (
   accent_color text default '#6366f1',
   position text default 'bottom-right',
   theme text default 'sleek',
+  widget_size text default 'medium',
   api_key uuid default uuid_generate_v4() unique -- Used by the widget to load config
 );
 
@@ -55,6 +56,7 @@ alter table tasks add column if not exists question text;
 alter table tasks add column if not exists answer text;
 alter table tasks add column if not exists nft_contract text;
 alter table tasks add column if not exists nft_chain_id integer;
+alter table projects add column if not exists widget_size text default 'medium';
 
 -- 3. End Users (People using the widget)
 create table if not exists end_users (

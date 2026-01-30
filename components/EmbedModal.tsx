@@ -25,7 +25,8 @@ const EmbedModal: React.FC<EmbedModalProps> = ({ isOpen, onClose, state }) => {
   const config = {
     projectName: state.projectName,
     projectId: projectId,
-    position: state.position
+    position: state.position,
+    widgetSize: state.widgetSize
   };
 
   const embedOrigin = import.meta.env.DEV && typeof window !== 'undefined'
@@ -42,7 +43,8 @@ useEffect(() => {
   initQuestLayer({
     projectId: '${projectId}',
     projectName: '${state.projectName}',
-    position: '${state.position}'${isFreeForm ? `,\n    mountId: '${mountId}'` : ''}
+    position: '${state.position}',
+    widgetSize: '${state.widgetSize}'${isFreeForm ? `,\n    mountId: '${mountId}'` : ''}
   });
 }, []);${isFreeForm ? `\n\nreturn <div id="${mountId}" />;` : ''}`;
 

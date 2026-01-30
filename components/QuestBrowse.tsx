@@ -25,6 +25,7 @@ const DEFAULT_WIDGET_STATE: AppState = {
   accentColor: '#6366f1',
   position: 'free-form',
   activeTheme: 'sleek',
+  widgetSize: 'medium',
   tasks: INITIAL_TASKS,
   userXP: 0,
   currentStreak: 1,
@@ -687,6 +688,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
         accentColor: project.accent_color,
         position: resolvedPosition,
         activeTheme: project.theme as ThemeType,
+        widgetSize: project.widget_size ?? 'medium',
         tasks: tasks.map((t: any) => ({
           id: t.id,
           title: t.title,

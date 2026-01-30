@@ -8,7 +8,7 @@ import type { AppState, Task } from './types.ts';
 import widgetStyles from './widget.css?inline';
 
 export type WidgetConfig = Partial<
-  Pick<AppState, 'projectName' | 'accentColor' | 'position' | 'activeTheme' | 'tasks'>
+  Pick<AppState, 'projectName' | 'accentColor' | 'position' | 'activeTheme' | 'tasks' | 'widgetSize'>
 > & {
   mountId?: string;
   apiBaseUrl?: string;
@@ -27,6 +27,7 @@ const DEFAULT_STATE: AppState = {
   accentColor: '#a78bfa',
   position: 'free-form',
   activeTheme: 'quest',
+  widgetSize: 'medium',
   tasks: INITIAL_TASKS,
   userXP: 0,
   currentStreak: 1,

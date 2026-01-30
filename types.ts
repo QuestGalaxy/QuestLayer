@@ -7,6 +7,7 @@ export type TaskSection = 'missions' | 'onboarding';
 export type TaskKind = 'link' | 'quiz' | 'nft_hold' | 'token_hold';
 export type TaskRewardCadence = 'once' | 'daily';
 export type TaskQuizType = 'secret_code' | 'multiple_choice';
+export type WidgetSize = 'small' | 'medium' | 'large';
 
 export interface Task {
   id: string | number;
@@ -79,6 +80,7 @@ export interface AppState {
   accentColor: string;
   position: Position;
   activeTheme: ThemeType;
+  widgetSize: WidgetSize;
   tasks: Task[];
   userXP: number;
   globalXP?: number;

@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Task, Position, ThemeType, AppState, ProjectSocialLinks } from '../types.ts';
+import { Task, Position, ThemeType, AppState, ProjectSocialLinks, WidgetSize } from '../types.ts';
 import {
   Edit2, Trash2, Plus, Check, X, Palette, Layout, Target, Droplets, Share2, Loader2,
   ArrowLeft, AlertCircle, Coins, Trophy, Gem, Sword, Crown, Twitter, MessageSquare,
@@ -116,6 +116,7 @@ interface EditorProps {
   setAccentColor: (color: string) => void;
   setPosition: (pos: Position) => void;
   setActiveTheme: (theme: ThemeType) => void;
+  setWidgetSize: (size: WidgetSize) => void;
   setTasks: (tasks: Task[]) => void;
   onPublish: () => Promise<void>;
   onBack: () => void;
@@ -1144,7 +1145,7 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
           <h3>Theme & Color</h3>
         </div>
         <div className="bg-slate-950/50 p-5 rounded-3xl border border-white/5 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-500">Theme</label>
               <select
@@ -1177,6 +1178,18 @@ const BasicBuilder: React.FC<BasicBuilderProps> = ({
                 <option value="top-right">Top Right</option>
                 <option value="top-left">Top Left</option>
                 <option value="free-form">Custom</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-500">Button Size</label>
+              <select
+                value={state.widgetSize}
+                onChange={(e) => setWidgetSize(e.target.value as WidgetSize)}
+                className="w-full h-[38px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
+              >
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
               </select>
             </div>
           </div>
@@ -1251,6 +1264,7 @@ const Editor: React.FC<EditorProps> = ({
   setAccentColor,
   setPosition,
   setActiveTheme,
+  setWidgetSize,
   setTasks,
   onPublish,
   onBack
@@ -2127,6 +2141,20 @@ const Editor: React.FC<EditorProps> = ({
                   <option value="top-right">Top Right</option>
                   <option value="top-left">Top Left</option>
                   <option value="free-form">Custom (embed anywhere)</option>
+                </select>
+              </div>
+              <div className="w-32 space-y-1.5">
+                <label className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1.5">
+                  <Layout size={10} /> Button Size
+                </label>
+                <select
+                  value={state.widgetSize}
+                  onChange={(e) => setWidgetSize(e.target.value as WidgetSize)}
+                  className="w-full h-[38px] bg-slate-900 border border-white/10 rounded-xl px-3 text-[10px] font-bold text-white uppercase outline-none focus:border-indigo-500"
+                >
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                  <option value="large">Large</option>
                 </select>
               </div>
             </div>

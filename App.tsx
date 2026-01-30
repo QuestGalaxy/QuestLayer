@@ -371,6 +371,7 @@ const App: React.FC = () => {
     accentColor: '#a78bfa',
     position: 'free-form',
     activeTheme: 'quest',
+    widgetSize: 'medium',
     tasks: INITIAL_TASKS,
     userXP: 0,
     currentStreak: 1,
@@ -404,6 +405,7 @@ const App: React.FC = () => {
   const handleSetColor = (color: string) => setState(prev => ({ ...prev, accentColor: color }));
   const handleSetPos = (pos: Position) => setState(prev => ({ ...prev, position: pos }));
   const handleSetTheme = (theme: ThemeType) => setState(prev => ({ ...prev, activeTheme: theme }));
+  const handleSetWidgetSize = (size: AppState['widgetSize']) => setState(prev => ({ ...prev, widgetSize: size }));
 
   const lastMetadataDomainRef = useRef<string | null>(null);
   const isValidPreviewUrl = (value?: string | null) => {
@@ -499,18 +501,19 @@ const App: React.FC = () => {
       tokenChainId: task.tokenChainId ?? null,
       minTokenAmount: task.minTokenAmount ?? '1'
     }));
-    return JSON.stringify({
-      projectId: snapshotState.projectId ?? null,
-      projectName: snapshotState.projectName,
-      projectDomain: snapshotState.projectDomain ?? null,
-      projectDescription: snapshotState.projectDescription ?? null,
-      projectSocials: snapshotState.projectSocials ?? null,
-      accentColor: snapshotState.accentColor,
-      position: snapshotState.position,
-      activeTheme: snapshotState.activeTheme,
-      tasks
-    });
-  };
+      return JSON.stringify({
+        projectId: snapshotState.projectId ?? null,
+        projectName: snapshotState.projectName,
+        projectDomain: snapshotState.projectDomain ?? null,
+        projectDescription: snapshotState.projectDescription ?? null,
+        projectSocials: snapshotState.projectSocials ?? null,
+        accentColor: snapshotState.accentColor,
+        position: snapshotState.position,
+        activeTheme: snapshotState.activeTheme,
+        widgetSize: snapshotState.widgetSize,
+        tasks
+      });
+    };
 
   const handlePublish = async () => {
     if (!address) return;
@@ -737,6 +740,7 @@ const App: React.FC = () => {
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,
+                widgetSize: project.widget_size ?? 'medium',
                 tasks: tasks.map((t: any) => ({
                   id: t.id,
                   title: t.title,
@@ -774,6 +778,7 @@ const App: React.FC = () => {
                 accentColor: project.accent_color,
                 position: project.position as Position,
                 activeTheme: project.theme as ThemeType,
+                widgetSize: project.widget_size ?? 'medium',
                 tasks: tasks.map((t: any) => ({
                   id: t.id,
                   title: t.title,
@@ -815,6 +820,7 @@ const App: React.FC = () => {
             accentColor: '#6366f1',
             position: 'free-form',
             activeTheme: 'sleek',
+            widgetSize: 'medium',
             tasks: INITIAL_TASKS,
             userXP: 0,
             currentStreak: 1,
@@ -890,6 +896,7 @@ const App: React.FC = () => {
             setAccentColor={handleSetColor}
             setPosition={handleSetPos}
             setActiveTheme={handleSetTheme}
+            setWidgetSize={handleSetWidgetSize}
             setTasks={handleSetTasks}
             onPublish={handlePublish}
             onBack={() => setCurrentPage('dashboard')}
