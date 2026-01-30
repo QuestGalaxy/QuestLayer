@@ -97,6 +97,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [globalXP, setGlobalXP] = useState(0);
   const [dbProjectId, setDbProjectId] = useState<string | null>(null);
   const [dbUserId, setDbUserId] = useState<string | null>(null);
+  const loadedProjectRef = useRef<string | null>(null);
   const [taskMap, setTaskMap] = useState<Record<string | number, string>>({}); // localId -> dbUuid
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const [onboardingInputs, setOnboardingInputs] = useState<Record<string | number, string>>({});
@@ -108,6 +109,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [nftBgImage, setNftBgImage] = useState<string | null>(null);
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
+  const isMinimalTheme = state.activeTheme === 'minimal';
 
   const getUtcDayRange = (date = new Date()) => {
     const year = date.getUTCFullYear();
@@ -300,6 +302,83 @@ const Widget: React.FC<WidgetProps> = ({
     };
     fetchMetadata();
   }, [state.projectDomain, isPreview]);
+
+  useEffect(() => {
+    if (isPreview) return;
+    let projectId = state.projectId;
+    if (!projectId || projectId.startsWith('temp-')) return;
+    if (loadedProjectRef.current === projectId) return;
+    loadedProjectRef.current = projectId;
+
+    let isActive = true;
+    const loadProjectConfig = async () => {
+      try {
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .select('id, name, domain, description, social_links, accent_color, position, theme, logo_url, banner_url')
+          .eq('id', projectId)
+          .single();
+        if (projectError) throw projectError;
+
+        const { data: tasks, error: tasksError } = await supabase
+          .from('tasks')
+          .select('id, title, description, link, icon_url, xp_reward, is_sponsored, task_section, task_kind, reward_cadence, quiz_type, choices, correct_choice, question, answer, nft_contract, nft_chain_id, token_contract, token_chain_id, min_token_amount')
+          .eq('project_id', projectId);
+        if (tasksError) throw tasksError;
+
+        if (!isActive) return;
+
+        setState(prev => {
+          const next: AppState = {
+            ...prev,
+            projectName: project?.name ?? prev.projectName,
+            projectDomain: project?.domain ?? prev.projectDomain,
+            projectDescription: project?.description ?? prev.projectDescription,
+            projectSocials: project?.social_links ?? prev.projectSocials,
+            projectLogo: project?.logo_url ?? prev.projectLogo,
+            projectBanner: project?.banner_url ?? prev.projectBanner,
+            accentColor: project?.accent_color ?? prev.accentColor,
+            position: (project?.position as Position) ?? prev.position,
+            activeTheme: (project?.theme as ThemeType) ?? prev.activeTheme
+          };
+
+          if (tasks && tasks.length > 0) {
+            next.tasks = tasks.map((t: any) => ({
+              id: t.id,
+              title: t.title,
+              desc: t.description,
+              link: t.link,
+              icon: t.icon_url,
+              xp: t.xp_reward,
+              isSponsored: t.is_sponsored,
+              section: t.task_section ?? 'missions',
+              kind: (t.task_kind === 'secret' ? 'quiz' : (t.task_kind ?? 'link')),
+              rewardCadence: t.reward_cadence ?? 'once',
+              quizType: t.quiz_type ?? 'secret_code',
+              choices: t.choices ?? [],
+              correctChoice: typeof t.correct_choice === 'number' ? t.correct_choice : undefined,
+              question: t.question ?? '',
+              answer: t.answer ?? '',
+              nftContract: t.nft_contract ?? '',
+              nftChainId: t.nft_chain_id ?? undefined,
+              tokenContract: t.token_contract ?? '',
+              tokenChainId: t.token_chain_id ?? undefined,
+              minTokenAmount: t.min_token_amount ?? '1'
+            }));
+          }
+
+          return next;
+        });
+      } catch (err) {
+        console.warn('[QuestLayer] Failed to load project config for widget embed:', err);
+      }
+    };
+
+    loadProjectConfig();
+    return () => {
+      isActive = false;
+    };
+  }, [state.projectId, isPreview, setState]);
 
   useEffect(() => {
     if (!isFreeForm || isPreview) return;
@@ -1767,19 +1846,45 @@ const Widget: React.FC<WidgetProps> = ({
                       <div className="grid grid-cols-1 gap-2">
                         {quizChoices.map((choice, index) => {
                           const isSelected = selectedChoice === index;
+                          const isCheckingChoice = isChecking && isSelected;
+                          const isSuccessChoice = checkStatus === 'success' && isSelected;
+                          const isErrorChoice = checkStatus === 'error' && isSelected;
                           return (
                             <button
                               key={`${task.id}-choice-${index}`}
                               onClick={() => handleOnboardingSubmit(task, index)}
                               disabled={isCompleted || isLocked || isChecking}
-                              className={`py-2 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${isSelected ? 'border-indigo-400 bg-indigo-500/20 text-white' : choiceBaseClass} disabled:opacity-50`}
+                              className={`relative overflow-hidden py-2 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${
+                                isSuccessChoice
+                                  ? (isLightTheme ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-emerald-400 bg-emerald-500/20 text-emerald-50')
+                                  : isErrorChoice
+                                    ? (isLightTheme ? 'border-rose-500 bg-rose-500 text-white' : 'border-rose-400 bg-rose-500/20 text-rose-50')
+                                    : isCheckingChoice
+                                      ? (isLightTheme ? 'border-slate-900 bg-slate-900 text-white' : 'border-indigo-300 bg-indigo-500/15 text-white')
+                                      : isSelected
+                                        ? 'border-indigo-400 bg-indigo-500/20 text-white'
+                                        : choiceBaseClass
+                              } ${isChecking && !isSelected ? 'opacity-50' : ''} disabled:opacity-50`}
                             >
-                              {choice}
+                              {isCheckingChoice && (
+                                <span className="absolute inset-0 pointer-events-none">
+                                  <span className="absolute inset-y-0 -left-full w-[200%] bg-gradient-to-r from-transparent via-white/35 to-transparent animate-[shimmer_1.1s_infinite]" />
+                                </span>
+                              )}
+                              <span className="relative z-10">
+                                {isCheckingChoice
+                                  ? 'Syncing…'
+                                  : isSuccessChoice
+                                    ? 'Correct'
+                                    : isErrorChoice
+                                      ? 'Wrong'
+                                      : choice}
+                              </span>
                             </button>
                           );
                         })}
                       </div>
-                      {showFeedback && (
+                      {showFeedback && quizType !== 'multiple_choice' && (
                         <p className={`text-[10px] font-bold ${feedback.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
                           {feedback.message}
                         </p>
@@ -2314,7 +2419,7 @@ const Widget: React.FC<WidgetProps> = ({
               onClick={handleConnect}
               disabled={isConnecting}
               style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})}
-              className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isMinimalTheme ? '!bg-black !text-white !border-black hover:!bg-white hover:!text-black' : ''} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isConnecting ? (
                 <><Loader2 size={10} className="animate-spin" /> Connecting...</>

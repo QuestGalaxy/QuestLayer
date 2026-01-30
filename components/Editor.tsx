@@ -1395,6 +1395,10 @@ const Editor: React.FC<EditorProps> = ({
       return;
     }
     setIsPublishing(true);
+    if (editForm && editingId !== null) {
+      saveEdit();
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
     await onPublish();
     setIsPublishing(false);
     setIsEmbedModalOpen(true);
@@ -1848,13 +1852,13 @@ const Editor: React.FC<EditorProps> = ({
 
   const saveEdit = () => {
     if (editForm) {
-      const resolvedKind = editForm.kind ?? 'link';
+      const resolvedKind = (editForm.section === 'onboarding') ? 'quiz' : (editForm.kind ?? 'link');
       const isQuiz = resolvedKind === 'quiz';
       const isLink = resolvedKind === 'link';
       const isNftHold = resolvedKind === 'nft_hold';
       const isTokenHold = resolvedKind === 'token_hold';
       const resolvedQuizType = isQuiz
-        ? (editForm.quizType ?? (editForm.section === 'onboarding' ? 'multiple_choice' : 'secret_code'))
+        ? (editForm.section === 'onboarding' ? 'multiple_choice' : (editForm.quizType ?? 'secret_code'))
         : undefined;
       const normalizedChoices = (resolvedQuizType === 'multiple_choice')
         ? (editForm.choices ?? [])

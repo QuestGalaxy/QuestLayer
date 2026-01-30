@@ -4,6 +4,7 @@ module.exports = {
     './App.tsx',
     './index.tsx',
     './components/**/*.{ts,tsx}',
+    './lib/**/*.{ts,tsx}',
     './widget-runtime.tsx',
     './constants.ts'
   ],

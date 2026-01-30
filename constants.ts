@@ -29,7 +29,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     card: 'bg-white rounded-none border-2 border-slate-200 shadow-2xl',
     trigger: 'rounded-full text-white bg-black border-black',
     header: 'bg-slate-50 border-b border-slate-200',
-    button: 'rounded-none border-2 border-black bg-black text-white hover:bg-white hover:text-black transition-colors',
+    button: 'rounded-none border-2 !border-black !bg-black !text-white hover:!bg-white hover:!text-black transition-colors',
     itemCard: 'bg-white border-slate-200',
     iconBox: 'rounded-none border border-slate-200 shadow-sm',
     font: 'font-["Inter"]'
@@ -51,7 +51,7 @@ export const THEMES: Record<ThemeType, ThemeConfig> = {
     card: 'bg-white rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]',
     trigger: 'rounded-none border-4 border-black bg-white text-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
     header: 'bg-yellow-400 border-b-4 border-black',
-    button: 'rounded-none border-2 border-black bg-black text-white font-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
+    button: 'rounded-none border-2 !border-black !bg-black !text-white font-black hover:!bg-white hover:!text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all',
     itemCard: 'bg-white border-2 border-black rounded-none',
     iconBox: 'rounded-none border-2 border-black',
     font: 'font-["Inter"]'

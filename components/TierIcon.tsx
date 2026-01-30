@@ -8,14 +8,16 @@ interface TierIconProps {
 }
 
 const TierIcon: React.FC<TierIconProps> = ({ icon, className = '', size = 32 }) => {
+    const resolveIconPath = (path: string) => new URL(path, import.meta.url).toString();
+
     const getIconPath = () => {
         switch (icon) {
-            case 'pixel-coin': return '/tiers/rookie.png';
-            case 'pixel-star': return '/tiers/bronze.png';
-            case 'pixel-shield': return '/tiers/silver.png';
-            case 'pixel-crown': return '/tiers/gold.png';
-            case 'pixel-dragon': return '/tiers/platinum.png';
-            case 'pixel-phoenix': return '/tiers/Mythic.png';
+            case 'pixel-coin': return resolveIconPath('/tiers/rookie.png');
+            case 'pixel-star': return resolveIconPath('/tiers/bronze.png');
+            case 'pixel-shield': return resolveIconPath('/tiers/silver.png');
+            case 'pixel-crown': return resolveIconPath('/tiers/gold.png');
+            case 'pixel-dragon': return resolveIconPath('/tiers/platinum.png');
+            case 'pixel-phoenix': return resolveIconPath('/tiers/Mythic.png');
             default: return null;
         }
     };
@@ -43,7 +45,7 @@ const TierIcon: React.FC<TierIconProps> = ({ icon, className = '', size = 32 }) 
                         const img = e.target as HTMLImageElement;
                         if (icon === 'pixel-phoenix' && !img.dataset.triedLower) {
                             img.dataset.triedLower = 'true';
-                            img.src = '/tiers/mythic.png';
+                            img.src = resolveIconPath('/tiers/mythic.png');
                         }
                     }}
                 />
