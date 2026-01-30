@@ -1988,7 +1988,7 @@ const Widget: React.FC<WidgetProps> = ({
                             color: 'white'
                           } : {})
                         }}
-                        className={`w-full md:w-32 h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
+                        className={`w-full md:w-32 ${embeddedActionHeightClass} border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center tracking-widest ${activeTheme.button} ${flashClass}`}
                       >
                         {isCompleted ? (
                           <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
@@ -2304,7 +2304,7 @@ const Widget: React.FC<WidgetProps> = ({
                   borderColor: isCompleted ? '#e2e8f0' : state.accentColor,
                   cursor: isCompleted ? 'not-allowed' : 'pointer'
                 }))}
-                className={`w-full h-7 md:h-9 border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
+                className={`w-full ${embeddedActionHeightClass} border-2 font-black text-[10px] md:text-[10px] uppercase transition-all flex items-center justify-center relative z-10 tracking-widest ${activeTheme.button}`}
               >
                 {isCompleted ? (
                   <span className="flex items-center gap-1">Completed <CheckCircle2 size={10} /></span>
@@ -2332,6 +2332,10 @@ const Widget: React.FC<WidgetProps> = ({
   const onboardingXP = onboardingTasks.reduce((acc, task) => acc + (task.xp || 0), 0);
   const onboardingAccent = themeBorder || state.accentColor;
 
+  const bodyPaddingClass = isEmbedded ? 'p-2 md:p-3' : 'p-1 md:p-2';
+  const embeddedActionHeightClass = isEmbedded ? 'h-8 md:h-10' : 'h-7 md:h-9';
+  const embeddedPrimaryButtonPaddingClass = isEmbedded ? 'py-2.5 md:py-3.5' : 'py-2 md:py-3';
+  const embeddedSecondaryButtonPaddingClass = isEmbedded ? 'py-2 md:py-3.5' : 'py-1.5 md:py-3';
   const popupContent = (
     <div
       data-ql-root="true"
@@ -2442,7 +2446,7 @@ const Widget: React.FC<WidgetProps> = ({
       </div>
 
       {/* Body */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-1 md:p-2 space-y-2 md:space-y-3 custom-scroll">
+      <div className={`flex-1 min-h-0 overflow-y-auto ${bodyPaddingClass} space-y-2 md:space-y-3 custom-scroll`}>
         {!effectiveConnected ? (
           <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 md:py-8">
             <div className="space-y-2">
@@ -2493,7 +2497,7 @@ const Widget: React.FC<WidgetProps> = ({
                   borderStyle: 'solid'
                 } : {})
               }}
-              className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isMinimalTheme ? '!bg-black !text-white !border-black hover:!bg-white hover:!text-black' : ''} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`w-full ${embeddedPrimaryButtonPaddingClass} font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isMinimalTheme ? '!bg-black !text-white !border-black hover:!bg-white hover:!text-black' : ''} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isConnecting ? (
                 <><Loader2 size={10} className="animate-spin" /> Connecting...</>
@@ -2660,7 +2664,7 @@ const Widget: React.FC<WidgetProps> = ({
                         color: activeTheme.colors?.text
                       }
                     }
-                    className={`w-full py-1.5 md:py-3 font-black text-[11px] md:text-[11px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
+                    className={`w-full ${embeddedSecondaryButtonPaddingClass} font-black text-[11px] md:text-[11px] uppercase tracking-widest ${activeTheme.button} hover:scale-[1.01] transition-transform`}
                   >
                     Claim Daily Bonus
                   </button>
