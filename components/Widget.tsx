@@ -1886,7 +1886,7 @@ const Widget: React.FC<WidgetProps> = ({
             {isQuizTask ? (
               <div className="space-y-1.5">
                 <div
-                  className={`pt-2 mt-1 border-t ${dividerClass}`}
+                  className={`pt-2 mt-1 border-t ${dividerClass} ql-no-outline`}
                   style={{ borderColor: themedBorderColor ? `${themedBorderColor}80` : undefined }}
                 >
                   {quizType === 'multiple_choice' ? (
@@ -1902,7 +1902,7 @@ const Widget: React.FC<WidgetProps> = ({
                               key={`${task.id}-choice-${index}`}
                               onClick={() => handleOnboardingSubmit(task, index)}
                               disabled={isCompleted || isLocked || isChecking}
-                              className={`relative overflow-hidden py-2 px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${
+                              className={`relative overflow-hidden ${embeddedActionHeightClass} px-2 md:px-3 rounded-lg border text-[10px] md:text-[11px] font-black uppercase tracking-wide transition-all whitespace-normal break-words leading-snug ${
                                 isSuccessChoice
                                   ? (isLightTheme ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-emerald-400 bg-emerald-500/20 text-emerald-50')
                                   : isErrorChoice
@@ -2097,7 +2097,7 @@ const Widget: React.FC<WidgetProps> = ({
                   <button
                     onClick={() => handleNftHoldVerify(task)}
                     disabled={isCompleted || isNftBusy}
-                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${isCompleted || isNftSuccess
+                    className={`w-full ${embeddedActionHeightClass} px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${isCompleted || isNftSuccess
                       ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
                       : isNftError
                         ? 'bg-rose-500 text-white hover:bg-rose-600'
@@ -2220,7 +2220,7 @@ const Widget: React.FC<WidgetProps> = ({
                   <button
                     onClick={() => handleTokenHoldVerify(task)}
                     disabled={isCompleted || isTokenBusy}
-                    className={`w-full py-2.5 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${isCompleted || isTokenSuccess
+                    className={`w-full ${embeddedActionHeightClass} px-4 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden relative ${isCompleted || isTokenSuccess
                       ? 'bg-emerald-500 text-white cursor-default shadow-[0_0_20px_rgba(16,185,129,0.4)]'
                       : isTokenError
                         ? 'bg-rose-500 text-white hover:bg-rose-600'
@@ -2332,8 +2332,8 @@ const Widget: React.FC<WidgetProps> = ({
   const onboardingXP = onboardingTasks.reduce((acc, task) => acc + (task.xp || 0), 0);
   const onboardingAccent = themeBorder || state.accentColor;
 
-  const bodyPaddingClass = isEmbedded ? 'p-2 md:p-3' : 'p-1 md:p-2';
-  const embeddedActionHeightClass = isEmbedded ? 'h-8 md:h-10' : 'h-7 md:h-9';
+  const bodyPaddingClass = isEmbedded ? 'p-4 md:p-5' : 'p-3 md:p-4';
+  const embeddedActionHeightClass = 'h-8 md:h-10';
   const embeddedPrimaryButtonPaddingClass = isEmbedded ? 'py-2.5 md:py-3.5' : 'py-2 md:py-3';
   const embeddedSecondaryButtonPaddingClass = isEmbedded ? 'py-2 md:py-3.5' : 'py-1.5 md:py-3';
   const popupContent = (
