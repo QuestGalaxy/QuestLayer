@@ -110,6 +110,7 @@ const Widget: React.FC<WidgetProps> = ({
   const [isWidgetActive, setIsWidgetActive] = useState(false);
   const effectiveConnected = isConnected && isWidgetActive;
   const isMinimalTheme = state.activeTheme === 'minimal';
+  const [isConnectHover, setIsConnectHover] = useState(false);
 
   const getUtcDayRange = (date = new Date()) => {
     const year = date.getUTCFullYear();
@@ -2417,8 +2418,19 @@ const Widget: React.FC<WidgetProps> = ({
             </div>
             <button
               onClick={handleConnect}
+              onMouseEnter={() => setIsConnectHover(true)}
+              onMouseLeave={() => setIsConnectHover(false)}
               disabled={isConnecting}
-              style={(!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})}
+              style={{
+                ...((!isLightTheme && !isTransparentTheme) ? { backgroundColor: state.accentColor } : (isTransparentTheme ? { border: `2px solid ${state.accentColor}`, backgroundColor: `${state.accentColor}10`, color: state.accentColor } : {})),
+                ...(isMinimalTheme ? {
+                  backgroundColor: isConnectHover ? '#ffffff' : '#000000',
+                  color: isConnectHover ? '#000000' : '#ffffff',
+                  borderColor: '#000000',
+                  borderWidth: 2,
+                  borderStyle: 'solid'
+                } : {})
+              }}
               className={`w-full py-2 md:py-3 font-black uppercase tracking-widest text-[11px] md:text-[11px] hover:brightness-110 transition-all flex items-center justify-center gap-2 ${activeTheme.button} ${isMinimalTheme ? '!bg-black !text-white !border-black hover:!bg-white hover:!text-black' : ''} ${isConnecting ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isConnecting ? (
