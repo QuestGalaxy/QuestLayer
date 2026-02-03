@@ -1200,6 +1200,8 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
       }
 
       if (totalXp > 0) {
+        triggerConfetti();
+        playCoinSound();
         setUserStats(prev => ({ ...prev, xp: prev.xp + totalXp }));
       }
 
