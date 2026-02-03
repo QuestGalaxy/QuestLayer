@@ -27,7 +27,7 @@ export const TIERS: Tier[] = [
     },
     {
         name: 'Bronze Explorer',
-        minLevel: 3,
+        minLevel: 13,
         icon: 'pixel-star',
         color: 'text-orange-400',
         textGradient: 'from-orange-400 to-amber-600',
@@ -37,7 +37,7 @@ export const TIERS: Tier[] = [
     },
     {
         name: 'Silver Questant',
-        minLevel: 11,
+        minLevel: 23,
         icon: 'pixel-shield',
         color: 'text-slate-200',
         textGradient: 'from-slate-200 to-slate-400',
@@ -47,7 +47,7 @@ export const TIERS: Tier[] = [
     },
     {
         name: 'Gold Vanguard',
-        minLevel: 26,
+        minLevel: 31,
         icon: 'pixel-crown',
         color: 'text-yellow-400',
         textGradient: 'from-yellow-300 to-amber-500',
@@ -57,7 +57,7 @@ export const TIERS: Tier[] = [
     },
     {
         name: 'Platinum Legend',
-        minLevel: 51,
+        minLevel: 48,
         icon: 'pixel-dragon',
         color: 'text-cyan-400',
         textGradient: 'from-cyan-300 to-blue-500',
@@ -67,7 +67,7 @@ export const TIERS: Tier[] = [
     },
     {
         name: 'Mythic Overlord',
-        minLevel: 101,
+        minLevel: 63,
         icon: 'pixel-phoenix',
         color: 'text-purple-400',
         textGradient: 'from-purple-400 via-fuchsia-400 to-indigo-500',
@@ -79,20 +79,20 @@ export const TIERS: Tier[] = [
 
 /**
  * Calculates current level from total XP using a much steeper RPG scaling curve.
- * Formula: Level = floor((XP / 2000)^(1/2.2)) + 1
+ * Formula: Level = floor((XP / 2000)^(1/2.5)) + 1
  */
 export const calculateLevel = (xp: number): number => {
     if (xp <= 0) return 1;
-    return Math.floor(Math.pow(xp / 2000, 1 / 2.2)) + 1;
+    return Math.floor(Math.pow(xp / 2000, 1 / 2.5)) + 1;
 };
 
 /**
  * Calculates the total XP required to REACH a specific level.
- * Formula: XP = 2000 * (Level - 1)^2.2
+ * Formula: XP = 2000 * (Level - 1)^2.5
  */
 export const calculateXpForLevel = (level: number): number => {
     if (level <= 1) return 0;
-    return Math.floor(2000 * Math.pow(level - 1, 2.2));
+    return Math.floor(2000 * Math.pow(level - 1, 2.5));
 };
 
 /**
