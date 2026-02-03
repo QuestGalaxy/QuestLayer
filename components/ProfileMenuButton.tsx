@@ -52,9 +52,12 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
 
   return (
     <div className="relative" ref={profileRef}>
-      <div
+      <button
+        type="button"
         onClick={() => setIsProfileOpen(!isProfileOpen)}
-        className="flex items-center gap-2 h-9 md:h-[42px] pl-1 pr-2 md:px-2 md:pr-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700"
+        aria-haspopup="menu"
+        aria-expanded={isProfileOpen}
+        className={`relative flex items-center gap-2 h-9 md:h-[42px] pl-1 pr-2 md:px-2 md:pr-3 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl hover:bg-slate-900/80 hover:border-indigo-500/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-top-4 duration-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 ${isProfileOpen ? 'ring-1 ring-indigo-400/40 bg-slate-900/80 border-indigo-500/30' : ''}`}
       >
         <div
           className={`w-7 h-7 md:w-8.5 md:h-8.5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg ${tier.shadow} group-hover:scale-105 transition-all relative`}
@@ -69,26 +72,32 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-2 whitespace-nowrap">
-            <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-wider opacity-0 max-w-0 overflow-hidden group-hover:opacity-100 group-hover:max-w-[80px] transition-all">
-              Lvl {level}
-            </span>
-            <span className="w-1 h-1 rounded-full bg-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <span className="text-[9px] md:text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-              <Star size={10} fill="currentColor" /> <AnimatedNumber value={xp} /> XP
+            <span className="text-[10px] md:text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1">
+              <Star size={10} fill="currentColor" />
+              <AnimatedNumber value={xp} />
+              <span className="hidden md:inline">XP</span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-            <span className="text-[9px] md:text-[10px] font-mono text-slate-400 group-hover:text-white transition-colors">
-              {address?.slice(0, 4)}...{address?.slice(-4)}
+            <span className="text-[10px] md:text-[11px] font-mono text-slate-200 transition-colors">
+              <span className="md:hidden">{address?.slice(0, 4)}…{address?.slice(-2)}</span>
+              <span className="hidden md:inline">{address?.slice(0, 4)}...{address?.slice(-4)}</span>
             </span>
           </div>
         </div>
-        <ChevronDown size={14} className={`text-slate-400 group-hover:text-white transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
-      </div>
+        <div className="ml-auto flex items-center gap-2 relative">
+          <div className={`w-7 h-7 md:w-8.5 md:h-8.5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg ${tier.shadow}`}>
+            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-[11px] md:text-sm font-black text-white">
+              {level}
+            </div>
+          </div>
+        </div>
+        <ChevronDown size={12} className={`absolute right-16 md:right-[78px] top-[28px] md:top-[32px] z-10 text-slate-400 group-hover:text-white transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+      </button>
 
       {isProfileOpen && (
-        <div className="absolute top-full right-0 mt-3 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full right-0 mt-3 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200" role="menu">
           <div className="p-4 border-b border-white/5 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-lg shadow-indigo-500/20">
