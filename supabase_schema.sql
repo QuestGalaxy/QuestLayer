@@ -492,6 +492,17 @@ begin
     where dcl.project_id = p_id
       and dcl.created_at >= (now() - interval '7 days')
     group by dcl.user_id
+
+    union all
+
+    -- Sum Viral Boost XP (Fixed 100 per completion)
+    select
+      vbc.user_id,
+      count(*) * 100 as earned_xp
+    from viral_boost_completions vbc
+    where vbc.project_id = p_id
+      and vbc.created_at >= (now() - interval '7 days')
+    group by vbc.user_id
   ),
   aggregated_stats as (
     select 
