@@ -812,29 +812,25 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
               if (link.id) userIdByProject.set(link.project_id, link.id);
             });
 
-            if (timeframe === 'all') {
-              const userIds = userLinks.map(link => link.id);
-              const { data: progressRows } = await supabase
-                .from('user_progress')
-                .select('user_id, xp')
-                .in('user_id', userIds);
+            const userIds = userLinks.map(link => link.id);
+            const { data: progressRows } = await supabase
+              .from('user_progress')
+              .select('user_id, xp')
+              .in('user_id', userIds);
 
-              const progressByUser = new Map<string, number>();
-              progressRows?.forEach(row => progressByUser.set(row.user_id, row.xp || 0));
+            const progressByUser = new Map<string, number>();
+            progressRows?.forEach(row => progressByUser.set(row.user_id, row.xp || 0));
 
-              userLinks.forEach(link => {
-                userXpByProject.set(link.project_id, progressByUser.get(link.id) || 0);
-              });
-            } else {
-              // For weekly, we skip user XP calculation for now to keep it fast
-            }
+            userLinks.forEach(link => {
+              userXpByProject.set(link.project_id, progressByUser.get(link.id) || 0);
+            });
           }
         }
 
         const fullData = await Promise.all(
           uniqueProjects.map(async project => {
             const stats = project.stats;
-            const userXp = (timeframe === 'all' && address) ? userXpByProject.get(project.id) || 0 : 0;
+            const userXp = address ? userXpByProject.get(project.id) || 0 : 0;
             const userId = userIdByProject.get(project.id) ?? null;
 
             let leaderboard: LeaderboardEntry[] = [];
@@ -1007,7 +1003,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
         onSubmitProject={onSubmitProject}
       />
 
-      <div className="relative overflow-hidden pt-28 md:pt-36">
+      <div className="relative overflow-hidden pt-16 md:pt-20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.35),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(14,165,233,0.3),transparent_55%)]" />
         <div className="relative z-10 px-6 py-10 md:px-12">
@@ -1073,18 +1069,18 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
 
         {!loading && filteredProjects.length > 0 && (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-8 rounded-2xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm">
-              <div className="flex flex-wrap items-center gap-4 md:gap-8">
+            <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8 rounded-2xl border border-white/5 bg-white/5 p-3 md:p-4 backdrop-blur-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-8 w-full">
                 {/* Filter Switch */}
-                <div className="flex items-center gap-3">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Filter</span>
+                <div className="flex items-start gap-2 md:items-center md:gap-3">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1 md:mt-0">Filter</span>
                   <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
                     <button
                       onClick={() => {
                         setLeaderboardFilter('global');
                         if (focusProjectId) onLeaderboard();
                       }}
-                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${leaderboardFilter === 'global' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'
+                      className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest transition-all md:px-3 md:py-1.5 ${leaderboardFilter === 'global' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'
                         }`}
                     >
                       Global
@@ -1095,7 +1091,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
                           setLeaderboardFilter('mine');
                           if (focusProjectId) onLeaderboard();
                         }}
-                        className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${leaderboardFilter === 'mine' ? 'bg-indigo-400 text-slate-950' : 'text-slate-400 hover:text-white'
+                        className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest transition-all md:px-3 md:py-1.5 ${leaderboardFilter === 'mine' ? 'bg-indigo-400 text-slate-950' : 'text-slate-400 hover:text-white'
                           }`}
                       >
                         My Projects
@@ -1105,19 +1101,19 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
                 </div>
 
                 {/* Period Switch */}
-                <div className="flex items-center gap-3 md:border-l md:border-white/10 md:pl-8">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Period</span>
+                <div className="flex items-start gap-2 md:items-center md:gap-3 md:border-l md:border-white/10 md:pl-8">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1 md:mt-0">Period</span>
                   <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1">
                     <button
                       onClick={() => setTimeframe('all')}
-                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${timeframe === 'all' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'
+                      className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest transition-all md:px-3 md:py-1.5 ${timeframe === 'all' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'
                         }`}
                     >
                       All Time
                     </button>
                     <button
                       onClick={() => setTimeframe('weekly')}
-                      className={`rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${timeframe === 'weekly' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
+                      className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest transition-all md:px-3 md:py-1.5 ${timeframe === 'weekly' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
                         }`}
                     >
                       This Week
@@ -1132,7 +1128,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 md:gap-6 w-full justify-between md:w-auto md:justify-start">
                 {isConnected && (
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Total XP</span>
