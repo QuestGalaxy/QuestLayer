@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { X, Gift, Wallet, AlertCircle, Upload } from 'lucide-react';
 import ProfileMenuButton from './ProfileMenuButton';
@@ -32,6 +32,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   onSubmitProject
 }) => {
   const [showBetaTooltip, setShowBetaTooltip] = useState(false);
+  const betaRef = useRef<HTMLDivElement>(null);
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [isLogoLoading, setIsLogoLoading] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -39,6 +40,16 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     message: "You found your first secret Reward!",
     type: "success" // success, warning, info
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showBetaTooltip && betaRef.current && !betaRef.current.contains(event.target as Node)) {
+        setShowBetaTooltip(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showBetaTooltip]);
 
   const triggerConfetti = () => {
     const duration = 3 * 1000;
@@ -398,7 +409,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           <div className="relative group/logo shrink-0 z-10">
             <button 
               onClick={onBack}
-              className="h-10 md:h-12 px-3 md:px-5 text-slate-200 hover:text-white transition-colors bg-slate-900/50 hover:bg-slate-800/50 rounded-xl border border-white/5 relative overflow-hidden group flex items-center shadow-inner"
+              className="h-9 md:h-[42px] px-3 md:px-5 text-slate-200 hover:text-white transition-colors bg-slate-900/50 hover:bg-slate-800/50 rounded-full border border-white/10 relative overflow-hidden group flex items-center shadow-inner"
             >
               <span className="absolute inset-0 bg-[linear-gradient(0deg,transparent,rgba(99,102,241,0.15),transparent)] animate-[ql-scanline_3.2s_linear_infinite] pointer-events-none" />
               <span className="absolute inset-0 opacity-40 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:4px_100%] pointer-events-none group-hover:opacity-70 transition-opacity" />
@@ -407,34 +418,36 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               </span>
             </button>
 
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowBetaTooltip(prev => !prev);
-              }}
-              className="absolute -top-1 md:-top-1.5 -right-1 md:-right-2 bg-indigo-500 text-white text-[8px] md:text-[9px] font-black px-1 md:px-1.5 py-0.5 rounded-md border border-white/20 shadow-lg cursor-pointer hover:bg-indigo-400 hover:scale-110 transition-all z-20 select-none ring-2 ring-slate-950"
-            >
-              BETA
-            </div>
-
-            {showBetaTooltip && (
-              <div className="absolute top-full left-0 mt-3 w-64 md:w-72 p-4 bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl text-xs text-slate-300 z-30 backdrop-blur-xl ring-1 ring-white/10">
-                <div className="font-bold text-white mb-1.5 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                  BETA v0.4
-                </div>
-                <p className="leading-relaxed text-slate-400">
-                  QuestLayer is currently in public beta. Please note that as we optimize the platform, progress and data may occasionally be reset.
-                </p>
+            <div ref={betaRef}>
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowBetaTooltip(prev => !prev);
+                }}
+                className="absolute -top-1 md:-top-1.5 -right-1 md:-right-2 bg-indigo-500 text-white text-[8px] md:text-[9px] font-black px-1 md:px-1.5 py-0.5 rounded-md border border-white/20 shadow-lg cursor-pointer hover:bg-indigo-400 hover:scale-110 transition-all z-20 select-none ring-2 ring-slate-950"
+              >
+                BETA
               </div>
-            )}
+
+              {showBetaTooltip && (
+                <div className="absolute top-full left-0 mt-3 w-64 md:w-72 p-4 bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl text-xs text-slate-300 z-30 backdrop-blur-xl ring-1 ring-white/10">
+                  <div className="font-bold text-white mb-1.5 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                    BETA v0.4
+                  </div>
+                  <p className="leading-relaxed text-slate-400">
+                    QuestLayer is currently in public beta. Please note that as we optimize the platform, progress and data may occasionally be reset.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="relative flex items-center gap-2 md:gap-3 shrink-0 z-10">
             {onSubmitProject && (
               <button
                 onClick={onSubmitProject}
-                className="hidden md:inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-100 text-[9px] md:text-[11px] font-black uppercase tracking-[0.25em] hover:bg-indigo-500/25 hover:text-white transition-all"
+                className="hidden md:inline-flex items-center gap-2 h-9 md:h-[42px] px-3 md:px-4 rounded-full bg-slate-900/60 backdrop-blur-xl border border-white/10 text-indigo-100 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-slate-900/80 hover:border-indigo-500/30 hover:text-white transition-all shadow-2xl"
               >
                 <Upload size={12} className="text-indigo-300" />
                 <span className="hidden md:inline">Submit Project</span>

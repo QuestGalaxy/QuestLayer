@@ -115,6 +115,20 @@ const Widget: React.FC<WidgetProps> = ({
   const isGlassTheme = state.activeTheme === 'glass';
   const [isConnectHover, setIsConnectHover] = useState(false);
 
+  const formatCompactXP = (value: number) =>
+    value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString();
+
+  const getTierTextClass = (tierColor?: string) => {
+    if (!isLightTheme) return tierColor || 'text-white';
+    if (!tierColor) return 'text-slate-900';
+    if (tierColor.includes('orange')) return 'text-orange-700';
+    if (tierColor.includes('yellow')) return 'text-yellow-700';
+    if (tierColor.includes('cyan')) return 'text-cyan-700';
+    if (tierColor.includes('purple')) return 'text-purple-700';
+    if (tierColor.includes('slate')) return 'text-slate-800';
+    return 'text-slate-900';
+  };
+
   const getUtcDayRange = (date = new Date()) => {
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth();
@@ -2541,11 +2555,7 @@ const Widget: React.FC<WidgetProps> = ({
                   <div className="flex flex-col gap-0.5">
                     <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] ${isLightTheme ? 'text-slate-500' : 'opacity-40 text-white'}`}>Current Tier</p>
                     <div className="flex items-center gap-1.5 drop-shadow-[0_0_10px_currentColor]">
-                      <span className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest flex items-center gap-1 ${
-                        isLightTheme
-                          ? (currentLevelData.tier.color || 'text-black')
-                          : (currentLevelData.tier.color || 'text-white')
-                      }`}>
+                      <span className={`text-[11px] md:text-[12px] font-black uppercase tracking-widest flex items-center gap-1 ${getTierTextClass(currentLevelData.tier.color)}`}>
                         {currentLevelData.tier.name}
                       </span>
                     </div>
@@ -2576,12 +2586,15 @@ const Widget: React.FC<WidgetProps> = ({
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
-                  Quest XP: <span className={isLightTheme ? 'text-slate-600' : 'text-white/70'}>{visualXP}</span>
-                </p>
-                <p className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`} style={!isLightTheme ? { color: themePrimary } : {}}>
-                  {currentLevelData.xpNeeded} XP to Lvl {currentLevelData.lvl + 1}
-                </p>
+                <div className={`text-[10px] md:text-[10px] font-bold uppercase ${isLightTheme ? 'text-slate-400' : 'text-white/40'}`}>
+                  Project XP: <span className={isLightTheme ? 'text-slate-600' : 'text-white/70'}>{formatCompactXP(visualXP)}</span>
+                </div>
+                <div
+                  className={`text-[10px] md:text-[11px] font-black uppercase ${isLightTheme ? 'text-indigo-600' : 'text-indigo-400'}`}
+                  style={!isLightTheme ? { color: themePrimary } : {}}
+                >
+                  {formatCompactXP(currentLevelData.xpNeeded)} <span className={isLightTheme ? 'text-slate-500' : 'text-white/50'}>→ Lvl {currentLevelData.lvl + 1}</span>
+                </div>
               </div>
               <div className="mt-3 flex gap-2">
                 <button
