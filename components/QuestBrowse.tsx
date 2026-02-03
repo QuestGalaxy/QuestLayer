@@ -625,6 +625,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
     if (iframeLoadTimeoutRef.current) {
       clearTimeout(iframeLoadTimeoutRef.current);
+      iframeLoadTimeoutRef.current = null;
     }
     setIframeBlocked(false);
     setIsIframeLoading(true);
@@ -636,11 +637,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       const query = normalized || validUrl.replace(/^https?:\/\//, '');
       window.history.pushState(null, '', `/browse?url=${encodeURIComponent(query)}`);
     }
-    iframeLoadTimeoutRef.current = setTimeout(() => {
-      setIframeBlocked(true);
-      setIsIframeLoading(false);
-      setIsWidgetOpen(false);
-    }, 6000);
   };
 
   const handleSearchOrSubmit = (query: string) => {
@@ -671,10 +667,11 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
 
   const handleBrowseProjectById = async (projectId: string, domain?: string, updateUrl = true) => {
     setIsIframeLoading(true);
-    if (iframeLoadTimeoutRef.current) {
-      clearTimeout(iframeLoadTimeoutRef.current);
-    }
-    setIframeBlocked(false);
+      if (iframeLoadTimeoutRef.current) {
+        clearTimeout(iframeLoadTimeoutRef.current);
+        iframeLoadTimeoutRef.current = null;
+      }
+      setIframeBlocked(false);
     try {
       const { project, tasks } = await fetchProjectDetails(projectId);
       if (!project) return;
@@ -729,11 +726,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
       }
       setIsBrowsing(true);
       setIsWidgetOpen(true);
-      iframeLoadTimeoutRef.current = setTimeout(() => {
-        setIframeBlocked(true);
-        setIsIframeLoading(false);
-        setIsWidgetOpen(false);
-      }, 6000);
     } catch (error) {
       if (domain) {
         handleBrowseUrl(domain, updateUrl);
@@ -1166,12 +1158,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                   isBlocked = true;
                 }
               } catch {
+                // Cross-origin access can throw even when the site is fine.
                 isBlocked = false;
               }
               setIframeBlocked(isBlocked);
-              if (isBlocked) {
-                setIsWidgetOpen(false);
-              }
             }}
           />
 
@@ -1206,10 +1196,10 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
                         Quest Store
                       </div>
                       <div className="text-xl font-black text-white tracking-tight">
-                        This site blocks embedding
+                        This site refused to connect
                       </div>
                       <div className="text-xs text-slate-400">
-                        Some sites (like OpenSea) refuse to load inside an iframe.
+                        The site blocks being loaded in an iframe. Open it in a new tab to continue.
                       </div>
                     </div>
                   </div>
@@ -1286,15 +1276,13 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           )}
 
           {/* Widget Overlay */}
-          {!iframeBlocked && (
-            <Widget
-              isOpen={isWidgetOpen}
-              setIsOpen={setIsWidgetOpen}
-              state={widgetState}
-              setState={setWidgetState}
-              isPreview={!widgetState.projectId} // Sync when projectId is known
-            />
-          )}
+          <Widget
+            isOpen={isWidgetOpen}
+            setIsOpen={setIsWidgetOpen}
+            state={widgetState}
+            setState={setWidgetState}
+            isPreview={!widgetState.projectId} // Sync when projectId is known
+          />
         </div>
       </div>
     );
