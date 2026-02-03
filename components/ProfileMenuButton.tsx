@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ExternalLink, Home, Layout, LogOut, ShoppingBag, Star, Trophy, Upload, User } from 'lucide-react';
 import ConnectCta from './ConnectCta';
 import AnimatedNumber from './AnimatedNumber';
-import { getTier } from '../lib/gamification';
+import { getLevelProgress, getTier } from '../lib/gamification';
 import TierIcon from './TierIcon';
 
 interface ProfileMenuButtonProps {
@@ -24,7 +24,6 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
   address,
   xp,
   level,
-  nextLevelXP,
   onConnect,
   onDisconnect,
   onHome,
@@ -33,6 +32,7 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
   onSubmitProject
 }) => {
   const tier = getTier(level);
+  const levelProgress = getLevelProgress(xp);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -111,12 +111,12 @@ const ProfileMenuButton: React.FC<ProfileMenuButtonProps> = ({
                 <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                   <div
                     className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((xp / nextLevelXP) * 100, 100)}%` }}
+                    style={{ width: `${levelProgress.progress}%` }}
                   />
                 </div>
                 <div className="flex justify-between mt-1">
                   <span className="text-[9px] font-bold text-slate-500 uppercase">Lvl {level}</span>
-                  <span className="text-[9px] font-bold text-slate-500 uppercase">{xp} / {nextLevelXP} XP</span>
+                  <span className="text-[9px] font-bold text-slate-500 uppercase">{levelProgress.xpInLevel} / {levelProgress.xpRequired} XP</span>
                 </div>
               </div>
             </div>
