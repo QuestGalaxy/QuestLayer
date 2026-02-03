@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { fetchAllProjects, fetchProjectStats, fetchUserXP, supabase } from '../lib/supabase';
 import { calculateXpForLevel, calculateLevel, getTier } from '../lib/gamification';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
+import { useSignMessage } from 'wagmi';
 import ProfileMenuButton from './ProfileMenuButton';
 import AnimatedNumber from './AnimatedNumber';
 import TierIcon from './TierIcon';
@@ -203,6 +204,107 @@ const ClaimModal: React.FC<{
               className="w-full py-3 font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/25"
             >
               Awesome!
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MasterClaimModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  status: 'idle' | 'claiming' | 'success' | 'error';
+  totalClaimed: number;
+  totalXp: number;
+  errorMessage?: string;
+}> = ({ isOpen, onClose, onConfirm, status, totalClaimed, totalXp, errorMessage }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+      <div
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300"
+        onClick={status === 'claiming' ? undefined : onClose}
+      />
+      <div className="relative w-full max-w-md bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 shadow-2xl transform transition-all scale-100 animate-[ql-modal-pop_0.4s_ease-out]">
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-[ql-shine_3s_linear_infinite]" />
+        </div>
+
+        {status !== 'claiming' && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-50 text-slate-400 hover:text-white transition-colors"
+          >
+            <X size={20} />
+          </button>
+        )}
+
+        <div className="flex flex-col items-center text-center space-y-5 relative z-10">
+          <div className="relative">
+            <div className={`absolute inset-0 blur-3xl opacity-20 animate-pulse ${status === 'success' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 ${status === 'success'
+              ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+              : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+              }`}>
+              {status === 'success' ? (
+                <Check size={40} className="text-white" />
+              ) : (
+                <Gift size={40} className="text-white animate-bounce" />
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-black text-white uppercase tracking-tight">
+              {status === 'success' ? 'All Rewards Claimed!' : 'Master Claim (NFT-Gated)'}
+            </h3>
+            <div className="text-sm text-slate-400 leading-relaxed">
+              {status === 'success' ? (
+                <>
+                  You claimed <span className="text-white font-bold">{totalClaimed}</span> rewards for a total of{' '}
+                  <span className="text-emerald-400 font-bold">{totalXp} XP</span>.
+                </>
+              ) : status === 'error' ? (
+                <span className="text-red-400">{errorMessage}</span>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <span>
+                    Claim <span className="text-white font-bold">daily + weekly</span> rewards across{' '}
+                    <span className="text-white font-bold">all projects</span> in one action.
+                  </span>
+                  <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-amber-300 bg-amber-500/10 px-4 py-3 rounded-xl border border-amber-500/20">
+                    <Crown size={14} />
+                    Requires LootBox NFT on Polygon
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Don’t have it yet? Grab LootBox to unlock Master Claim and save time every day.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {status === 'idle' || status === 'error' ? (
+            <button
+              onClick={onConfirm}
+              className="w-full py-3 font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/25"
+            >
+              Verify & Claim All
+            </button>
+          ) : status === 'claiming' ? (
+            <button disabled className="w-full py-3 font-bold rounded-xl bg-slate-700 text-slate-400 cursor-wait flex items-center justify-center gap-2">
+              <Loader2 size={16} className="animate-spin" /> Claiming...
+            </button>
+          ) : (
+            <button
+              onClick={onClose}
+              className="w-full py-3 font-bold rounded-xl shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/25"
+            >
+              Done
             </button>
           )}
         </div>
@@ -698,6 +800,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<ProjectLeaderboard[]>([]);
   const [userProjectIds, setUserProjectIds] = useState<Set<string>>(new Set());
@@ -720,6 +823,36 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
       return 'all';
     }
   });
+  const [masterClaimState, setMasterClaimState] = useState<{
+    isOpen: boolean;
+    status: 'idle' | 'claiming' | 'success' | 'error';
+    totalClaimed: number;
+    totalXp: number;
+    errorMessage?: string;
+  }>({
+    isOpen: false,
+    status: 'idle',
+    totalClaimed: 0,
+    totalXp: 0
+  });
+
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  const getApiUrl = (path: string) => {
+    if (!apiBaseUrl) return path;
+    const base = apiBaseUrl.replace(/\/$/, '');
+    return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const buildMasterClaimMessage = (params: { address: string; chainId: number; contract: string; timestamp: string }) => {
+    const addressLower = params.address.toLowerCase();
+    return [
+      'QuestLayer Master Claim Access',
+      `Wallet: ${addressLower}`,
+      `Chain: ${params.chainId}`,
+      `Contract: ${params.contract}`,
+      `Timestamp: ${params.timestamp}`
+    ].join('\n');
+  };
 
   // Calculate time remaining until Sunday midnight UTC
   const [timeRemaining, setTimeRemaining] = useState<string>('');
@@ -986,6 +1119,101 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
     setCurrentPage(1);
   }, [filteredProjects.length, leaderboardFilter]);
 
+  const handleOpenMasterClaim = async () => {
+    if (!isConnected || !address) {
+      await open();
+      return;
+    }
+    setMasterClaimState({
+      isOpen: true,
+      status: 'idle',
+      totalClaimed: 0,
+      totalXp: 0
+    });
+  };
+
+  const handleMasterClaimConfirm = async () => {
+    if (!address) return;
+    setMasterClaimState(prev => ({ ...prev, status: 'claiming', errorMessage: undefined }));
+
+    const chainId = 137;
+    const contract = '0xcE9Ca2edfeC724B17582959cE4B8cf2B9F0d3cF8';
+    const timestamp = new Date().toISOString();
+    const message = buildMasterClaimMessage({ address, chainId, contract, timestamp });
+
+    let signature = '';
+    try {
+      signature = await signMessageAsync({ message, account: address as any });
+    } catch {
+      setMasterClaimState(prev => ({ ...prev, status: 'error', errorMessage: 'Signature rejected.' }));
+      return;
+    }
+
+    try {
+      const response = await fetch(getApiUrl('/api/leaderboard-claim-all'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, signature, message })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const errorMessage = payload?.error || 'Master claim failed.';
+        setMasterClaimState(prev => ({ ...prev, status: 'error', errorMessage }));
+        return;
+      }
+
+      if (!payload?.success) {
+        const errorMessage = payload?.error || 'Master claim failed.';
+        setMasterClaimState(prev => ({ ...prev, status: 'error', errorMessage }));
+        return;
+      }
+
+      const totalClaimed = payload?.totalClaimed ?? 0;
+      const totalXp = payload?.totalXp ?? 0;
+      const results: Array<{ projectId: string; period: 'daily' | 'weekly'; success: boolean; reward?: number }> = payload?.results || [];
+
+      if (results.length > 0) {
+        const rewardsByProject = new Map<string, number>();
+        results.forEach(result => {
+          if (!result.success || !result.reward) return;
+          const current = rewardsByProject.get(result.projectId) || 0;
+          rewardsByProject.set(result.projectId, current + result.reward);
+        });
+
+        setProjects(prev => prev.map(project => {
+          const reward = rewardsByProject.get(project.project.id) || 0;
+          const updatedClaimStatus = { daily: false, weekly: false, ...project.claimStatus };
+          results.forEach(result => {
+            if (result.projectId === project.project.id && result.success) {
+              updatedClaimStatus[result.period] = true;
+            }
+          });
+          return {
+            ...project,
+            userXp: project.userXp + reward,
+            claimStatus: updatedClaimStatus,
+            claimableDaily: updatedClaimStatus.daily ? false : project.claimableDaily,
+            claimableWeekly: updatedClaimStatus.weekly ? false : project.claimableWeekly
+          };
+        }));
+      }
+
+      if (totalXp > 0) {
+        setUserStats(prev => ({ ...prev, xp: prev.xp + totalXp }));
+      }
+
+      setMasterClaimState(prev => ({
+        ...prev,
+        status: 'success',
+        totalClaimed,
+        totalXp
+      }));
+    } catch {
+      setMasterClaimState(prev => ({ ...prev, status: 'error', errorMessage: 'Network error. Try again.' }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-y-auto">
       {/* Unified Sticky Header */}
@@ -1001,6 +1229,15 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
         onLeaderboard={onLeaderboard}
         onWidgetBuilder={onWidgetBuilder}
         onSubmitProject={onSubmitProject}
+      />
+      <MasterClaimModal
+        isOpen={masterClaimState.isOpen}
+        onClose={() => setMasterClaimState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleMasterClaimConfirm}
+        status={masterClaimState.status}
+        totalClaimed={masterClaimState.totalClaimed}
+        totalXp={masterClaimState.totalXp}
+        errorMessage={masterClaimState.errorMessage}
       />
 
       <div className="relative overflow-hidden pt-16 md:pt-20">
@@ -1128,7 +1365,14 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-4 md:gap-6 w-full justify-between md:w-auto md:justify-start">
+              <div className="flex items-center gap-3 md:gap-4 w-full justify-between md:w-auto md:justify-start">
+                <button
+                  onClick={handleOpenMasterClaim}
+                  className="group flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3.5 py-2 text-[9px] font-black uppercase tracking-widest text-indigo-200 transition-all hover:bg-indigo-500/20 hover:border-indigo-400/60"
+                >
+                  <Gift size={12} className="text-indigo-300 group-hover:text-indigo-200" />
+                  Master Claim
+                </button>
                 {isConnected && (
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Total XP</span>
