@@ -145,9 +145,9 @@ const ClaimModal: React.FC<{
           <div className="relative">
             <div className={`absolute inset-0 blur-3xl opacity-20 animate-pulse ${status === 'success' ? 'bg-emerald-500' : 'bg-indigo-500'
               }`} />
-            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 ${status === 'success'
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-              : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl ${status === 'success'
+              ? 'bg-gradient-to-br from-emerald-500 to-teal-600 border border-white/20'
+              : 'bg-transparent'
               }`}>
               {status === 'success' ? (
                 <Check size={40} className="text-white" />
@@ -243,49 +243,74 @@ const MasterClaimModal: React.FC<{
           </button>
         )}
 
-        <div className="flex flex-col items-center text-center space-y-5 relative z-10">
-          <div className="relative">
-            <div className={`absolute inset-0 blur-3xl opacity-20 animate-pulse ${status === 'success' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
-            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl border border-white/20 ${status === 'success'
-              ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
-              : 'bg-gradient-to-br from-indigo-500 to-purple-600'
-              }`}>
-              {status === 'success' ? (
-                <Check size={40} className="text-white" />
-              ) : (
-                <Gift size={40} className="text-white animate-bounce" />
-              )}
+        <div className="flex flex-col items-center text-center space-y-4 relative z-10">
+          <div className="relative w-full h-56">
+            {status === 'success' && (
+              <div className="absolute inset-0 blur-3xl opacity-20 animate-pulse bg-emerald-500" />
+            )}
+            <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+              <video
+                className="h-full w-full rounded-2xl object-cover opacity-95"
+                src="/images/lootbox.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
             </div>
+            {status === 'success' && (
+              <div className="relative z-10 w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl bg-gradient-to-br from-emerald-500 to-teal-600 border border-white/20">
+                <Check size={40} className="text-white" />
+              </div>
+            )}
+            {status !== 'success' && status !== 'error' && (
+              <div className="absolute inset-x-0 bottom-0 z-10 rounded-b-2xl bg-gradient-to-t from-slate-950/90 via-slate-950/50 to-transparent px-4 py-4 text-left">
+                <div className="text-sm font-black text-white uppercase tracking-tight">Master Claim (NFT-Gated)</div>
+                <div className="text-[11px] text-slate-300">Claim daily + weekly rewards across all projects in one action.</div>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-xl font-black text-white uppercase tracking-tight">
-              {status === 'success' ? 'All Rewards Claimed!' : 'Master Claim (NFT-Gated)'}
-            </h3>
-            <div className="text-sm text-slate-400 leading-relaxed">
-              {status === 'success' ? (
-                <>
+          <div className="space-y-2 w-full">
+            {status === 'success' ? (
+              <>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">All Rewards Claimed!</h3>
+                <div className="text-sm text-slate-400 leading-relaxed">
                   You claimed <span className="text-white font-bold">{totalClaimed}</span> rewards for a total of{' '}
                   <span className="text-emerald-400 font-bold">{totalXp} XP</span>.
-                </>
-              ) : status === 'error' ? (
-                <span className="text-red-400">{errorMessage}</span>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <span>
-                    Claim <span className="text-white font-bold">daily + weekly</span> rewards across{' '}
-                    <span className="text-white font-bold">all projects</span> in one action.
-                  </span>
-                  <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-amber-300 bg-amber-500/10 px-4 py-3 rounded-xl border border-amber-500/20">
+                </div>
+              </>
+            ) : status === 'error' ? (
+              <div className="text-sm text-red-400 leading-relaxed">{errorMessage}</div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 text-[11px] font-bold text-amber-300 bg-amber-500/10 px-4 py-3 rounded-xl border border-amber-500/20">
+                  <div className="flex items-center justify-center gap-2">
                     <Crown size={14} />
                     Requires LootBox NFT on Polygon
                   </div>
-                  <div className="text-[11px] text-slate-400">
-                    Don’t have it yet? Grab LootBox to unlock Master Claim and save time every day.
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://opensea.io/collection/questgalaxy-lootbox/overview"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full bg-amber-300 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-950 hover:bg-amber-200 transition-colors"
+                    >
+                      Mint Now
+                    </a>
+                    <a
+                      href="https://questgalaxy.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full border border-amber-300/60 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-amber-200 hover:text-amber-100 hover:border-amber-200/80 transition-colors"
+                    >
+                      Learn More
+                    </a>
                   </div>
-                </div>
-              )}
-            </div>
+                  <div className="text-[9px] font-medium text-amber-100/80 text-center">
+                    Don’t have it yet? Grab LootBox to unlock Master Claim.
+                  </div>
+              </div>
+            )}
           </div>
 
           {status === 'idle' || status === 'error' ? (
@@ -1370,10 +1395,17 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLea
               <div className="flex items-center gap-3 md:gap-4 w-full justify-between md:w-auto md:justify-start">
                 <button
                   onClick={handleOpenMasterClaim}
-                  className="group flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-500/10 px-3.5 py-2 text-[9px] font-black uppercase tracking-widest text-indigo-200 transition-all hover:bg-indigo-500/20 hover:border-indigo-400/60"
+                  className="group relative flex items-center gap-2 rounded-full px-4 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-slate-950 transition-all hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-amber-300 via-yellow-300 to-emerald-300 shadow-[0_12px_30px_rgba(251,191,36,0.35)] whitespace-nowrap overflow-hidden"
                 >
-                  <Gift size={12} className="text-indigo-300 group-hover:text-indigo-200" />
-                  Master Claim
+                  <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.8),transparent_60%)] opacity-60" />
+                  <span className="absolute inset-0 rounded-full border border-white/60 shadow-[inset_0_0_20px_rgba(255,255,255,0.35)]" />
+                  <span className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-amber-400/60 via-yellow-300/60 to-emerald-400/60 blur-md opacity-60 group-hover:opacity-90" />
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent animate-shimmer" />
+                  <span className="absolute inset-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,0.6)_45%,transparent_70%)] bg-[length:200%_100%] animate-[ql-shine_2.4s_linear_infinite]" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Gift size={12} className="text-slate-900" />
+                    Claim All
+                  </span>
                 </button>
                 {isConnected && (
                   <div className="flex items-center gap-2">
