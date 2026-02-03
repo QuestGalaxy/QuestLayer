@@ -12,6 +12,7 @@ import GlobalFooter from './GlobalFooter';
 
 interface LeaderboardPageProps {
   onBack: () => void;
+  onHome?: () => void;
   onLeaderboard: () => void;
   onContinue: (payload: { projectId: string; domain?: string | null }) => void;
   onWidgetBuilder?: () => void;
@@ -693,7 +694,7 @@ const ProjectCard: React.FC<{
   );
 };
 
-const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard, onContinue, onWidgetBuilder, onSubmitProject, focusProjectId }) => {
+const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onHome, onLeaderboard, onContinue, onWidgetBuilder, onSubmitProject, focusProjectId }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -703,8 +704,22 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
   const [currentPage, setCurrentPage] = useState(1);
   const [userStats, setUserStats] = useState({ xp: 0, level: 1 });
   const [nextLevelXP, setNextLevelXP] = useState(1000);
-  const [leaderboardFilter, setLeaderboardFilter] = useState<'global' | 'mine'>('global');
-  const [timeframe, setTimeframe] = useState<'all' | 'weekly'>('all');
+  const [leaderboardFilter, setLeaderboardFilter] = useState<'global' | 'mine'>(() => {
+    try {
+      const stored = window.localStorage.getItem('ql:leaderboard:filter');
+      return stored === 'mine' ? 'mine' : 'global';
+    } catch {
+      return 'global';
+    }
+  });
+  const [timeframe, setTimeframe] = useState<'all' | 'weekly'>(() => {
+    try {
+      const stored = window.localStorage.getItem('ql:leaderboard:timeframe');
+      return stored === 'weekly' ? 'weekly' : 'all';
+    } catch {
+      return 'all';
+    }
+  });
 
   // Calculate time remaining until Sunday midnight UTC
   const [timeRemaining, setTimeRemaining] = useState<string>('');
@@ -918,12 +933,28 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
   }, [address, timeframe]);
 
   useEffect(() => {
-    if (isConnected) {
-      setLeaderboardFilter('mine');
-    } else {
+    if (!isConnected) {
       setLeaderboardFilter('global');
+      return;
     }
+    setLeaderboardFilter(prev => (prev === 'global' ? 'mine' : prev));
   }, [isConnected]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('ql:leaderboard:filter', leaderboardFilter);
+    } catch {
+      // Ignore storage errors (private mode, quota).
+    }
+  }, [leaderboardFilter]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('ql:leaderboard:timeframe', timeframe);
+    } catch {
+      // Ignore storage errors (private mode, quota).
+    }
+  }, [timeframe]);
 
   const totalXp = useMemo(() => projects.reduce((sum, project) => sum + project.userXp, 0), [projects]);
   const filteredProjects = useMemo(() => {
@@ -964,7 +995,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onBack, onLeaderboard
       {/* Unified Sticky Header */}
       <UnifiedHeader
         onBack={onBack}
-        onHome={onBack}
+        onHome={onHome}
         isConnected={isConnected}
         address={address}
         userStats={userStats}

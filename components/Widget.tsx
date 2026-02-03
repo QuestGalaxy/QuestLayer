@@ -166,19 +166,31 @@ const Widget: React.FC<WidgetProps> = ({
   const animationFrameRef = useRef<number | null>(null);
   const wasConnectedRef = useRef(false);
   const isDisconnectingRef = useRef(false);
+  const wasOpenRef = useRef(false);
   const cacheScope = globalThis.location?.origin ?? 'unknown-origin';
   const projectScope = state.projectId ?? (state.projectName ? `name:${state.projectName}` : 'unknown-project');
   const walletKey = address ? `questlayer:wallet:${address.toLowerCase()}:${cacheScope}:${projectScope}` : '';
   const projectScopeRef = useRef<string | null>(null);
-  const normalizeHost = (value: string) => value.toLowerCase()
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .split('/')[0]
-    .split(':')[0];
   const normalizeAnswer = (value: string) => value
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[\s\p{P}\p{S}]+/gu, '');
+  const trackWidgetOpen = async () => {
+    if (isPreview) return;
+    let projectId = state.projectId;
+
+    if (!projectId && state.projectName) {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('name', state.projectName)
+        .limit(1);
+      projectId = projects?.[0]?.id;
+    }
+
+    if (!projectId) return;
+    await logProjectView(projectId);
+  };
   const toRgba = (value: string, alpha: number) => {
     const trimmed = value.trim();
     if (!trimmed.startsWith('#')) return value;
@@ -435,6 +447,15 @@ const Widget: React.FC<WidgetProps> = ({
       body.style.overflow = prevBodyOverflow;
     };
   }, [isOpen, isFreeForm]);
+
+  useEffect(() => {
+    if (isOpen && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      void trackWidgetOpen();
+    } else if (!isOpen && wasOpenRef.current) {
+      wasOpenRef.current = false;
+    }
+  }, [isOpen, state.projectId, state.projectName, isPreview]);
 
   // --- SUPABASE SYNC ---
   useEffect(() => {
@@ -1375,41 +1396,6 @@ const Widget: React.FC<WidgetProps> = ({
       setIsWidgetActive(true);
       playSound('connect');
     } else {
-      if (!isPreview && isEmbedded) {
-        const trackConnect = async () => {
-          let projectId = state.projectId;
-
-          if (!projectId && state.projectName) {
-            const { data: projects } = await supabase
-              .from('projects')
-              .select('id')
-              .eq('name', state.projectName)
-              .limit(1);
-            projectId = projects?.[0]?.id;
-          }
-
-          if (!projectId) return;
-
-          const host = normalizeHost(window.location.hostname || '');
-          const projectHost = state.projectDomain ? normalizeHost(state.projectDomain) : '';
-
-          console.log('[QuestLayer] Tracking Connect:', {
-            host,
-            projectHost,
-            projectId,
-            match: host === projectHost
-          });
-
-          if (!host || !projectHost || host !== projectHost) {
-            console.warn('[QuestLayer] Domain mismatch or missing configuration. Tracking skipped.');
-            return;
-          }
-
-          await logProjectView(projectId);
-        };
-
-        void trackConnect();
-      }
       setIsWidgetActive(true);
       open();
     }

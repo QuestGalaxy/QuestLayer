@@ -569,6 +569,19 @@ const App: React.FC = () => {
     window.history.pushState(null, '', '/leaderboard');
   };
 
+  const goBrowse = () => {
+    setPendingBrowseRequest(null);
+    setCurrentPage('questbrowse');
+  };
+
+  const goDashboard = () => {
+    setCurrentPage('dashboard');
+  };
+
+  const goSubmit = () => {
+    setCurrentPage('submit');
+  };
+
   const handleProjectLeaderboard = (projectId: string) => {
     setLeaderboardProjectId(projectId);
     setCurrentPage('leaderboard');
@@ -622,9 +635,10 @@ const App: React.FC = () => {
       <Suspense fallback={<LoadingFallback />}>
         <QuestBrowse
           onBack={() => setCurrentPage('landing')}
+          onHome={goBrowse}
           onLeaderboard={handleGlobalLeaderboard}
-          onWidgetBuilder={() => setCurrentPage('dashboard')}
-          onSubmitProject={openSubmitModal}
+          onWidgetBuilder={goDashboard}
+          onSubmitProject={goSubmit}
           onProjectDetails={openProjectDetails}
           initialBrowseRequest={pendingBrowseRequest}
           onBrowseHandled={() => setPendingBrowseRequest(null)}
@@ -658,13 +672,14 @@ const App: React.FC = () => {
               window.history.pushState(null, '', '/browse');
             }
           }}
+          onHome={goBrowse}
           onLeaderboard={handleGlobalLeaderboard}
           onContinue={({ projectId, domain }) => {
             setPendingBrowseRequest({ projectId, url: domain || undefined });
             setCurrentPage('questbrowse');
           }}
-          onWidgetBuilder={() => setCurrentPage('dashboard')}
-          onSubmitProject={openSubmitModal}
+          onWidgetBuilder={goDashboard}
+          onSubmitProject={goSubmit}
           focusProjectId={leaderboardProjectId}
         />
         {isSubmitModalOpen && (
@@ -694,14 +709,15 @@ const App: React.FC = () => {
         <ProjectDetail
         projectId={selectedProjectId}
         onBack={() => setCurrentPage('questbrowse')}
+        onHome={goBrowse}
         onOpen={({ projectId, domain }) => {
           setPendingBrowseRequest({ projectId, url: domain || undefined });
           setCurrentPage('questbrowse');
         }}
         onLeaderboard={handleGlobalLeaderboard}
         onProjectLeaderboard={handleProjectLeaderboard}
-        onWidgetBuilder={() => setCurrentPage('builder')}
-        onSubmitProject={() => setCurrentPage('submit')}
+        onWidgetBuilder={goDashboard}
+        onSubmitProject={goSubmit}
       />
       </Suspense>
     );

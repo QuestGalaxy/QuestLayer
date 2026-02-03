@@ -26,7 +26,7 @@ import {
   Facebook
 } from 'lucide-react';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
-import { fetchProjectDetails, fetchProjectStats, fetchUserXP, rewardDailyShare } from '../lib/supabase';
+import { fetchProjectDetails, fetchProjectStats, fetchUserXP, logProjectView, rewardDailyShare } from '../lib/supabase';
 import { calculateXpForLevel } from '../lib/gamification';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
@@ -51,6 +51,7 @@ const getFaviconUrl = (link: string) => {
 interface ProjectDetailProps {
   projectId: string;
   onBack: () => void;
+  onHome?: () => void;
   onOpen: (payload: { projectId: string; domain?: string | null }) => void;
   onLeaderboard: () => void;
   onProjectLeaderboard: (projectId: string) => void;
@@ -58,7 +59,7 @@ interface ProjectDetailProps {
   onSubmitProject?: () => void;
 }
 
-const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen, onLeaderboard, onProjectLeaderboard, onWidgetBuilder, onSubmitProject }) => {
+const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onHome, onOpen, onLeaderboard, onProjectLeaderboard, onWidgetBuilder, onSubmitProject }) => {
   const [project, setProject] = useState<any | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [stats, setStats] = useState<any | null>(null);
@@ -69,6 +70,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
   const [canExpandDescription, setCanExpandDescription] = useState(false);
   const [logoOverride, setLogoOverride] = useState<string | null>(null);
   const descriptionRef = useRef<HTMLParagraphElement | null>(null);
+  const hasLoggedViewRef = useRef(false);
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -127,6 +129,12 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     return () => {
       isMounted = false;
     };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!projectId || hasLoggedViewRef.current) return;
+    hasLoggedViewRef.current = true;
+    void logProjectView(projectId);
   }, [projectId]);
 
   useEffect(() => {
@@ -459,7 +467,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onOpen
     <div className="min-h-screen bg-[#020617] text-white overflow-y-auto custom-scroll selection:bg-indigo-500/30 flex flex-col">
       <UnifiedHeader
         onBack={onBack}
-        onHome={onBack}
+        onHome={onHome}
         isConnected={isConnected}
         address={address}
         userStats={userStats}

@@ -408,7 +408,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Logo Group */}
           <div className="relative group/logo shrink-0 z-10">
             <button 
-              onClick={onBack}
+              onClick={onHome || onBack}
               className="h-9 md:h-[42px] px-3 md:px-5 text-slate-200 hover:text-white transition-colors bg-slate-900/50 hover:bg-slate-800/50 rounded-full border border-white/10 relative overflow-hidden group flex items-center shadow-inner"
             >
               <span className="absolute inset-0 bg-[linear-gradient(0deg,transparent,rgba(99,102,241,0.15),transparent)] animate-[ql-scanline_3.2s_linear_infinite] pointer-events-none" />
@@ -462,7 +462,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               nextLevelXP={nextLevelXP}
               onConnect={onConnect}
               onDisconnect={onDisconnect}
-              onHome={onHome || onBack}
+              onHome={onHome}
               onLeaderboard={onLeaderboard}
               onWidgetBuilder={onWidgetBuilder}
               onSubmitProject={onSubmitProject}

@@ -12,6 +12,7 @@ import { calculateXpForLevel } from '../lib/gamification';
 
 interface QuestBrowseProps {
   onBack: () => void;
+  onHome?: () => void;
   onLeaderboard: () => void;
   onWidgetBuilder?: () => void;
   onSubmitProject?: () => void;
@@ -355,7 +356,7 @@ const BrowseCard: React.FC<{
   );
 };
 
-const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidgetBuilder, onSubmitProject, onProjectDetails, initialBrowseRequest, onBrowseHandled }) => {
+const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard, onWidgetBuilder, onSubmitProject, onProjectDetails, initialBrowseRequest, onBrowseHandled }) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { disconnect } = useDisconnect();
@@ -1362,6 +1363,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onLeaderboard, onWidg
           onHome={() => {
             setIsBrowsing(false);
             setIsIframeLoading(false);
+            onHome?.();
           }}
           isConnected={isConnected}
           address={address}
