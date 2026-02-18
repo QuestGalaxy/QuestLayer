@@ -152,7 +152,7 @@ create policy "Public read access for analytics" on analytics_events for select 
 
 -- 7. Analytics RPCs
 
--- Log a view and update the project's last_ping_at timestamp (Heartbeat)
+-- Log a project view for analytics only
 create or replace function log_project_view(p_id uuid)
 returns void
 language plpgsql
@@ -163,10 +163,19 @@ begin
   -- Insert view record
   insert into analytics_events (project_id, event_type)
   values (p_id, 'view');
+end;
+$$;
 
-  -- Update project heartbeat
-  update projects 
-  set last_ping_at = now() 
+-- Update the project's widget heartbeat (external embed usage)
+create or replace function ping_project_widget(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update projects
+  set last_ping_at = now()
   where id = p_id;
 end;
 $$;
@@ -531,6 +540,7 @@ $$;
 
 -- Grant Execute Permissions
 GRANT EXECUTE ON FUNCTION log_project_view(uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION ping_project_widget(uuid) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_project_stats(uuid) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_global_dashboard_stats(text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION claim_daily_bonus(uuid) TO anon, authenticated;

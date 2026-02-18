@@ -31,6 +31,16 @@ import { calculateXpForLevel } from '../lib/gamification';
 import UnifiedHeader from './UnifiedHeader';
 import GlobalFooter from './GlobalFooter';
 
+const VERIFIED_WINDOW_MS = 1000 * 60 * 60 * 24 * 90;
+const ONLINE_WINDOW_MS = 1000 * 60 * 60 * 24;
+
+const isPingWithinWindow = (lastPingAt: string | null | undefined, windowMs: number) => {
+  if (!lastPingAt) return false;
+  const pingAtMs = new Date(lastPingAt).getTime();
+  if (Number.isNaN(pingAtMs)) return false;
+  return pingAtMs > Date.now() - windowMs;
+};
+
 const getFaviconUrl = (link: string) => {
   try {
     if (!link || link.length < 4) return '';
@@ -287,19 +297,20 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onHome
 
   const logoSrc = logoOverride || project?.logo_url || (project?.domain ? getFaviconUrl(project.domain) : '');
 
-  const lastVerifiedLabel = project?.last_ping_at
+  const hasAnyPing = Boolean(project?.last_ping_at);
+  const isVerified = isPingWithinWindow(project?.last_ping_at, VERIFIED_WINDOW_MS);
+  const isOnline = isPingWithinWindow(project?.last_ping_at, ONLINE_WINDOW_MS);
+  const formattedLastPingLabel = project?.last_ping_at
     ? new Date(project.last_ping_at).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     })
+    : '';
+  const lastVerifiedLabel = hasAnyPing
+    ? (isVerified ? formattedLastPingLabel : `${formattedLastPingLabel} (older than 3 months)`)
     : 'Not verified yet';
-
-  const isVerified = Boolean(project?.last_ping_at);
-  const isOnline = project?.last_ping_at
-    ? new Date(project.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
-    : false;
 
   const socialLinks = useMemo(() => {
     const socials = (project?.social_links ?? {}) as Record<string, string | undefined>;
@@ -679,7 +690,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onHome
                     </a>
                     <div className="h-1 w-1 rounded-full bg-slate-700" />
                     {isVerified ? (
-                      <BadgeWithTooltip tooltipText="Auto‑verified via widget activity.">
+                      <BadgeWithTooltip tooltipText="Auto‑verified via external widget activity in the last 3 months.">
                         <div className="flex items-center gap-2 text-sm text-sky-300">
                           <ShieldCheck size={16} />
                           <span>Verified</span>
@@ -876,7 +887,9 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({ projectId, onBack, onHome
                     <div className="text-xs text-slate-400 mt-1 leading-relaxed">
                       {isVerified
                         ? `QuestLayer widget is detected and active on ${project.domain}.`
-                        : 'We have not detected a live widget ping for this project yet.'}
+                        : (hasAnyPing
+                          ? 'We found widget activity before, but not in the last 3 months.'
+                          : 'We have not detected a live widget ping for this project yet.')}
                     </div>
                   </div>
                 </div>

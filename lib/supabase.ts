@@ -144,6 +144,11 @@ export const logProjectView = async (projectId: string) => {
   if (error) console.error('Error logging view:', error);
 };
 
+export const pingProjectWidget = async (projectId: string) => {
+  const { error } = await supabase.rpc('ping_project_widget', { p_id: projectId });
+  if (error) console.error('Error updating project heartbeat:', error);
+};
+
 export const fetchProjectStats = async (projectId: string) => {
   const { data, error } = await supabase.rpc('get_project_stats', { p_id: projectId });
   if (error) throw error;

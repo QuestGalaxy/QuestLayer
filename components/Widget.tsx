@@ -11,7 +11,7 @@ import {
   XCircle, Lock, RefreshCw, Shield, Bird, Star
 } from 'lucide-react';
 import TierIcon from './TierIcon';
-import { supabase, logProjectView } from '../lib/supabase';
+import { supabase, logProjectView, pingProjectWidget } from '../lib/supabase';
 import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
 import { useChainId, useSignMessage, useSwitchChain } from 'wagmi';
 
@@ -175,6 +175,30 @@ const Widget: React.FC<WidgetProps> = ({
     .toLowerCase()
     .normalize('NFKC')
     .replace(/[\s\p{P}\p{S}]+/gu, '');
+  const normalizeHostname = (value?: string | null) => {
+    if (!value) return '';
+    try {
+      const source = value.trim();
+      const withScheme = source.startsWith('http://') || source.startsWith('https://')
+        ? source
+        : `https://${source}`;
+      return new URL(withScheme).hostname.replace(/^www\./, '').toLowerCase();
+    } catch {
+      return value.trim().toLowerCase().replace(/^www\./, '');
+    }
+  };
+  const isQuestLayerHost = (hostname: string) =>
+    hostname === 'questlayer.app' || hostname.endsWith('.questlayer.app');
+  const hostMatchesProjectDomain = (host: string, projectDomain: string) =>
+    host === projectDomain || host.endsWith(`.${projectDomain}`) || projectDomain.endsWith(`.${host}`);
+  const shouldPingProjectHeartbeat = () => {
+    if (!isEmbedded || typeof window === 'undefined') return false;
+    const currentHost = normalizeHostname(window.location.hostname);
+    if (!currentHost || isQuestLayerHost(currentHost)) return false;
+    const projectHost = normalizeHostname(state.projectDomain ?? '');
+    if (!projectHost) return false;
+    return hostMatchesProjectDomain(currentHost, projectHost);
+  };
   const trackWidgetOpen = async () => {
     if (isPreview) return;
     let projectId = state.projectId;
@@ -190,6 +214,9 @@ const Widget: React.FC<WidgetProps> = ({
 
     if (!projectId) return;
     await logProjectView(projectId);
+    if (shouldPingProjectHeartbeat()) {
+      await pingProjectWidget(projectId);
+    }
   };
   const toRgba = (value: string, alpha: number) => {
     const trimmed = value.trim();

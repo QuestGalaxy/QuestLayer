@@ -44,6 +44,18 @@ const FALLBACK_ACCENTS = [
   '#a855f7',
   '#f59e0b'
 ];
+const NEW_WIDGET_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
+const TRENDING_COOLDOWN_MS = 1000 * 60 * 60 * 12;
+const VERIFIED_WINDOW_MS = 1000 * 60 * 60 * 24 * 90;
+
+const isPingWithinWindow = (lastPingAt: string | null | undefined, windowMs: number) => {
+  if (!lastPingAt) return false;
+  const pingAtMs = new Date(lastPingAt).getTime();
+  if (Number.isNaN(pingAtMs)) return false;
+  return pingAtMs > Date.now() - windowMs;
+};
+
+const isProjectVerified = (project: any) => isPingWithinWindow(project?.last_ping_at, VERIFIED_WINDOW_MS);
 
 const hashString = (value: string) => {
   let hash = 2166136261;
@@ -185,6 +197,7 @@ const BrowseCard: React.FC<{
   const rewardBadge = (typeof stats?.reward_xp === 'number' || typeof stats?.total_xp === 'number')
     ? `Rewards: ${stats?.reward_xp ?? stats?.total_xp} XP`
     : 'Rewards · Multi-chain';
+  const isVerified = isProjectVerified(project);
   const lastCheckedLabel = project.last_ping_at
     ? new Date(project.last_ping_at).toLocaleString('en-US')
     : 'Not checked yet';
@@ -225,11 +238,11 @@ const BrowseCard: React.FC<{
         </div>
 
         <div className="absolute top-4 right-4 flex gap-2 items-end">
-          {project.last_ping_at && (
+          {isVerified && (
             <BadgeWithTooltip
               tooltipText={
                 <div className="flex flex-col gap-1">
-                  <span>Auto-verified: Embedded & active on the website.</span>
+                  <span>Auto-verified: External widget activity seen in the last 3 months.</span>
                   <span className="text-[9px] text-slate-400">Last checked: {lastCheckedLabel}</span>
                 </div>
               }
@@ -385,8 +398,6 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard
   const [ogImageCache, setOgImageCache] = useState<Record<string, string>>({});
   const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
   const isDev = (import.meta as any).env?.DEV ?? false;
-  const NEW_WIDGET_WINDOW_MS = 1000 * 60 * 60 * 24 * 30;
-  const TRENDING_COOLDOWN_MS = 1000 * 60 * 60 * 12;
 
   const handleNextProject = () => {
     if (projects.length === 0) return;
@@ -444,9 +455,9 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard
             const isOnlineB = b.last_ping_at && (new Date(b.last_ping_at).getTime() > Date.now() - 24 * 60 * 60 * 1000);
             if (isOnlineA !== isOnlineB) return isOnlineA ? -1 : 1;
 
-            // Then by Verified status (ever had a ping)
-            const isVerifiedA = !!a.last_ping_at;
-            const isVerifiedB = !!b.last_ping_at;
+            // Then by Verified status (last ping within 3 months)
+            const isVerifiedA = isProjectVerified(a);
+            const isVerifiedB = isProjectVerified(b);
             if (isVerifiedA !== isVerifiedB) return isVerifiedA ? -1 : 1;
 
             // Then by visits
@@ -861,9 +872,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard
   };
 
   const isProjectOnline = (project: any) => {
-    if (!project.last_ping_at) return false;
-    const lastPing = new Date(project.last_ping_at).getTime();
-    return lastPing > Date.now() - 24 * 60 * 60 * 1000;
+    return isPingWithinWindow(project?.last_ping_at, 24 * 60 * 60 * 1000);
   };
 
   const isNewProject = (project: any) => {
@@ -987,7 +996,7 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard
       )
     )
     .filter(p => (browseFilter === 'new' ? isNewProject(p) : true))
-    .filter(p => (browseFilter === 'verified' ? !!p.last_ping_at : true))
+    .filter(p => (browseFilter === 'verified' ? isProjectVerified(p) : true))
     .sort((a, b) => {
       if (browseFilter === 'new') {
         const aCreated = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -1000,8 +1009,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard
         const aOnline = isProjectOnline(a);
         const bOnline = isProjectOnline(b);
         if (aOnline !== bOnline) return aOnline ? -1 : 1;
-        const isVerifiedA = !!a.last_ping_at;
-        const isVerifiedB = !!b.last_ping_at;
+        const isVerifiedA = isProjectVerified(a);
+        const isVerifiedB = isProjectVerified(b);
         if (isVerifiedA !== isVerifiedB) return isVerifiedA ? -1 : 1;
         const visitsA = a.stats?.total_visits || 0;
         const visitsB = b.stats?.total_visits || 0;
@@ -1011,8 +1020,8 @@ const QuestBrowse: React.FC<QuestBrowseProps> = ({ onBack, onHome, onLeaderboard
       const aOnline = isProjectOnline(a);
       const bOnline = isProjectOnline(b);
       if (aOnline !== bOnline) return aOnline ? -1 : 1;
-      const isVerifiedA = !!a.last_ping_at;
-      const isVerifiedB = !!b.last_ping_at;
+      const isVerifiedA = isProjectVerified(a);
+      const isVerifiedB = isProjectVerified(b);
       if (isVerifiedA !== isVerifiedB) return isVerifiedA ? -1 : 1;
       const visitsA = a.stats?.total_visits || 0;
       const visitsB = b.stats?.total_visits || 0;
