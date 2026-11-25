@@ -1,10 +1,12 @@
-
-import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, ChevronRight, Gem, Lock, Rocket, Sparkles, Target, Trophy, UserPlus, Wallet, X, Zap } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { FocusEvent, KeyboardEvent } from 'react';
+import { ArrowRight, ArrowUpRight, Code2, Flame, Gem, Menu, MousePointerClick, Palette, Plus, Store, Target, Trophy, Zap } from 'lucide-react';
 import { useAppKitAccount } from '@reown/appkit/react';
 import GlobalFooter from './GlobalFooter';
-import { STORE_SLIDING_LINKS } from '../constants';
-import { fetchAllProjects } from '../lib/supabase';
+import LandingDemo from './landing/LandingDemo';
+import LandingEcosystem from './landing/LandingEcosystem';
+import { followLandingLink, staticPageHref } from './landing/links';
+import './landing/landing.css';
 
 interface LandingPageProps {
   onLaunch: () => void;
@@ -15,842 +17,212 @@ interface LandingPageProps {
   allowAutoLaunch?: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onLaunch, onBrowse, onTryBuilder, onSubmitProject, onProjectDetails, allowAutoLaunch = true }) => {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [featuredImages, setFeaturedImages] = useState<Record<string, string>>({});
-  const [projectDomainMap, setProjectDomainMap] = useState<Record<string, string>>({});
-  const [projectImageMap, setProjectImageMap] = useState<Record<string, string>>({});
-  const isDev = (import.meta as any).env?.DEV ?? false;
-  const { isConnected } = useAppKitAccount();
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const sliderRef = React.useRef<HTMLDivElement>(null);
-  const sliderDragDistance = React.useRef(0);
-  const sliderLastDragAt = React.useRef(0);
-  const [isSliderDragging, setIsSliderDragging] = useState(false);
-  const sliderDraggingRef = React.useRef(false);
-  const [sliderStartX, setSliderStartX] = useState(0);
-  const [sliderScrollLeft, setSliderScrollLeft] = useState(0);
-  const normalizeDomain = (value: string) => {
-    const trimmed = value.trim().toLowerCase();
-    if (!trimmed) return '';
-    try {
-      const withScheme = trimmed.startsWith('http://') || trimmed.startsWith('https://')
-        ? trimmed
-        : `https://${trimmed}`;
-      return new URL(withScheme).hostname.replace(/^www\./, '');
-    } catch {
-      return trimmed.split('/')[0].replace(/^www\./, '');
-    }
-  };
-  const featuredStoreItems = useMemo(() => {
-    const tags = ['XP Quests', 'Liquidity', 'Collectibles', 'DeFi', 'Wallet', 'Discover', 'Swap', 'NFTs'];
-    const accents = [
-      'from-indigo-500/40 via-indigo-500/10 to-transparent',
-      'from-orange-500/40 via-orange-500/10 to-transparent',
-      'from-emerald-500/40 via-emerald-500/10 to-transparent',
-      'from-sky-500/40 via-sky-500/10 to-transparent',
-      'from-purple-500/40 via-purple-500/10 to-transparent',
-      'from-blue-500/40 via-blue-500/10 to-transparent',
-      'from-rose-500/40 via-rose-500/10 to-transparent',
-      'from-teal-500/40 via-teal-500/10 to-transparent'
-    ];
-    return STORE_SLIDING_LINKS.slice(0, 8).map((item, index) => ({
-      ...item,
-      tag: tags[index % tags.length],
-      accent: accents[index % accents.length]
-    }));
-  }, []);
+const steps = [
+  { title: 'Create', description: 'Choose your quests and XP.', Icon: MousePointerClick },
+  { title: 'Customize', description: 'Match your theme, color and placement.', Icon: Palette },
+  { title: 'Embed', description: 'Add the snippet to your website.', Icon: Code2 }
+];
 
-  React.useEffect(() => {
-    // Lazy load video after mount to prioritize LCP
-    const timer = setTimeout(() => {
-      if (videoRef.current) {
-        videoRef.current.src = "/questlayer.mp4";
-        // Attempt to play - some browsers require user interaction for unmuted, but this is muted
-        videoRef.current.play().catch(e => console.debug("Video autoplay blocked", e));
-      }
-    }, 1000); // 1 second delay to ensure initial paint is done
-    return () => clearTimeout(timer);
-  }, []);
+const features = [
+  { title: 'Quests', description: 'Give visitors a reason to take action.', Icon: Target, href: '/features/quests' },
+  { title: 'Rewards', description: 'Reward progress with XP and perks.', Icon: Gem, href: '/features/rewards' },
+  { title: 'Streaks', description: 'Give players a reason to come back.', Icon: Flame, href: '/features/streaks' },
+  { title: 'Leaderboards', description: 'Let players see how they rank.', Icon: Trophy, href: '/leaderboard' }
+];
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchProjectsIndex = async () => {
-      try {
-        const list = await fetchAllProjects();
-        if (!isMounted) return;
-        const nextMap: Record<string, string> = {};
-        const nextImages: Record<string, string> = {};
-        list.forEach((project) => {
-          if (!project?.id || !project?.domain) return;
-          const key = normalizeDomain(project.domain);
-          if (key) {
-            nextMap[key] = project.id;
-            const image = project.banner_url || project.logo_url;
-            if (image) nextImages[key] = image;
-          }
-        });
-        setProjectDomainMap(nextMap);
-        setProjectImageMap(nextImages);
-      } catch {
-        // ignore
-      }
-    };
-    const fetchFeaturedImages = async () => {
-      const entries = await Promise.all(
-        featuredStoreItems.map(async (item) => {
-          try {
-            const key = normalizeDomain(item.domain);
-            const projectImage = projectImageMap[key];
-            const isFavicon = projectImage?.includes('favicon');
-            const target = item.domain.startsWith('http') ? item.domain : `https://${item.domain}`;
-            const res = await fetch(`/api/og?url=${encodeURIComponent(target)}`);
-            const data = await res.json();
-            if (data?.image && !isFavicon) return [item.domain, data.image] as const;
-            if (data?.image && isFavicon) return [item.domain, data.image] as const;
-            if (projectImage) return [item.domain, projectImage] as const;
-            if (isDev) {
-              return [item.domain, `https://www.google.com/s2/favicons?domain=${item.domain}&sz=256`] as const;
-            }
-            return [item.domain, ''] as const;
-          } catch {
-            if (isDev) {
-              return [item.domain, `https://www.google.com/s2/favicons?domain=${item.domain}&sz=256`] as const;
-            }
-            return [item.domain, projectImageMap[normalizeDomain(item.domain)] || ''] as const;
-          }
-        })
-      );
-      if (!isMounted) return;
-      const nextImages: Record<string, string> = {};
-      entries.forEach(([domain, image]) => {
-        if (image) nextImages[domain] = image;
-      });
-      setFeaturedImages(nextImages);
-    };
-    fetchFeaturedImages();
-    fetchProjectsIndex();
-    return () => {
-      isMounted = false;
-    };
-  }, [featuredStoreItems, isDev, projectImageMap]);
+const templates = [
+  { title: 'NFT holder quest', category: 'Web3 community', art: 'community', href: '/templates/nft-holder-only' },
+  { title: 'Referral campaign', category: 'Product launch', art: 'launch', href: '/templates/referral-campaign' },
+  { title: 'Daily login streak', category: 'Repeat engagement', art: 'gaming', href: '/templates/daily-login' },
+  { title: 'E-commerce playbook', category: 'Use-case guide', art: 'commerce', href: '/use-cases/ecommerce' }
+];
 
-  React.useEffect(() => {
-    if (isConnected && allowAutoLaunch) {
-      onLaunch();
-    }
-  }, [isConnected, allowAutoLaunch, onLaunch]);
+const faq = [
+  { question: 'Do I need a wallet to use QuestLayer?', answer: 'You can try the demo and design a widget without a wallet. Connect a wallet to save and publish from the builder.' },
+  { question: 'Where can I embed the widget?', answer: 'Add the embed snippet to a website where you can insert custom HTML or JavaScript.' },
+  { question: 'Is QuestLayer only for Web3 projects?', answer: 'You can build quests around links, quizzes, and daily check-ins. Web3 projects can also use wallet and NFT-based quests.' }
+];
 
-  const getHubGlow = () => {
-    switch (hoveredCard) {
-      case 1: return 'shadow-[0_0_80px_rgba(249,115,22,0.6)] border-orange-500';
-      case 2: return 'shadow-[0_0_80px_rgba(99,102,241,0.6)] border-indigo-500';
-      case 3: return 'shadow-[0_0_80px_rgba(168,85,247,0.6)] border-purple-500';
-      case 4: return 'shadow-[0_0_80px_rgba(234,179,8,0.6)] border-yellow-500';
-      default: return 'shadow-[0_0_60px_rgba(139,92,246,0.4)] border-indigo-500/50';
-    }
-  };
+const supportsPopover = typeof HTMLElement !== 'undefined' && 'showPopover' in HTMLElement.prototype;
 
-  const handleSliderPointerDown = (e: React.PointerEvent) => {
-    if (!sliderRef.current || e.pointerType !== 'touch') return;
-    setIsSliderDragging(true);
-    sliderDraggingRef.current = true;
-    sliderDragDistance.current = 0;
-    sliderRef.current.setPointerCapture(e.pointerId);
-    setSliderStartX(e.clientX);
-    setSliderScrollLeft(sliderRef.current.scrollLeft);
-  };
+function LandingHeader({ onTryBuilder, onBrowse, onLaunch }: Pick<LandingPageProps, 'onTryBuilder' | 'onBrowse' | 'onLaunch'>) {
+  const menuId = useId();
+  const menuRef = useRef<HTMLUListElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [expanded, setExpanded] = useState(false);
 
-  const handleSliderPointerMove = (e: React.PointerEvent) => {
-    if (!isSliderDragging || !sliderRef.current || e.pointerType !== 'touch') return;
-    const walk = (e.clientX - sliderStartX) * 1.5;
-    sliderDragDistance.current = Math.max(sliderDragDistance.current, Math.abs(e.clientX - sliderStartX));
-    sliderLastDragAt.current = Date.now();
-    sliderRef.current.scrollLeft = sliderScrollLeft - walk;
-  };
+  function closeMenu() {
+    const menu = menuRef.current;
+    if (supportsPopover && menu?.matches(':popover-open')) menu.hidePopover();
+    if (!supportsPopover) setExpanded(false);
+  }
 
-  const handleSliderPointerUp = (e: React.PointerEvent) => {
-    if (!sliderRef.current || e.pointerType !== 'touch') return;
-    setIsSliderDragging(false);
-    sliderDraggingRef.current = false;
-    sliderRef.current.releasePointerCapture(e.pointerId);
-  };
+  function closeOnEscape(event: KeyboardEvent<HTMLElement>) {
+    if (supportsPopover || !expanded || event.key !== 'Escape') return;
+    closeMenu();
+    triggerRef.current?.focus();
+  }
+
+  function closeOnBlur(event: FocusEvent<HTMLElement>) {
+    if (!supportsPopover && !event.currentTarget.contains(event.relatedTarget)) closeMenu();
+  }
 
   return (
-    <div className="relative min-h-screen w-full bg-[#05010d] overflow-x-hidden overflow-y-auto custom-scroll selection:bg-orange-500/30 font-['Inter']">
-
-      {/* --- VIDEO BACKGROUND LAYER --- */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <video
-          ref={videoRef}
-          muted
-          loop
-          playsInline
-          preload="none"
-          poster="/qlayer.jpeg"
-          className="absolute inset-0 w-full h-full object-cover opacity-20"
-        >
-          {/* Source injected via JS */}
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#05010d]/50 via-transparent to-[#05010d]" />
-      </div>
-
-      {/* --- COSMIC BACKGROUND LAYER --- */}
-      <div className="fixed inset-0 pointer-events-none z-[1]">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/15 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-orange-900/15 blur-[150px] rounded-full" />
-
-        {/* Animated Stars */}
-        {[...Array(40)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white opacity-40 animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${1 + Math.random() * 2}px`,
-              height: `${1 + Math.random() * 2}px`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${2 + Math.random() * 3}s`
-            }}
-          />
-        ))}
-
-        {/* Floating Particles */}
-        {[...Array(25)].map((_, i) => (
-          <div
-            key={`p-${i}`}
-            className="absolute bg-indigo-500/30 rounded-full animate-float-slow"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${4 + Math.random() * 8}px`,
-              height: `${4 + Math.random() * 8}px`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${10 + Math.random() * 15}s`,
-              opacity: 0.2 + Math.random() * 0.3
-            }}
-          />
-        ))}
-
-        {/* Pixel Blocks */}
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={`px-${i}`}
-            className="absolute bg-orange-500/20 border border-orange-500/30 animate-pulse"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: '10px',
-              height: '10px',
-              transform: `rotate(${Math.random() * 360}deg)`,
-              animationDelay: `${Math.random() * 4}s`,
-              opacity: 0.15 + Math.random() * 0.2
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col items-center z-10">
-
-        {/* --- HERO SECTION --- */}
-        <div className="mb-6 text-center animate-in fade-in slide-in-from-top-8 duration-1000 w-full">
-          <div className="flex flex-col items-center">
-            <div className="flex flex-row items-center gap-2 sm:gap-4 mb-6">
-              <video
-                src="/questLogo.webm"
-                autoPlay
-                loop
-                muted
-                playsInline
-                poster="/logoLayer.webp"
-                className="h-16 w-16 sm:h-24 sm:w-24 object-contain"
-              />
-              <h1 className="pixel-text text-4xl sm:text-6xl md:text-8xl text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-orange-400 drop-shadow-[0_0_30px_rgba(249,115,22,0.4)] mb-4">
-              QUESTLAYER
-            </h1>
-          </div>
-          <p className="text-xl sm:text-3xl md:text-4xl font-black text-white max-w-4xl leading-[1.1] tracking-tight px-4 mt-4">
-            Turn Any Website Into an Interactive <br className="hidden md:block" />
-            <span className="relative inline-block">
-              <span className="relative z-10 text-orange-500 italic underline decoration-orange-500/30 underline-offset-[12px]">Quest & Reward Hub</span>
-              <span className="absolute -inset-x-2 -inset-y-1 bg-orange-500/10 blur-xl rounded-full -z-0 animate-pulse" />
-            </span>
-          </p>
-          <div className="mt-10 flex flex-row items-center justify-center gap-x-3 sm:gap-x-6 px-4 sm:px-10 py-3 sm:py-4 bg-white/[0.03] border border-white/10 rounded-full max-w-[98vw] backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.05)]">
-            <div className="flex items-center gap-1.5 sm:gap-2.5 group animate-[soft-bounce_3s_ease-in-out_infinite]">
-              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-500/10 text-orange-400 group-hover:scale-110 transition-transform duration-300">
-                <Sparkles className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
-              </div>
-              <span className="text-slate-200 text-[8px] sm:text-xs font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] whitespace-nowrap">One embed</span>
-            </div>
-            
-            <div className="w-px h-3 sm:h-4 bg-white/10" />
-            
-            <div className="flex items-center gap-1.5 sm:gap-2.5 group animate-[soft-bounce_3s_ease-in-out_infinite_0.5s]">
-              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform duration-300">
-                <Zap className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
-              </div>
-              <span className="text-slate-200 text-[8px] sm:text-xs font-black uppercase tracking-[0.1em] sm:tracking-[0.15em] whitespace-nowrap">No redirects</span>
-            </div>
-            
-            <div className="w-px h-3 sm:h-4 bg-white/10" />
-            
-            <div className="flex items-center gap-1.5 sm:gap-2.5 group animate-[soft-bounce_3s_ease-in-out_infinite_1s]">
-              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform duration-300">
-                <Target className="w-3 h-3 sm:w-[14px] sm:h-[14px]" />
-              </div>
-              <span className="text-slate-200 text-[8px] sm:text-xs font-black uppercase tracking-[0.15em] whitespace-nowrap">Instant Web3</span>
-            </div>
-          </div>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6 w-full px-4">
-              <button
-                 onClick={onTryBuilder}
-                 className="group relative w-full sm:w-[320px] px-8 py-3 bg-orange-500 hover:bg-orange-400 text-black font-black uppercase text-xs tracking-[0.25em] rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col items-center justify-center overflow-hidden leading-tight
-                   shadow-[0_10px_30px_rgba(249,115,22,0.4),inset_0_2px_4px_rgba(255,255,255,0.4),inset_0_-4px_8px_rgba(0,0,0,0.2)]
-                   before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/30 before:to-transparent before:opacity-100
-                   after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/40 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite]
-                   animate-[lively-wiggle_3s_ease-in-out_infinite]"
-               >
-                <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex items-center gap-2">
-                    <Rocket size={16} className="group-hover:rotate-12 transition-transform" />
-                    <span>Start Building</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.1em] text-black/60 animate-pulse">
-                    <Sparkles size={8} />
-                    <span>No Wallet Required</span>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                 onClick={onBrowse}
-                 className="group relative w-full sm:w-auto px-10 py-4 bg-white/10 hover:bg-white/15 text-white font-black uppercase text-[11px] tracking-[0.2em] rounded-2xl border border-white/10 transition-all flex items-center justify-center gap-3 overflow-hidden
-                   shadow-[0_10px_30px_rgba(99,102,241,0.2),inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-4px_8px_rgba(0,0,0,0.3)]
-                   before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-100
-                   after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/20 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite] backdrop-blur-md
-                   hover:scale-[1.05] active:scale-[0.95] hover:shadow-[0_15px_40px_rgba(99,102,241,0.4)]"
-               >
-                 <Gem size={16} className="text-indigo-400 group-hover:scale-110 transition-transform relative z-10" />
-                 <span className="relative z-10">Browse Store</span>
-               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* --- FEATURED STORE STRIP --- */}
-        <div className="w-full max-w-6xl mx-auto mt-10 mb-6 px-2 sm:px-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-left">
-              <div className="text-[10px] uppercase tracking-[0.35em] text-indigo-300/70 font-black">
-                Featured in Store
-              </div>
-              <p className="text-slate-400 text-xs sm:text-sm mt-2">
-                Live quests across the ecosystem, curated for instant exploration.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={onSubmitProject}
-                className="px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-100 font-black uppercase text-[10px] tracking-[0.3em] rounded-xl border border-indigo-500/30 transition-all"
-              >
-                Submit Project
-              </button>
-              <button
-                onClick={onBrowse}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white font-black uppercase text-[10px] tracking-[0.3em] rounded-xl border border-white/10 transition-all"
-              >
-                View all
-              </button>
-            </div>
-          </div>
-
-          <style>
-            {`
-              @keyframes landing-marquee {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(-50%); }
-              }
-              @keyframes shimmer {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-              }
-              @keyframes glass-shine {
-                0% { transform: translateX(-200%) skewX(-30deg); }
-                100% { transform: translateX(200%) skewX(-30deg); }
-              }
-              @keyframes lively-wiggle {
-            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
-            25% { transform: translateY(-2px) scale(1.01) rotate(0.5deg); }
-            50% { transform: translateY(0) scale(1) rotate(-0.5deg); }
-            75% { transform: translateY(-1px) scale(1.01) rotate(0.3deg); }
-          }
-
-          @keyframes soft-bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-          }
-        `}</style>
-          <div
-            ref={sliderRef}
-            className="mt-6 relative overflow-x-auto scrollbar-hide"
-            onPointerDown={handleSliderPointerDown}
-            onPointerMove={handleSliderPointerMove}
-            onPointerUp={handleSliderPointerUp}
-            onPointerLeave={handleSliderPointerUp}
-          >
-            <div
-              className="flex gap-3 sm:gap-4 w-max animate-[landing-marquee_35s_linear_infinite]"
-              style={{ animationPlayState: isSliderDragging ? 'paused' : 'running' }}
-            >
-              {featuredStoreItems.concat(featuredStoreItems).map((item, idx) => {
-                const projectId = projectDomainMap[normalizeDomain(item.domain)];
-                const href = projectId ? `/store/${projectId}` : '/browse';
-                return (
-                  <a
-                    key={`${item.name}-${idx}`}
-                    href={href}
-                    onClick={(e) => {
-                      if (sliderDraggingRef.current || sliderDragDistance.current > 6 || Date.now() - sliderLastDragAt.current < 150) {
-                        e.preventDefault();
-                        return;
-                      }
-                      if (projectId && onProjectDetails) {
-                        e.preventDefault();
-                        onProjectDetails(projectId);
-                        return;
-                      }
-                      if (!projectId) {
-                        e.preventDefault();
-                        onBrowse();
-                      }
-                    }}
-                    className="group text-left rounded-3xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/70 transition-all overflow-hidden min-w-[220px] sm:min-w-[240px]"
-                  >
-                  <div className="relative h-24 sm:h-28 w-full bg-slate-950/60 border-b border-white/5 overflow-hidden">
-                    {featuredImages[item.domain] ? (
-                      <img
-                        src={featuredImages[item.domain]}
-                        alt={item.name}
-                        className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-500"
-                      />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-br ${item.accent}`} />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
-                    <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-white/10 border border-white/10 text-[9px] font-black uppercase tracking-[0.25em] text-white/80">
-                      Live
-                    </div>
-                  </div>
-                  <div className="p-3 sm:p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl border border-white/10 bg-slate-950/60 flex items-center justify-center text-white font-black text-xs">
-                        {item.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-white font-black uppercase text-[11px] sm:text-xs tracking-widest truncate">{item.name}</div>
-                        <div className="text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-[0.3em] mt-1 truncate">{item.tag}</div>
-                      </div>
-                      <ChevronRight size={14} className="text-white/30 group-hover:text-white/70 transition-colors shrink-0" />
-                    </div>
-                  </div>
-                </a>
-              )})}
-            </div>
-          </div>
-        </div>
-
-        {/* --- THE OCTOPUS ENGINE (Interactive Feature Map) --- */}
-        <div className="relative w-full min-h-[500px] flex items-center justify-center pb-20 pt-4">
-
-          {/* SVG Tentacle Layer */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="tentacleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6366f1" />
-                <stop offset="100%" stopColor="#f97316" />
-              </linearGradient>
-            </defs>
-            {/* These paths simulate the tentacles reaching from center to grid positions */}
-            <path d="M 50 50 Q 25 25 15 15" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" className="animate-pulse" />
-            <path d="M 50 50 Q 75 25 85 15" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
-            <path d="M 50 50 Q 75 75 85 85" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
-            <path d="M 50 50 Q 25 75 15 85" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
-            <path d="M 50 50 L 50 90" stroke="url(#tentacleGrad)" strokeWidth="0.5" fill="none" strokeDasharray="2 2" />
-          </svg>
-
-          {/* Central Animated Hub */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
-            <div className={`w-32 h-32 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-purple-600/20 to-indigo-400/20 p-1.5 animate-float transition-all duration-700 border-4 ${getHubGlow()}`}>
-              <div className="w-full h-full rounded-full bg-slate-950/90 flex flex-col items-center justify-center backdrop-blur-3xl overflow-hidden relative">
-                <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
-                <video
-                  src="/questLogo.webm"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  poster="/logoLayer.webp"
-                  className="h-20 w-20 md:h-24 md:w-24 object-contain mb-2 relative z-10"
-                />
-                <span className="pixel-text text-[10px] text-white/40 tracking-[0.4em] relative z-10">CORE</span>
-              </div>
-            </div>
-            {/* Ambient Pulsing Rings */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full border border-indigo-500/10 scale-125 animate-ping opacity-10" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full border border-orange-500/5 scale-150 animate-pulse opacity-5" />
-          </div>
-
-          {/* Responsive Feature Grid */}
-          <div className="grid w-full max-w-5xl grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 relative z-40">
-
-            {/* Card 1: Embed */}
-            <div
-              onMouseEnter={() => setHoveredCard(1)}
-              onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => setActiveVideo('/EmbedCode.webm')}
-              className="group cursor-pointer"
-            >
-              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]">
-                <div className="absolute -inset-6 rounded-[40px] bg-orange-500/20 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-orange opacity-70 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-orange-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-orange-500/40 opacity-50 card-ring pointer-events-none" />
-                <div className="relative rounded-[31px] bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(249,115,22,0.7)]">
-                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(251,146,60,0.25),transparent_60%)] opacity-80 pointer-events-none" />
-                  <div className="relative z-10 flex items-center gap-3 mb-4">
-                    <span className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(249,115,22,0.4)]">01</span>
-                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Embed Once</h4>
-                  </div>
-                  <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-orange-500/10 transition-all overflow-hidden">
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(251,146,60,0.25),transparent_65%)] pointer-events-none" />
-                    <video
-                      src="/EmbedCode.webm"
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      poster="/logoLayer.webp"
-                      className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
-                    />
-                  </div>
-                  <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Inject QuestLayer Snippet</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Wallet */}
-            <div
-              onMouseEnter={() => setHoveredCard(2)}
-              onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => setActiveVideo('/ConnectWallet.webm')}
-              className="group cursor-pointer"
-            >
-              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '0.4s' }}>
-                <div className="absolute -inset-6 rounded-[40px] bg-indigo-500/20 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-indigo opacity-70 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-indigo-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-indigo-500/40 opacity-50 card-ring pointer-events-none" />
-                <div className="relative rounded-[31px] bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(99,102,241,0.7)]">
-                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(129,140,248,0.25),transparent_60%)] opacity-80 pointer-events-none" />
-                  <div className="relative z-10 flex items-center gap-3 mb-4">
-                    <span className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(99,102,241,0.4)]">02</span>
-                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Connect Wallet</h4>
-                  </div>
-                  <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 transition-all overflow-hidden">
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(129,140,248,0.25),transparent_65%)] pointer-events-none" />
-                    <video
-                      src="/ConnectWallet.webm"
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      poster="/logoLayer.webp"
-                      className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity duration-500"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center group-hover:opacity-0 transition-opacity duration-500">
-                      <Wallet size={48} className="text-indigo-500/50" />
-                    </div>
-                  </div>
-                  <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Floating Wallet Button</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Tasks */}
-            <div
-              onMouseEnter={() => setHoveredCard(3)}
-              onMouseLeave={() => setHoveredCard(null)}
-              className="group cursor-pointer"
-            >
-              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '0.8s' }}>
-                <div className="absolute -inset-6 rounded-[40px] bg-purple-500/20 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-purple opacity-70 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-purple-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-purple-500/40 opacity-50 card-ring pointer-events-none" />
-                <div className="relative rounded-[31px] bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(168,85,247,0.7)]">
-                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(216,180,254,0.25),transparent_60%)] opacity-80 pointer-events-none" />
-                  <div className="relative z-10 flex items-center gap-3 mb-4">
-                    <span className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-[10px] font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]">03</span>
-                    <h4 className="text-white font-black uppercase text-xs tracking-widest">Complete Tasks</h4>
-                  </div>
-                  <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-center group-hover:bg-purple-500/10 transition-all overflow-hidden">
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(216,180,254,0.25),transparent_65%)] pointer-events-none" />
-                    <Target size={48} className="text-purple-500/50 group-hover:text-purple-200 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500" />
-                  </div>
-                  <p className="relative z-10 text-[10px] text-slate-400 font-bold uppercase tracking-tight text-center">Gamified Mission Completion</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 4: Rewards */}
-            <div
-              onMouseEnter={() => setHoveredCard(4)}
-              onMouseLeave={() => setHoveredCard(null)}
-              className="group cursor-pointer"
-            >
-              <div className="relative rounded-[32px] p-[1px] transition-all duration-700 card-drift group-hover:-translate-y-2 group-hover:scale-[1.03]" style={{ animationDelay: '1.2s' }}>
-                <div className="absolute -inset-6 rounded-[40px] bg-yellow-500/25 blur-3xl opacity-60 transition-opacity duration-700 group-hover:opacity-90 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] card-aurora card-aurora-yellow opacity-70 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] border border-white/10 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-yellow-500/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute inset-0 rounded-[32px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 card-scanline group-hover:opacity-100 pointer-events-none" />
-                <div className="absolute right-6 top-6 h-14 w-14 rounded-full border border-yellow-500/40 opacity-50 card-ring pointer-events-none" />
-                <div className="relative rounded-[31px] bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-6 shadow-[0_30px_80px_-50px_rgba(234,179,8,0.8)]">
-                  <div className="absolute inset-0 rounded-[31px] bg-[radial-gradient(circle_at_top,_rgba(253,230,138,0.25),transparent_60%)] opacity-80 pointer-events-none" />
-                  <div className="relative z-10 flex items-center justify-center gap-3 mb-4">
-                    <span className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center text-[12px] font-black text-black shadow-[0_0_20px_rgba(234,179,8,0.5)]">04</span>
-                    <h4 className="text-white font-black uppercase text-sm tracking-widest">Earn Rewards</h4>
-                  </div>
-                  <div className="relative z-10 aspect-video bg-black/40 rounded-2xl mb-4 border border-white/5 flex items-center justify-around group-hover:bg-yellow-500/10 transition-all overflow-hidden">
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,_rgba(253,230,138,0.3),transparent_65%)] pointer-events-none" />
-                    <Trophy size={40} className="text-yellow-500/50 group-hover:text-yellow-200 reward-hop" style={{ animationDelay: '0.2s' }} />
-                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 font-black text-xs reward-smash" style={{ animationDelay: '0.6s' }}>XP</div>
-                    <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-black text-[10px] reward-splash" style={{ animationDelay: '1s' }}>NFT</div>
-                  </div>
-                  <p className="relative z-10 text-[11px] text-slate-400 font-bold uppercase tracking-tight text-center">Gain XP, Tokens, & Digital Assets</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* --- FEATURES STRIP --- */}
-        <div className="relative w-full mt-16 md:mt-24">
-          <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-r from-orange-500/15 via-indigo-500/10 to-purple-500/15 blur-3xl opacity-80 pointer-events-none" />
-          <div className="relative rounded-[36px] border border-white/10 bg-white/5 p-8 md:p-12 overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,146,60,0.2),transparent_55%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(99,102,241,0.2),transparent_55%)]" />
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-4 py-2 text-[10px] font-black uppercase tracking-[0.3em] text-orange-300">
-                <span className="h-2 w-2 rounded-full bg-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.8)]" />
-                Features
-              </div>
-
-              <div className="mt-6 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
-                <div>
-                  <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white">
-                    Embed Quests.
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-yellow-300 to-indigo-400">
-                      Trigger Growth.
-                    </span>
-                  </h2>
-                  <p className="mt-4 text-sm md:text-base text-slate-300 max-w-xl">
-                    Turn your website into a living reward hub - powered by quests, XP, NFTs & tokens.
-                  </p>
-                  <button
-                    onClick={onTryBuilder}
-                    className="group mt-8 relative inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black shadow-[0_0_40px_rgba(249,115,22,0.4)] transition-all hover:scale-105 active:scale-95 overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                    <Rocket size={18} className="group-hover:rotate-12 transition-transform" />
-                    Start Building Now
-                  </button>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {[
-                    {
-                      icon: Rocket,
-                      title: '1-Line Embed Setup',
-                      copy: 'Go live in minutes.',
-                      tone: 'from-orange-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: Target,
-                      title: 'Quests That Drive Action',
-                      copy: 'Follow, join, mint, stake, claim.',
-                      tone: 'from-indigo-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: Gem,
-                      title: 'Token / NFT / XP Rewards',
-                      copy: 'Automated distribution.',
-                      tone: 'from-yellow-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: Lock,
-                      title: 'NFT-Gated Missions',
-                      copy: 'Reward your real holders.',
-                      tone: 'from-purple-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: Trophy,
-                      title: 'Leaderboards & Seasons',
-                      copy: 'Competitive grind = retention.',
-                      tone: 'from-emerald-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: UserPlus,
-                      title: 'Referral Growth Loops',
-                      copy: 'Invite-to-earn built-in.',
-                      tone: 'from-sky-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: BarChart3,
-                      title: 'Analytics Dashboard',
-                      copy: 'Clicks -> connects -> completions.',
-                      tone: 'from-rose-500/30 via-transparent to-transparent'
-                    },
-                    {
-                      icon: Sparkles,
-                      title: 'Free Lifetime',
-                      copy: 'Launch without hidden fees.',
-                      tone: 'from-cyan-500/30 via-transparent to-transparent'
-                    }
-                  ].map(({ icon: Icon, title, copy, tone }) => (
-                    <div
-                      key={title}
-                      className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/70 p-4 backdrop-blur-xl"
-                    >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${tone} opacity-60`} />
-                      <div className="relative z-10 flex items-start gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white">
-                          <Icon size={18} />
-                        </div>
-                        <div>
-                          <div className="text-[11px] font-black uppercase tracking-widest text-white">{title}</div>
-                          <div className="mt-1 text-[11px] text-slate-400">{copy}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* --- BOTTOM CTA --- */}
-        <div className="mt-20 md:mt-40 w-full max-w-3xl text-center space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-          <div className="space-y-4">
-            <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-tight drop-shadow-2xl">
-              QuestLayer turns traffic <br />
-              <span className="text-indigo-500">into engagement</span> <br />
-              <span className="opacity-20">& engagement into ownership.</span>
-            </h2>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+    <header className="ql-landing-header">
+      <div className="ql-landing-header-inner">
+        <a className="ql-landing-brand" href="/" aria-current="page">
+          <img src="/landing/mascot-mark.webp" alt="" width={38} height={38} />
+          QuestLayer
+        </a>
+        <div className="ql-landing-header-actions">
+          <a className="ql-landing-button ql-landing-button--primary ql-landing-button--small" href="/builder" onClick={event => followLandingLink(event, onTryBuilder)}>
+            Get started <ArrowRight aria-hidden="true" />
+          </a>
+          <nav className="ql-landing-nav" aria-label="Main navigation" onKeyDown={closeOnEscape} onBlur={closeOnBlur}>
             <button
-              onClick={onTryBuilder}
-              className="group relative w-full md:w-[320px] px-12 py-4 bg-orange-500 hover:bg-orange-400 text-black font-black uppercase text-sm tracking-[0.25em] rounded-2xl transition-all hover:scale-[1.05] active:scale-[0.95] flex flex-col items-center justify-center overflow-hidden leading-tight
-                shadow-[0_15px_40px_rgba(249,115,22,0.4),inset_0_2px_6px_rgba(255,255,255,0.4),inset_0_-6px_12px_rgba(0,0,0,0.2)]
-                before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/30 before:to-transparent before:opacity-100
-                after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/50 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite]
-                animate-[lively-wiggle_4s_ease-in-out_infinite]"
+              ref={triggerRef}
+              className="ql-landing-menu-button"
+              type="button"
+              aria-label="Menu"
+              aria-controls={menuId}
+              aria-expanded={supportsPopover ? undefined : expanded}
+              popoverTarget={supportsPopover ? menuId : undefined}
+              onClick={supportsPopover ? undefined : () => setExpanded(value => !value)}
             >
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="flex items-center gap-3">
-                  <Rocket size={20} className="group-hover:rotate-12 transition-transform" />
-                  <span>Start Building</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.15em] text-black/60 animate-pulse">
-                  <Sparkles size={10} />
-                  <span>No Wallet Required</span>
-                </div>
-              </div>
+              <Menu size={23} aria-hidden="true" />
             </button>
-
-            <button
-               onClick={onBrowse}
-               className="group relative w-full md:w-[320px] px-12 py-4 bg-white/10 hover:bg-white/15 text-white font-black uppercase text-sm tracking-[0.25em] rounded-2xl border border-white/10 transition-all flex flex-col items-center justify-center gap-1 overflow-hidden
-                 shadow-[0_15px_40px_rgba(99,102,241,0.2),inset_0_2px_6px_rgba(255,255,255,0.1),inset_0_-6px_12px_rgba(0,0,0,0.3)]
-                 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-100
-                 after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/30 after:to-transparent after:-translate-x-full after:group-hover:animate-[glass-shine_1.5s_infinite] backdrop-blur-md
-                 hover:scale-[1.05] active:scale-[0.95] hover:shadow-[0_20px_50px_rgba(99,102,241,0.5)]"
-             >
-               <div className="relative z-10 flex items-center gap-3">
-                 <Gem size={20} className="text-indigo-400 group-hover:scale-110 transition-transform" />
-                 <span>Browse Store</span>
-               </div>
-               <div className="relative z-10 text-[10px] font-black uppercase tracking-[0.15em] text-white/40">
-                 Explore Ecosystem
-               </div>
-             </button>
-          </div>
-
-          <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-slate-500 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-              <span>Embed quests</span>
-              <span className="h-1 w-1 rounded-full bg-orange-500/40" />
-              <span>Build loyalty</span>
-              <span className="h-1 w-1 rounded-full bg-indigo-500/40" />
-              <span>Reward users</span>
-            </p>
-          </div>
-
+            <ul ref={menuRef} id={menuId} className="ql-landing-menu" popover={supportsPopover ? 'auto' : undefined} hidden={!supportsPopover && !expanded}>
+              <li><a href="#how-it-works" onClick={closeMenu}>How it works</a></li>
+              <li><a href={staticPageHref('/templates')} onClick={closeMenu}>Templates</a></li>
+              <li><a href="/browse" onClick={event => { closeMenu(); followLandingLink(event, onBrowse); }}>Quest Store</a></li>
+              <li><a href="/explore" onClick={closeMenu}>Explore</a></li>
+              <li><a href="/dashboard" onClick={event => { closeMenu(); followLandingLink(event, onLaunch); }}>Dashboard</a></li>
+              <li><a href={staticPageHref('/docs')} onClick={closeMenu}>Docs <ArrowUpRight size={14} aria-hidden="true" /></a></li>
+            </ul>
+          </nav>
         </div>
       </div>
+    </header>
+  );
+}
 
-      <div className="mt-10 border-t border-white/1 bg-white/2 backdrop-blur-sm">
-        <GlobalFooter className="pt-8" />
-      </div>
+export default function LandingPage({ onLaunch, onBrowse, onTryBuilder, onSubmitProject, onProjectDetails, allowAutoLaunch = true }: LandingPageProps) {
+  const { isConnected } = useAppKitAccount();
 
-      {/* Video Lightbox Modal */}
-      {activeVideo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-          <div
-            className="absolute inset-0 bg-[#05010d]/90 backdrop-blur-2xl cursor-pointer"
-            onClick={() => setActiveVideo(null)}
-          />
+  useEffect(() => {
+    if (isConnected && allowAutoLaunch) onLaunch();
+  }, [isConnected, allowAutoLaunch, onLaunch]);
 
-          <div className="relative w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(249,115,22,0.2)] animate-in zoom-in-95 duration-300">
-            {/* Close Button */}
-            <button
-              onClick={() => setActiveVideo(null)}
-              className="absolute top-4 right-4 z-50 p-2 bg-black/50 hover:bg-white/10 text-white rounded-full backdrop-blur-md transition-all border border-white/10 group"
-            >
-              <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
-            </button>
-
-            {/* Modal Video */}
-            <video
-              key={activeVideo}
-              src={activeVideo}
-              autoPlay
-              controls
-              loop
-              className="w-full h-full object-contain"
+  return (
+    <div className="ql-landing">
+      <a className="ql-landing-skip" href="#landing-main">Skip to content</a>
+      <LandingHeader onTryBuilder={onTryBuilder} onBrowse={onBrowse} onLaunch={onLaunch} />
+      <main id="landing-main" className="ql-landing-main" tabIndex={-1}>
+        <section className="ql-landing-hero" aria-labelledby="ql-hero-title">
+          <div className="ql-hero-copy">
+            <h1 id="ql-hero-title">Make your website <em>playable.</em></h1>
+            <p>Add quests, XP and rewards to any website.</p>
+            <div className="ql-hero-actions">
+              <a className="ql-landing-button ql-landing-button--primary" href="/builder" onClick={event => followLandingLink(event, onTryBuilder)}>
+                Build your widget <ArrowRight aria-hidden="true" />
+              </a>
+              <a className="ql-landing-button ql-landing-button--secondary" href="/browse" onClick={event => followLandingLink(event, onBrowse)}>
+                <Store aria-hidden="true" /> Browse Store
+              </a>
+            </div>
+          </div>
+          <div className="ql-landing-stage">
+            <img
+              className="ql-landing-stage-art"
+              src="/landing/hero.webp"
+              srcSet="/landing/hero-small.webp 760w, /landing/hero.webp 1440w"
+              sizes="(max-width: 29rem) 100vw, (max-width: 64rem) 48rem, 58rem"
+              alt=""
+              width={1440}
+              height={960}
+              fetchPriority="high"
+              decoding="async"
             />
-
-            {/* Decorative Glows */}
-            <div className="absolute -top-24 -left-24 w-64 h-64 bg-orange-500/10 blur-[100px] rounded-full pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
+            <LandingDemo />
           </div>
-        </div>
-      )}
+          <ul className="ql-hero-benefits" aria-label="Widget benefits">
+            <li><Code2 aria-hidden="true" /> One embed</li>
+            <li><Zap aria-hidden="true" /> No redirects</li>
+            <li><Palette aria-hidden="true" /> Fully customizable</li>
+          </ul>
+        </section>
+
+        <section className="ql-landing-section ql-steps" id="how-it-works" aria-labelledby="ql-steps-title">
+          <h2 id="ql-steps-title">Live in three simple steps</h2>
+          <ol className="ql-steps-grid">
+            {steps.map(({ title, description, Icon }, index) => (
+              <li key={title}>
+                <span className="ql-step-number" aria-hidden="true">{index + 1}</span>
+                <Icon className="ql-step-icon" aria-hidden="true" />
+                <div><h3>{title}</h3><p>{description}</p></div>
+                {index < steps.length - 1 && <ArrowRight className="ql-step-arrow" aria-hidden="true" />}
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="ql-landing-section ql-features" aria-labelledby="ql-features-title">
+          <h2 id="ql-features-title">Quests that keep people playing</h2>
+          <ul className="ql-features-grid">
+            {features.map(({ title, description, Icon, href }) => (
+              <li key={title}>
+                <a href={href.startsWith('/features/') ? staticPageHref(href) : href}>
+                  <span className="ql-feature-icon"><Icon aria-hidden="true" /></span>
+                  <span><strong>{title}</strong><small>{description}</small></span>
+                  <ArrowUpRight className="ql-feature-arrow" size={16} aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="ql-landing-section ql-templates" id="landing-templates" aria-labelledby="ql-templates-title">
+          <div className="ql-section-heading">
+            <div><h2 id="ql-templates-title">Start with a template</h2><p>Find a starting point for your next quest.</p></div>
+            <a className="ql-landing-text-link" href={staticPageHref('/templates')}>Browse templates <ArrowRight size={16} aria-hidden="true" /></a>
+          </div>
+          <ul className="ql-template-grid">
+            {templates.map(template => (
+              <li key={template.art}>
+                <a href={staticPageHref(template.href)} className="ql-template-card">
+                  <img src={`/landing/${template.art}.webp`} alt="" width={496} height={248} loading="lazy" decoding="async" />
+                  <span><strong>{template.title}</strong><small>{template.category}</small></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <LandingEcosystem onBrowse={onBrowse} onSubmitProject={onSubmitProject} onProjectDetails={onProjectDetails} />
+
+        <section className="ql-landing-section ql-final" aria-labelledby="ql-final-title">
+          <img src="/landing/cta.webp" alt="" width={1280} height={427} loading="lazy" decoding="async" />
+          <div className="ql-final-content">
+            <h2 id="ql-final-title">Turn your community into a game.</h2>
+            <a className="ql-landing-button ql-landing-button--primary" href="/builder" onClick={event => followLandingLink(event, onTryBuilder)}>
+              Get started <ArrowRight aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+
+        <section className="ql-landing-section ql-faq" aria-labelledby="ql-faq-title">
+          <h2 id="ql-faq-title">Frequently asked questions</h2>
+          <div>
+            {faq.map(({ question, answer }) => (
+              <details key={question} name="ql-landing-faq">
+                <summary>{question}<Plus size={18} aria-hidden="true" /></summary>
+                <p>{answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      </main>
+      <GlobalFooter variant="landing" />
     </div>
   );
-};
-
-export default LandingPage;
+}
